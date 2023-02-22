@@ -1,11 +1,17 @@
 package edu.yu.cs.com1320.project.impl;
 import edu.yu.cs.com1320.project.HashTable;
 
+import java.util.LinkedList;
+
 public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value> {
     private myLinkedList<Entry<Key,Value>>[] table;
 
     public HashTableImplUsingMyList() {
         this.table = new myLinkedList[5];
+        for(int i = 0; i < this.table.length; i++){
+            this.table[i] = new myLinkedList<Entry<Key,Value>>();
+        }
+
     }
 
     private int hashFunction(Key key){
@@ -14,18 +20,45 @@ public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value
 
     @Override
     public Value get(Key k) {
-        int index = this.hashFunction(k);
-        Entry<Key,Value> temp;
-        return null;
+        Entry<Key,Value> temp = getEntry(k);
+        if(temp.value != null){
+            return temp.value;
+        }else{
+            return null;
+        }
     }
     @Override
     public Value put(Key k, Value v) {
+        Entry<Key,Value> temp = new Entry<>(k,v);
+        int index = this.hashFunction(k);
+//        if(getEntry(k) == null){
+//            this.table[index].add(temp);
+//            return null;
+//        }else{
+//            Entry<Key,Value> old = this.table[index].get(temp);
+//            this.table[index].remove(old);
+//            this.table[index].add(temp);
+//            return old.value;
+//        }
+        this.table[index].add(temp);
         return null;
     }
     private Entry getEntry(Key k){
         int index = this.hashFunction(k);
-        myLinkedList<Entry<Key, Value>> temp = this.table[index];
-        //if(temp.get())
+        if(this.table[index] == null){
+            return null;
+        }
+        Entry<Key,Value> temp = this.table[index].head.item;
+        int current = 1;
+        while(current < this.table[index].getSize()){
+            if(temp.key.equals(k)){
+                return temp;
+            }else{
+                temp = this.table[index].next();
+                current++;
+            }
+        }
+        //returns null if it doesnt exist
         return null;
     }
     private class Entry<Key, Value>{
@@ -45,7 +78,14 @@ public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value
         private Node<type> tail;
 
         private myLinkedList(){
-            this.head = null;
+            //this.head = null;
+        }
+        private Node<type> lastReturn = head;
+        private Node<type> next = head;
+        private type next(){
+            lastReturn = next;
+            next = next.next;
+            return lastReturn.item;
         }
         private void add(type t){
             if(head == null){
