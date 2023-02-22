@@ -2,8 +2,33 @@ package edu.yu.cs.com1320.project.impl;
 import edu.yu.cs.com1320.project.HashTable;
 
 public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value> {
+    private myLinkedList<Entry<Key,Value>>[] table;
 
-    public class Entry<Key, Value>{
+    public HashTableImplUsingMyList() {
+        this.table = new myLinkedList[5];
+    }
+
+    private int hashFunction(Key key){
+        return (key.hashCode() & 0x7fffffff) % this.table.length;
+    }
+
+    @Override
+    public Value get(Key k) {
+        int index = this.hashFunction(k);
+        Entry<Key,Value> temp;
+        return null;
+    }
+    @Override
+    public Value put(Key k, Value v) {
+        return null;
+    }
+    private Entry getEntry(Key k){
+        int index = this.hashFunction(k);
+        myLinkedList<Entry<Key, Value>> temp = this.table[index];
+        //if(temp.get())
+        return null;
+    }
+    private class Entry<Key, Value>{
         Key key;
         Value value;
         Entry(Key k, Value v){
@@ -14,22 +39,15 @@ public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value
             value = v;
         }
     }
-    public class myLinkedList<type> {
-        private class Node<E>{
-            E item;
-            Node<type> next;
-            Node(E d){
-                this.item = d;
-                this.next = null;
-            }
-        }
+    private class myLinkedList<type> {
         private int size = 0;
         private Node<type> head;
         private Node<type> tail;
-        public myLinkedList(){
+
+        private myLinkedList(){
             this.head = null;
         }
-        public void add(type t){
+        private void add(type t){
             if(head == null){
                 head = new Node<>(t);
                 tail = head;
@@ -48,6 +66,7 @@ public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value
                 }
             }
         }
+
         public void remove(type t){
             //Might be t.item.equals(head.item) also ^might be remove(node t)
             if(t == head){
@@ -62,42 +81,27 @@ public class HashTableImplUsingMyList<Key, Value> implements HashTable<Key,Value
                 }
             }
         }
-        public Node<type> find(Node<type> t){
+        public type get(type t){
             Node<type> temp = head;
             while(temp.next != null && temp.next != t){
                 temp = temp.next;
             }
-            return temp;
+            if(temp != null){
+                return (type)temp.item;
+            }
+            return null;
         }
         public int getSize(){
             return this.size;
         }
+        private class Node<type>{
+            type item;
+            Node<type> next;
+            Node(type d){
+                this.item = d;
+                this.next = null;
+            }
+        }
     }
 
-    private myLinkedList<Entry<Key,Value>>[] table;
-
-    public HashTableImplUsingMyList() {
-        this.table = new myLinkedList[5];
-    }
-    private int hashFunction(Key key){
-        return (key.hashCode() & 0x7fffffff) % this.table.length;
-    }
-
-    @Override
-    public Value get(Key k) {
-        int index = this.hashFunction(k);
-        Entry<Key,Value> temp = getEntry(k);
-        return null;
-    }
-
-    private Entry getEntry(Key k){
-        int index = this.hashFunction(k);
-        //this.table[index].
-        return null;
-    }
-
-    @Override
-    public Value put(Key k, Value v) {
-        return null;
-    }
 }
