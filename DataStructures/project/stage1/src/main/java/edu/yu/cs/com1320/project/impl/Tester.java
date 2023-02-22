@@ -10,7 +10,12 @@ public class Tester {
         test.put("A",4);
         test.put("Hello",5);
         int not = test.get("Hello");
+        int not1 = test.get("This");
+//        int not2 = test.get("Is");
         System.out.println(not);
+        System.out.println(not1);
+//        System.out.println(not2);
+
     }
 
 }
