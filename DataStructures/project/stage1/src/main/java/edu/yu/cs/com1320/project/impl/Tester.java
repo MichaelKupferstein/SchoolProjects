@@ -3,7 +3,7 @@ package edu.yu.cs.com1320.project.impl;
 public class Tester {
 
     public static void main(String[] args){
-        HashTableImplUsingMyList<Integer,String> test = new HashTableImplUsingMyList<>();
+        HashTableImpl<Integer,String> test = new HashTableImpl<>();
         test.put(1,"Hello");
         test.put(2,"This1");
         test.put(3,"is");
