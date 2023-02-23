@@ -24,6 +24,12 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
     @Override
     public Value put(Key k, Value v){
         int index = hashFunction(k);
+        //if v == null then its a deletion
+        if(v == null){
+            Value old = this.table[index].get(k);
+            this.table[index].remove(k);
+            return old;
+        }
         if(this.table[index].get(k) == null){
             this.table[index].add(k,v);
             return null;
@@ -37,7 +43,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
     }
     private class myLinkedList<Key,Value>{
         private int size = 0;
-        Node<Key,Value> head;
+        private Node<Key,Value> head;
         private myLinkedList(){
             this.head = null;
         }
@@ -59,7 +65,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
                 head = head.next;
             }else{
                 Node<Key,Value> temp = head;
-                while(temp.next != null && !(temp.k.equals(k))){
+                while(temp.next != null && !(temp.next.k.equals(k))){
                     temp = temp.next;
                 }
                 if(temp.next != null){
@@ -81,10 +87,14 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
                 }
                 temp = temp.next;
             }
+            if(temp.k != null){
+                if(temp.k.equals(k)){
+                    return temp.v;
+                }
+            }
             //return null if it doesnt exist, becuase it went through each element and none equaled k so it ended the while loop bc its null
             return null;
         }
-
         private class Node<Key,Value>{
             private Key k;
             private Value v;
