@@ -30,6 +30,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
             this.table[index].remove(k);
             return old;
         }
+        //if this entry didnt exist return null
         if(this.table[index].get(k) == null){
             this.table[index].add(k,v);
             return null;
@@ -37,6 +38,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
             Value old = this.table[index].get(k);
             this.table[index].remove(k);
             this.table[index].add(k,v);
+            //if this entry did exist and its a replacment return the old value
             return old;
         }
 
