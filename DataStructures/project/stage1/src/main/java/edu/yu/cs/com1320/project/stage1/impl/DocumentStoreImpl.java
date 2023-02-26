@@ -30,9 +30,12 @@ public class DocumentStoreImpl implements DocumentStore{
             throw new IllegalArgumentException();
         }
         if(input == null){
-            if (delete(uri) == false) return 0;
-            return this.hashTable.put(uri,null).hashCode();
-
+            if(this.hashTable.containsKey(uri)){
+                DocumentImpl temp = this.hashTable.get(uri);
+                delete(uri);
+                return temp.hashCode();
+            }
+            return 0;
         }
         byte[] bytes = input.readAllBytes();
         input.close();
@@ -62,6 +65,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Document get(URI uri) {
+        this.hashTable.containsKey(uri);
         return this.hashTable.get(uri);
     }
 
@@ -71,8 +75,13 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public boolean delete(URI uri) {
-        if(this.hashTable.get(uri) == null) return false;
-        return true;
+        if(this.hashTable.containsKey(uri)){
+            //used containsKey so it is known already that it exists in the HT, so put null with it so it deletes.
+            this.hashTable.put(uri,null);
+            return true;
+        }
+        //returns false if the document doesn't exist
+        return false;
     }
 
 }

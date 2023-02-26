@@ -43,6 +43,17 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         }
 
     }
+
+    @Override
+    public boolean containsKey(Key key){
+        if(key == null){
+            throw new NullPointerException();
+        }
+        int index = hashFunction(key);
+        if(this.table[index].get(key) == null) return false;
+        return true;
+    }
+
     private class myLinkedList<Key,Value>{
         private int size = 0;
         private Node<Key,Value> head;
