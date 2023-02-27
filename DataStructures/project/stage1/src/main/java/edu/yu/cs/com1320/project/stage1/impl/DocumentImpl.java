@@ -3,7 +3,6 @@ import edu.yu.cs.com1320.project.stage1.Document;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class DocumentImpl implements Document{
 
