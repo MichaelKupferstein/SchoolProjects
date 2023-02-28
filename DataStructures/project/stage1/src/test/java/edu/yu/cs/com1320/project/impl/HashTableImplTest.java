@@ -1,6 +1,7 @@
 package edu.yu.cs.com1320.project.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,6 +14,7 @@ public class HashTableImplTest {
     }
 
     @Test
+    @DisplayName("Putting inputs in for the first time")
     void initialPut() {
         //initial put should return null bc there are no entries for given key
         assertNull(this.test.put(123,"1st Test"));
@@ -22,6 +24,7 @@ public class HashTableImplTest {
         assertNull(this.test.put(131415,"5th Test"));
     }
     @Test
+    @DisplayName("Getting the inputs that were put in originally")
     void initialGet() {
         initialPut();
         assertEquals("1st Test", this.test.get(123));
@@ -32,6 +35,7 @@ public class HashTableImplTest {
 
     }
     @Test
+    @DisplayName("Replacing the original put and seeing if it returns the old value")
     void replacingWithPut(){
         initialPut();
         assertEquals("1st Test", this.test.put(123, "Replacing 1st Test"));
@@ -41,6 +45,7 @@ public class HashTableImplTest {
         assertEquals("5th Test", this.test.put(131415, "Replacing 5th Test"));
     }
     @Test
+    @DisplayName("Checking to see if the table contains the appropriate values for each key")
     void containsKey() {
         replacingWithPut();
         assertTrue(this.test.containsKey(123));
@@ -51,6 +56,7 @@ public class HashTableImplTest {
         assertFalse(this.test.containsKey(1234));
     }
     @Test
+    @DisplayName("Using get after the values have been replaced to see if they return correct values")
     void usingGetAfterValuesHaveBeenReplaced(){
         replacingWithPut();
         assertEquals("Replacing 1st Test", this.test.get(123));
@@ -60,6 +66,7 @@ public class HashTableImplTest {
         assertEquals("Replacing 5th Test", this.test.get(131415));
     }
     @Test
+    @DisplayName("Removing an entry by putting null as a value")
     void puttingNullAsVtoDeleteAnEntry(){
         replacingWithPut();
         assertEquals("Replacing 5th Test", this.test.put(131415,null));

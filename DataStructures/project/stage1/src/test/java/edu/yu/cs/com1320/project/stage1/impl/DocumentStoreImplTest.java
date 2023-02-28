@@ -1,79 +1,107 @@
 package edu.yu.cs.com1320.project.stage1.impl;
 
-import edu.yu.cs.com1320.project.impl.HashTableImpl;
-import edu.yu.cs.com1320.project.stage1.DocumentStore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.util.UUID;
 
+import static edu.yu.cs.com1320.project.stage1.DocumentStore.DocumentFormat.BINARY;
 import static edu.yu.cs.com1320.project.stage1.DocumentStore.DocumentFormat.TXT;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DocumentStoreImplTest {
-    DocumentStoreImpl hashTable;
-    DocumentImpl TXTTemp1;
-    DocumentImpl TXTTemp2;
-    DocumentImpl TXTTemp3;
-    DocumentImpl TXTTemp4;
-    DocumentImpl TXTTemp5;
-    DocumentImpl BinTemp1;
-    DocumentImpl BinTemp2;
-    DocumentImpl BinTemp3;
-    DocumentImpl BinTemp4;
-    DocumentImpl BinTemp5;
-
+    DocumentStoreImpl docStore;
 
     @BeforeEach
     void setUp() throws URISyntaxException {
-        this.hashTable = new DocumentStoreImpl();
-        //create a bunch of random DocumentImpl
-        this.TXTTemp1 = new DocumentImpl(generateRandomURI(),generateRandomString());
-        this.TXTTemp2 = new DocumentImpl(generateRandomURI(),generateRandomString());
-        this.TXTTemp3 = new DocumentImpl(generateRandomURI(),generateRandomString());
-        this.TXTTemp4 = new DocumentImpl(generateRandomURI(),generateRandomString());
-        this.TXTTemp5 = new DocumentImpl(generateRandomURI(),generateRandomString());
-        this.BinTemp1 = new DocumentImpl(generateRandomURI(),generateRandomByteArray());
-        this.BinTemp2 = new DocumentImpl(generateRandomURI(),generateRandomByteArray());
-        this.BinTemp3 = new DocumentImpl(generateRandomURI(),generateRandomByteArray());
-        this.BinTemp4 = new DocumentImpl(generateRandomURI(),generateRandomByteArray());
-        this.BinTemp5 = new DocumentImpl(generateRandomURI(),generateRandomByteArray());
-
+        this.docStore = new DocumentStoreImpl();
+    }
+    @Test
+    @DisplayName("Testing putting and getting with a TXT document")
+    void initialPutAndGetWithTXTDoc() throws Exception {
+        URI uri = generateRandomURI();
+        String str = generateRandomString();
+        DocumentImpl temp = new DocumentImpl(uri,str);
+        byte[] byteArray = str.getBytes();
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
+        assertEquals(temp,this.docStore.get(uri));
+    }
+    @Test
+    @DisplayName("Testing putting and getting with a Binary document")
+    void initialPutAndGetWithBinaryDoc() throws Exception {
+        URI uri = generateRandomURI();
+        byte[] byteArray = generateRandomByteArray();
+        DocumentImpl temp = new DocumentImpl(uri,byteArray);
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,BINARY));
+        assertEquals(temp,this.docStore.get(uri));
     }
 
     @Test
-    void initialPut() throws Exception {
-        //assertEquals(0, this.hashTable.put(this.TXTTemp1,this.TXTTemp1.getKey(),TXT));
+    @DisplayName("Testing replacing TXT document")
+    void testingReplace() throws Exception{
+        URI uri = generateRandomURI();
+        String str = generateRandomString();
+        DocumentImpl temp = new DocumentImpl(uri,str);
+        byte[] byteArray = str.getBytes();
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
+        assertEquals(temp,this.docStore.get(uri));
+        String str2 = generateRandomString();
+        byte[] byteArray2 = str2.getBytes();
+        DocumentImpl temp2 = new DocumentImpl(uri,str2);
+        assertEquals(temp.hashCode(),this.docStore.put(new ByteArrayInputStream(byteArray2),uri,TXT));
+        assertEquals(temp2,this.docStore.get(uri));
     }
-
 
     @Test
-    void get() {
+    @DisplayName("Putting a null where null isnt supposed to go")
+    void puttingNull() throws Exception {
+        URI uri = generateRandomURI();
+        String str = generateRandomString();
+        DocumentImpl temp = new DocumentImpl(uri,str);
+        byte[] byteArray = str.getBytes();
+        assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(byteArray),uri,null));
+        assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(byteArray),null,TXT));
+        assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(byteArray),null,null));
     }
 
     @Test
-    void delete() {
+    @DisplayName("Deleting an enrty by putting a null input")
+    void testingDelete() throws Exception{
+        URI uri = generateRandomURI();
+        String str = generateRandomString();
+        DocumentImpl temp = new DocumentImpl(uri,str);
+        byte[] byteArray = str.getBytes();
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
+        assertEquals(temp,this.docStore.get(uri));
+        assertEquals(temp.hashCode(),this.docStore.put(null,uri,TXT));
+        assertNull(this.docStore.get(uri));
     }
+
     private URI generateRandomURI() throws URISyntaxException {
-        String scheme = "http";
-        String host = "example.com";
-        String randomString = generateRandomString();
-        String path = "/" + randomString;
-        return new URI(scheme, host, path, null);
-    }
-    private String generateRandomString() {
-        return new String(generateRandomByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+        UUID uuid = UUID.randomUUID();
+        return new URI("https", "test.com", "/" + uuid.toString(), null);
     }
 
-    private byte[] generateRandomByteArray(){
+    private String generateRandomString() {
+        final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(CHARACTERS.charAt(rand.nextInt(CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+
+    private byte[] generateRandomByteArray() {
         byte[] temp = new byte[10];
         new Random().nextBytes(temp);
         return temp;
     }
+
 }

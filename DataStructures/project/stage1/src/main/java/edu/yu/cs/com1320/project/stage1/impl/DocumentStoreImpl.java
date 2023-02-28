@@ -65,8 +65,10 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Document get(URI uri) {
-        this.hashTable.containsKey(uri);
-        return this.hashTable.get(uri);
+        if(this.hashTable.containsKey(uri)) {
+            return this.hashTable.get(uri);
+        }
+        return null;
     }
 
     /**
