@@ -1,6 +1,7 @@
 package edu.yu.cs.com1320.project.stage1.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -18,6 +19,20 @@ public class DocumentImplTest {
         this.uri = new URI("https","test.com","/" + uuid.toString(),null);
     }
     @Test
+    @DisplayName("Creating with a null where a null isnt supposed to go")
+    void createWithNullUri(){
+        String test = "This is a test string";
+        byte[] temp = new byte[10];
+        new Random().nextBytes(temp);
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null,test));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null,temp));
+        String strNull = null;
+        byte[] nullByte = null;
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(this.uri,strNull));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(this.uri,nullByte));
+    }
+    @Test
+    @DisplayName("Creating a TXT document and using all methods on it")
     void createATXTDocumentAndUseMethods() {
         DocumentImpl test = new DocumentImpl(this.uri,"This is a test String");
         assertEquals("This is a test String", test.getDocumentTxt());
@@ -32,6 +47,7 @@ public class DocumentImplTest {
     }
 
     @Test
+    @DisplayName("Creating a Binary document and using all methods on it")
     void createABinaryDocumentAndUseMethods() {
         byte[] temp = new byte[10];
         new Random().nextBytes(temp);
