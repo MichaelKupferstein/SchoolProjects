@@ -97,11 +97,30 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    @DisplayName("Deleting a document that doesnt exist")
+    @DisplayName("Deleting a document that doesnt exist by putting null")
     void deletingAdocThatDoesntExist() throws Exception{
         String str = generateRandomString();
         byte[] byteArr = str.getBytes();
         assertEquals(0,this.docStore.put(null,generateRandomURI(),TXT));
+    }
+
+    @Test
+    @DisplayName("Deleting a document using the delete method")
+    void deletingWithDelete() throws Exception {
+        URI uri = generateRandomURI();
+        String str = generateRandomString();
+        byte[] bytes = str.getBytes();
+        DocumentImpl temp = new DocumentImpl(uri,str);
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT));
+        assertEquals(temp,this.docStore.get(uri));
+        assertTrue(this.docStore.delete(uri));
+        assertNull(this.docStore.get(uri));
+    }
+
+    @Test
+    @DisplayName("Deleting a document that doesnt exist with delete")
+    void deletingFakeDoc()throws Exception{
+        assertFalse(this.docStore.delete(generateRandomURI()));
     }
 
     /*
