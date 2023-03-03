@@ -80,4 +80,10 @@ public class HashTableImplTest {
         assertNull(this.test.get(131415));
     }
 
+    @Test
+    @DisplayName("Using get on a null key")
+    void gettingWithNull(){
+        assertNull(this.test.get(null));
+    }
+
 }

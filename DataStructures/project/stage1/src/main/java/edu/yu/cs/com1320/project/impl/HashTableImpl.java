@@ -18,6 +18,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
 
     @Override
     public Value get(Key k) {
+        if(k == null) return null;
         int index = hashFunction(k);
         return this.table[index].get(k);
     }
