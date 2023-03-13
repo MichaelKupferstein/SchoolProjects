@@ -17,11 +17,6 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         return (key.hashCode() & 0x7fffffff) % this.table.length;
     }
 
-    //This method is for testing purposes
-    public int tableLength(){
-        return this.table.length;
-    }
-
     private void arrayDouble(){
         myLinkedList.Node[] tempArr = new myLinkedList.Node[this.size];
         int count = 0;
