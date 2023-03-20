@@ -49,6 +49,7 @@ public class StackImpl<T> implements Stack<T> {
      */
     @Override
     public T peek() {
+        if(itemCount == 0) return null;
         return this.stack[this.itemCount - 1];
     }
 

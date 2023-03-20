@@ -59,18 +59,29 @@ public class StackImplTest {
         StackImpl<Integer> tempTest = new StackImpl<>();
         for(int i = 0; i < 15; i++){
             tempTest.push(i);
-/*
-            if(i < 9){
-                assertEquals(10,tempTest.length());
-            }else{
-                assertEquals(20,tempTest.length());
-            }
-*/
-
+        // if(i < 9){
+        //     assertEquals(10,tempTest.length());
+        // }else{
+        //     assertEquals(20,tempTest.length());
+        // }
         }
-
         for(int i = 0, count = 14; i < 15; i++,count--){
             assertEquals(count,tempTest.pop());
         }
+    }
+
+    @Test
+    @DisplayName("Should return null if stack is empty")
+    void nullIfEmptyTest(){
+        assertNull(this.test.peek());
+        assertNull(this.test.pop());
+    }
+
+    @Test
+    @DisplayName("Adding an element then popping it,and popping again ")
+    void popTest(){
+        this.test.push("Test String");
+        assertEquals("Test String",this.test.pop());
+        assertNull(this.test.pop());
     }
 }
