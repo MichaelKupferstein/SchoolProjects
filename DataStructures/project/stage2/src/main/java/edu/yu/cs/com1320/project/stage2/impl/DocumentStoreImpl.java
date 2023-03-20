@@ -1,18 +1,22 @@
 package edu.yu.cs.com1320.project.stage2.impl;
+import edu.yu.cs.com1320.project.Command;
 import edu.yu.cs.com1320.project.impl.HashTableImpl;
+import edu.yu.cs.com1320.project.impl.StackImpl;
 import edu.yu.cs.com1320.project.stage2.Document;
-import edu.yu.cs.com1320.project.stage2.impl.DocumentImpl;
 import edu.yu.cs.com1320.project.stage2.DocumentStore;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.function.Function;
 
 public class DocumentStoreImpl implements DocumentStore{
-    HashTableImpl<URI,DocumentImpl> hashTable;
+    private HashTableImpl<URI,DocumentImpl> hashTable;
+    private StackImpl<Command> commandStack;
+
     public DocumentStoreImpl() {
         this.hashTable = new HashTableImpl<>();
+        this.commandStack = new StackImpl<>();
     }
 
     /**
@@ -39,9 +43,15 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         byte[] bytes = input.readAllBytes();
         input.close();
+        Function<URI, Boolean> func = (tempUri) -> {
+            this.hashTable.put(uri,null);
+            return true;
+        };
+        Command tempCommand = new Command(uri, func);
         if(format.equals(DocumentFormat.BINARY)){
             DocumentImpl temp = new DocumentImpl(uri,bytes);
             DocumentImpl v = this.hashTable.put(uri,temp);
+            this.commandStack.push(tempCommand);
             if(v == null){
                 return 0;
             }else{
@@ -50,6 +60,7 @@ public class DocumentStoreImpl implements DocumentStore{
         }else if(format.equals(DocumentFormat.TXT)){
             DocumentImpl temp = new DocumentImpl(uri, new String(bytes));
             DocumentImpl v = this.hashTable.put(uri,temp);
+            this.commandStack.push(tempCommand);
             if(v == null){
                 return 0;
             }else{
@@ -79,6 +90,13 @@ public class DocumentStoreImpl implements DocumentStore{
     public boolean delete(URI uri) {
         if(this.hashTable.containsKey(uri)){
             //used containsKey so it is known already that it exists in the HT, so put null with it so it deletes.
+            DocumentImpl tempDoc = this.hashTable.get(uri);
+            Function<URI, Boolean> func = (tempUri) ->{
+                this.hashTable.put(uri,tempDoc);
+                return true;
+            };
+            Command tempCommand = new Command(uri, func);
+            this.commandStack.push(tempCommand);
             this.hashTable.put(uri,null);
             return true;
         }
@@ -93,7 +111,10 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void undo() throws IllegalStateException {
-
+        if(this.commandStack.size() == 0){
+            throw new IllegalStateException();
+        }
+        this.commandStack.pop().undo();
     }
 
     /**
@@ -104,7 +125,26 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void undo(URI uri) throws IllegalStateException {
-
+        if(this.commandStack.size() == 0){
+            throw new IllegalStateException();
+        }
+        StackImpl<Command> tempStack = new StackImpl<>();
+        boolean found = false;
+        for(int i = 0; i < this.commandStack.size(); i++){
+            Command tempCommand = this.commandStack.pop();
+            tempStack.push(tempCommand);
+            if(tempCommand.getUri().equals(uri)){
+                found = true;
+                tempCommand.undo();
+                break;
+            }
+        }
+        if(found == false){
+            throw new IllegalStateException();
+        }
+        for(int i = 0; i < tempStack.size(); i++){
+            this.commandStack.push(tempStack.pop());
+        }
     }
 
 }
