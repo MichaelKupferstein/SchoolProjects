@@ -130,15 +130,19 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         StackImpl<Command> tempStack = new StackImpl<>();
         boolean found = false;
-        for(int i = 0; i < this.commandStack.size(); i++){
+        while(this.commandStack.size() != 0){
             Command tempCommand = this.commandStack.pop();
-            tempStack.push(tempCommand);
             if(tempCommand.getUri().equals(uri)){
-                found = true;
                 tempCommand.undo();
+                found = true;
                 break;
             }
+            tempStack.push(tempCommand);
         }
+        while(tempStack.size() != 0){
+            this.commandStack.push(tempStack.pop());
+        }
+
         if(found == false){
             throw new IllegalStateException();
         }
