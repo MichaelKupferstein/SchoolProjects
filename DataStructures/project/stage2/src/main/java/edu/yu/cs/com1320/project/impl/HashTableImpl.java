@@ -149,19 +149,6 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         private int getSize(){
             return this.size;
         }
-        private Node[] getAllNodes(){
-            if(this.size == 0) return null;
-            if(head == null) return null;
-            Node[] tempArr = new Node[size];
-            int count = 0;
-            Node<Key,Value> tempNode = head;
-            while(count < this.size && tempNode.next != null){
-                tempArr[count] = tempNode;
-                tempNode = tempNode.next;
-                count++;
-            }
-            return tempArr;
-        }
 
     }
     private class Node<Key,Value>{
