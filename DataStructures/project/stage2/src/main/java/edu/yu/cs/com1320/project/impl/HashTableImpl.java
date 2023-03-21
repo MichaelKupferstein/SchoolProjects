@@ -2,12 +2,12 @@ package edu.yu.cs.com1320.project.impl;
 import edu.yu.cs.com1320.project.HashTable;
 
 public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
-    private int size;
+    private int itemCount;
     private myLinkedList<Key,Value>[] table;
 
     public HashTableImpl() {
         this.table = new myLinkedList[5];
-        this.size = 0;
+        this.itemCount = 0;
         for(int i = 0; i < this.table.length; i++){
             this.table[i] = new myLinkedList<Key,Value>();
         }
@@ -16,15 +16,20 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
     private int hashFunction(Key key){
         return (key.hashCode() & 0x7fffffff) % this.table.length;
     }
+    private int hashFunction(Key key,int i){return (key.hashCode() & 0x7fffffff) % i;}
 
     private void arrayDouble(){
-        myLinkedList.Node[] tempArr = new myLinkedList.Node[this.size];
+        Node[] tempArr = new Node[this.itemCount];
         int count = 0;
         for(int i = 0; i < this.table.length; i++){
-            myLinkedList.Node[] temp = this.table[i].getAllNodes();
-            if(temp != null) {
-                for (int j = 0; j < temp.length; j++) {
-                    tempArr[count] = temp[j];
+            Node tempNode = this.table[i].head;
+            if(tempNode != null){
+                tempArr[count] = tempNode;
+                count++;
+                while(tempNode.next != null){
+                    tempNode = tempNode.next;
+                    tempArr[count] = tempNode;
+                    count++;
                 }
             }
         }
@@ -34,7 +39,8 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         }
         for(int i = 0; i < tempArr.length; i++){
             if(tempArr[i] != null) {
-                int index = hashFunction((Key) tempArr[i].getKey());
+                //had to create a second hashFunction bc this.table.length wasnt updating until the end
+                int index = hashFunction((Key) tempArr[i].getKey(),this.table.length*2);
                 tempTable[index].add((Key) tempArr[i].getKey(), (Value) tempArr[i].getValue());
             }
         }
@@ -49,7 +55,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
     @Override
     public Value put(Key k, Value v){
         //First check if the array needs to be doubled
-        if(this.size/this.table.length > 0.25){
+        if(this.itemCount/this.table.length > 0.25){
             arrayDouble();
         }
         int index = hashFunction(k);
@@ -57,13 +63,13 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         if(v == null){
             Value old = this.table[index].get(k);
             this.table[index].remove(k);
-            this.size--;
+            this.itemCount--;
             return old;
         }
         //if this entry didnt exist return null
         if(this.table[index].get(k) == null){
             this.table[index].add(k,v);
-            this.size++;
+            this.itemCount++;
             return null;
         }else{
             Value old = this.table[index].get(k);
@@ -144,34 +150,35 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
             return this.size;
         }
         private Node[] getAllNodes(){
+            if(this.size == 0) return null;
+            if(head == null) return null;
             Node[] tempArr = new Node[size];
             int count = 0;
-            if(this.size == 0) return null;
             Node<Key,Value> tempNode = head;
-            while(tempNode.next != null){
+            while(count < this.size && tempNode.next != null){
                 tempArr[count] = tempNode;
                 tempNode = tempNode.next;
                 count++;
             }
             return tempArr;
         }
-        private class Node<Key,Value>{
-            private Key k;
-            private Value v;
-            private Node<Key,Value> next;
 
-            private Node(Key k1, Value v1){
-                this.k = k1;
-                this.v = v1;
-                this.next = null;
-            }
-            private Key getKey(){
-                return this.k;
-            }
-            private Value getValue(){
-                return this.v;
-            }
+    }
+    private class Node<Key,Value>{
+        private Key k;
+        private Value v;
+        private Node<Key,Value> next;
+
+        private Node(Key k1, Value v1){
+            this.k = k1;
+            this.v = v1;
+            this.next = null;
+        }
+        private Key getKey(){
+            return this.k;
+        }
+        private Value getValue(){
+            return this.v;
         }
     }
-
 }
