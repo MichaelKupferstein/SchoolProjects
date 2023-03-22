@@ -52,22 +52,22 @@ public class DocumentStoreImpl implements DocumentStore{
             DocumentImpl temp = new DocumentImpl(uri,bytes);
             DocumentImpl v = this.hashTable.put(uri,temp);
             this.commandStack.push(tempCommand);
-            if(v == null){
-                return 0;
-            }else{
-                return v.hashCode();
-            }
+            return returnValue(v);
         }else if(format.equals(DocumentFormat.TXT)){
             DocumentImpl temp = new DocumentImpl(uri, new String(bytes));
             DocumentImpl v = this.hashTable.put(uri,temp);
             this.commandStack.push(tempCommand);
-            if(v == null){
-                return 0;
-            }else{
-                return v.hashCode();
-            }
+            return returnValue(v);
         }
         return 0;
+    }
+
+    private int returnValue(DocumentImpl v){
+        if(v == null){
+            return 0;
+        }else{
+            return v.hashCode();
+        }
     }
 
     /**
