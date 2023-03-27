@@ -112,6 +112,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
         private void remove(Key k){
             if(head.k.equals(k)){
                 head = head.next;
+                size--;
             }else{
                 Node<Key,Value> temp = head;
                 while(temp.next != null && !(temp.next.k.equals(k))){
@@ -119,6 +120,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key,Value> {
                 }
                 if(temp.next != null){
                     temp.next = temp.next.next;
+                    size--;
                 }
             }
         }

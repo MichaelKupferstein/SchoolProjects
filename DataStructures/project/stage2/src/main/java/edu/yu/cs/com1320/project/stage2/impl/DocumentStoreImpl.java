@@ -47,6 +47,13 @@ public class DocumentStoreImpl implements DocumentStore{
             this.hashTable.put(uri,null);
             return true;
         };
+        if(this.hashTable.containsKey(uri)){
+            DocumentImpl tempDoc = this.hashTable.get(uri);
+            func = (tempUri) -> {
+                this.hashTable.put(uri,tempDoc);
+                return true;
+            };
+        }
         Command tempCommand = new Command(uri, func);
         if(format.equals(DocumentFormat.BINARY)){
             DocumentImpl temp = new DocumentImpl(uri,bytes);
