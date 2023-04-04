@@ -99,7 +99,7 @@ public class TrieImpl<Value> implements Trie<Value> {
      *
      */
     @Override
-    public List getAllSorted(String key, Comparator<Value> comparator) {
+    public List<Value> getAllSorted(String key, Comparator<Value> comparator) {
         Node x = this.get(this.root,key, 0);
         if(x == null){
             return Collections.emptyList();
@@ -119,7 +119,7 @@ public class TrieImpl<Value> implements Trie<Value> {
      * @return a List of all matching Values containing the given prefix, in descending order
      */
     @Override
-    public List getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
+    public List<Value> getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
         Node x = this.get(this.root,prefix,0);
         if(x == null){
             return Collections.emptyList();
@@ -129,7 +129,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         return result;
     }
 
-    private List getAllLinksValues(Node x){
+    private List<Value> getAllLinksValues(Node x){
         List<Value> all = new ArrayList<>();
         all.addAll(x.values);
         for(Node links : x.links){
@@ -148,13 +148,13 @@ public class TrieImpl<Value> implements Trie<Value> {
      * @return a Set of all Values that were deleted.
      */
     @Override
-    public Set deleteAllWithPrefix(String prefix) {
+    public Set<Value> deleteAllWithPrefix(String prefix) {
         Node x = this.get(this.root, prefix, 0);
         if(x == null){
             return Collections.emptySet();
         }
-        List<Value> all = getAllLinksValues(x);
-        Set<Value> set = new HashSet<>(all);
+        Set<Value> set = new HashSet<>(getAllLinksValues(x));
+        x.values.clear();
         for(int i = 0; i < alphabetSize; i++){
             x.links[i] = null;
         }
@@ -168,8 +168,14 @@ public class TrieImpl<Value> implements Trie<Value> {
      * @return a Set of all Values that were deleted.
      */
     @Override
-    public Set deleteAll(String key) {
-        return null;
+    public Set<Value> deleteAll(String key) {
+        Node x = this.get(this.root, key, 0);
+        if(x == null){
+            return Collections.emptySet();
+        }
+        Set<Value> set = new HashSet<>(getAllLinksValues(x));
+        x.values.clear();
+        return set;
     }
 
     /**
