@@ -121,6 +121,9 @@ public class TrieImpl<Value> implements Trie<Value> {
     @Override
     public List getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
         Node x = this.get(this.root,prefix,0);
+        if(x == null){
+            return Collections.emptyList();
+        }
         List<Value> result = new ArrayList<>(getAllLinksValues(x));
         result.sort(comparator);
         return result;
@@ -146,7 +149,16 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Set deleteAllWithPrefix(String prefix) {
-        return null;
+        Node x = this.get(this.root, prefix, 0);
+        if(x == null){
+            return Collections.emptySet();
+        }
+        List<Value> all = getAllLinksValues(x);
+        Set<Value> set = new HashSet<>(all);
+        for(int i = 0; i < alphabetSize; i++){
+            x.links[i] = null;
+        }
+        return set;
     }
 
     /**
