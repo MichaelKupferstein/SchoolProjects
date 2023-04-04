@@ -120,7 +120,21 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public List getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
-        return null;
+        Node x = this.get(this.root,prefix,0);
+        List<Value> result = new ArrayList<>(getAllLinksValues(x));
+        result.sort(comparator);
+        return result;
+    }
+
+    private List getAllLinksValues(Node x){
+        List<Value> all = new ArrayList<>();
+        all.addAll(x.values);
+        for(Node links : x.links){
+            if(links != null){
+                all.addAll(getAllLinksValues(links));
+            }
+        }
+        return all;
     }
 
     /**
