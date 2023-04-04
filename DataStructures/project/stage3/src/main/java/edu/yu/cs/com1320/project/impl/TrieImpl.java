@@ -74,17 +74,14 @@ public class TrieImpl<Value> implements Trie<Value> {
         return -1;
     }
 
-    private Node get(Node x, String key, int d)
-    {
+    private Node get(Node x, String key, int d) {
         //link was null - return null, indicating a miss
-        if (x == null)
-        {
+        if (x == null) {
             return null;
         }
         //we've reached the last node in the key,
         //return the node
-        if (d == key.length())
-        {
+        if (d == key.length()) {
             return x;
         }
         //proceed to the next node in the chain of nodes that
@@ -104,7 +101,12 @@ public class TrieImpl<Value> implements Trie<Value> {
     @Override
     public List getAllSorted(String key, Comparator<Value> comparator) {
         Node x = this.get(this.root,key, 0);
-        return null;
+        if(x == null){
+            return Collections.emptyList();
+        }
+        List<Value> result = new ArrayList<>(x.values);
+        result.sort(comparator);
+        return result;
     }
 
     /**
