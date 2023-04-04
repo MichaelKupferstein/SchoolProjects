@@ -15,9 +15,16 @@ public interface HashTable<Key,Value>
 
     /**
      * @param k the key at which to store the value
-     * @param v the value to store
+     * @param v the value to store.
      * To delete an entry, put a null value.
      * @return if the key was already present in the HashTable, return the previous value stored for the key. If the key was not already present, return null.
      */
     Value put(Key k, Value v);
+
+    /**
+     * @param key the key whose presence in the hashtabe we are inquiring about
+     * @return true if the given key is present in the hashtable as a key, false if not
+     * @throws NullPointerException if the specified key is null
+     */
+    boolean containsKey(Key key);
 }
