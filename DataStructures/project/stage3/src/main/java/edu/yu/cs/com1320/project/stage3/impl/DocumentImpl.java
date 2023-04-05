@@ -95,6 +95,9 @@ public class DocumentImpl implements Document{
         String cleaned = this.txt.replaceAll("[^a-zA-Z0-9\\s]", "");
         String[] words = cleaned.split(" ");
         for(String word : words){
+            if(word.equals(" ") || word.equals("")){
+                continue;
+            }
             if(this.words.containsKey(word)){
                 int wordCount = this.words.get(word);
                 this.words.put(word,wordCount + 1);
