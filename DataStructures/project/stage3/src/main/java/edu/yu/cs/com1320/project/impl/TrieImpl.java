@@ -174,7 +174,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         if(x == null){
             return Collections.emptySet();
         }
-        Set<Value> set = new HashSet<>(getAllLinksValues(x));
+        Set<Value> set = new HashSet<>(x.values);
         x.values.clear();
         return set;
     }
