@@ -26,6 +26,7 @@ public class TrieImplTest {
         this.test.put("Toot",789);
         this.test.put("Toodle",101);
         this.test.put("Tool",234);
+        this.test.put("Too", 12345);
     }
 
     @Test
@@ -63,18 +64,31 @@ public class TrieImplTest {
         Set<Integer> testSet = new HashSet<>();
         testSet.addAll(Arrays.asList(123,456,789,101,234));
         assertEquals(testSet, this.test.deleteAllWithPrefix("Too"));
-    }
-
-    @Test
-    void deleteAllWithPrefix() {
+        assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("Too",Collections.reverseOrder()));
+        assertEquals(Collections.emptyList(), this.test.getAllSorted("Toot", Collections.reverseOrder()));
+        assertEquals(Collections.emptyList(), this.test.getAllSorted("Too", Collections.reverseOrder()));
     }
 
     @Test
     void deleteAll() {
+        Set<Integer> testSet = new HashSet<>();
+        testSet.addAll(Arrays.asList(123,12345));
+        assertEquals(testSet, this.test.deleteAll("Too"));
+        assertEquals(Collections.emptyList(),this.test.getAllSorted("Too",Collections.reverseOrder()));
+        List<Integer> testList = new ArrayList<>();
+        testList.add(456);
+        assertEquals(testList, this.test.getAllSorted("Tooth", Collections.reverseOrder() ));
     }
 
     @Test
     void delete() {
+        List<Integer> testList = new ArrayList<>();
+        testList.addAll(Arrays.asList(12345,123));
+        assertEquals(testList,this.test.getAllSorted("Too",Collections.reverseOrder()));
+        assertEquals(123, this.test.delete("Too", 123));
+        testList.remove(1);
+        assertEquals(testList,this.test.getAllSorted("Too",Collections.reverseOrder()));
+
     }
 
 }
