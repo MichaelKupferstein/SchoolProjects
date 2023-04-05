@@ -189,9 +189,9 @@ public class TrieImpl<Value> implements Trie<Value> {
     @Override
     public Value delete(String key, Value val) {
         Node x = this.get(this.root, key, 0);
-        if(x == null){
-            return null; //might need to throw excpetion not return null
-        }
+//        if(x == null){
+//            return null; //might need to throw excpetion not return null
+//        }
         if(x.values.remove(val)){
            return val;
         }

@@ -88,7 +88,17 @@ public class TrieImplTest {
         assertEquals(123, this.test.delete("Too", 123));
         testList.remove(1);
         assertEquals(testList,this.test.getAllSorted("Too",Collections.reverseOrder()));
-
     }
+
+    @Test
+    void deleteTest2(){
+        List<Integer> testList = new ArrayList<>();
+        testList.addAll(Arrays.asList(12345,123));
+        assertEquals(testList,this.test.getAllSorted("Too",Collections.reverseOrder()));
+        assertEquals(123, this.test.delete("Too", 123));
+        testList.remove(1);
+        assertNull(this.test.delete("Too",123));
+    }
+
 
 }
