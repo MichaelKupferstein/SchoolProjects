@@ -4,10 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 public class TrieImplTest {
@@ -22,10 +19,17 @@ public class TrieImplTest {
         this.test.put("Hell",203);
         this.test.put("Help", 911);
         this.test.put("He", 12);
+        this.test.put("hello",42);
+        this.test.put("hell",66);
+        this.test.put("Too",123);
+        this.test.put("Tooth",456);
+        this.test.put("Toot",789);
+        this.test.put("Toodle",101);
+        this.test.put("Tool",234);
     }
 
     @Test
-    void put() {
+    void intialTest() {
         List<Integer> testList = new ArrayList<>();
         testList.add(420);
         testList.add(69);
@@ -46,11 +50,19 @@ public class TrieImplTest {
     }
 
     @Test
-    void getAllSorted() {
+    void prefixTest() {
+        List<Integer> testList = new ArrayList<>();
+        testList.addAll(Arrays.asList(123,456,789,101,234));
+        testList.sort(Collections.reverseOrder());
+        assertEquals(testList, this.test.getAllWithPrefixSorted("Too", Collections.reverseOrder()));
+
     }
 
     @Test
-    void getAllWithPrefixSorted() {
+    void testingDeleteAll() {
+        Set<Integer> testSet = new HashSet<>();
+        testSet.addAll(Arrays.asList(123,456,789,101,234));
+        assertEquals(testSet, this.test.deleteAllWithPrefix("Too"));
     }
 
     @Test
