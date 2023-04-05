@@ -2,20 +2,22 @@ package edu.yu.cs.com1320.project.stage3.impl;
 import edu.yu.cs.com1320.project.stage3.Document;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 
 public class DocumentImpl implements Document{
 
     private URI uri;
     private String txt;
     private byte[] binaryData;
+    private Map<String,Integer> words;
     public DocumentImpl(URI uri, String txt) {
         if(uri == null || txt == null){
             throw new IllegalArgumentException();
         }
         this.uri = uri;
         this.txt = txt;
+        this.words = new HashMap<>();
+        this.addWords();
     }
     public DocumentImpl(URI uri, byte[] binaryData){
         if(uri == null || binaryData == null){
@@ -75,7 +77,7 @@ public class DocumentImpl implements Document{
     public int wordCount(String word) {
         //if its binary
         if(this.txt == null) return 0;
-        return 1;
+        return this.words.get(word);
     }
 
     /**
@@ -83,6 +85,22 @@ public class DocumentImpl implements Document{
      */
     @Override
     public Set<String> getWords() {
-        return null;
+        if(this.txt == null){
+            return Collections.emptySet();
+        }
+        return this.words.keySet();
+    }
+
+    private void addWords(){
+        String cleaned = this.txt.replaceAll("[^a-zA-Z0-9\\s]", "");
+        String[] words = cleaned.split(" ");
+        for(String word : words){
+            if(this.words.containsKey(word)){
+                int wordCount = this.words.get(word);
+                this.words.put(word,wordCount + 1);
+            }else{
+                this.words.put(word,1);
+            }
+        }
     }
 }
