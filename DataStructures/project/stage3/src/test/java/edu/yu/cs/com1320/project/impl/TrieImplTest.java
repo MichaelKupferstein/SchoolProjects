@@ -53,7 +53,7 @@ public class TrieImplTest {
     @Test
     void prefixTest() {
         List<Integer> testList = new ArrayList<>();
-        testList.addAll(Arrays.asList(123,456,789,101,234));
+        testList.addAll(Arrays.asList(123,456,789,101,234,12345));
         testList.sort(Collections.reverseOrder());
         assertEquals(testList, this.test.getAllWithPrefixSorted("Too", Collections.reverseOrder()));
 
@@ -62,7 +62,7 @@ public class TrieImplTest {
     @Test
     void testingDeleteAll() {
         Set<Integer> testSet = new HashSet<>();
-        testSet.addAll(Arrays.asList(123,456,789,101,234));
+        testSet.addAll(Arrays.asList(123,456,789,101,234,12345));
         assertEquals(testSet, this.test.deleteAllWithPrefix("Too"));
         assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("Too",Collections.reverseOrder()));
         assertEquals(Collections.emptyList(), this.test.getAllSorted("Toot", Collections.reverseOrder()));
