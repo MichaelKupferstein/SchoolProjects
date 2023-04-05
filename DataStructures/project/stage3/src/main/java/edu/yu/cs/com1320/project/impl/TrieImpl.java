@@ -9,10 +9,10 @@ public class TrieImpl<Value> implements Trie<Value> {
     private static final int alphabetSize = 62; //a-z A-Z 0-9
     private Node<Value> root;
     private class Node<Value>{
-        ArrayList<Value> values;
+        Set<Value> values;
         private Node[] links = new Node[TrieImpl.alphabetSize];
         private Node(){
-            values = new ArrayList<>();
+            values = new HashSet<>();
             for(int i = 0; i < TrieImpl.alphabetSize; i++){
                 links[i] = null;
             }
@@ -52,21 +52,22 @@ public class TrieImpl<Value> implements Trie<Value> {
         //proceed to the next node in the chain of nodes that
         //forms the desired key
         char c = key.charAt(d);
-        x.links[getArrayLoc(c)] = this.put(x.links[getArrayLoc(c)], key, val, d + 1);
+        int temp = this.getArrayLoc(c);
+        x.links[temp] = this.put(x.links[temp], key, val, d + 1);
         return x;
     }
 
     private int getArrayLoc(char c){
-        if(65<= c && c>= 90){
+        if(65<= c && c <= 90){
             //upper case A-Z
             //math to put it in array
-            return c-65;
+            return (int) c-65;
         }
-        if(97<= c && c>= 122){
+        if(97<= c && c<= 122){
             //lowerase a-z
             return c-71;
         }
-        if(48<= c && c>= 57){
+        if(48<= c && c<= 57){
             //numbers 0-9
             return c+4;
         }
@@ -187,6 +188,14 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Value delete(String key, Value val) {
+        Node x = this.get(this.root, key, 0);
+        if(x == null){
+            return null; //might need to throw excpetion not return null
+        }
+        if(x.values.remove(val)){
+           return val;
+        }
         return null;
+
     }
 }
