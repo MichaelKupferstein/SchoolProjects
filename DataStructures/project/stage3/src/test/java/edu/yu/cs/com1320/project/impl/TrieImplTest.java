@@ -27,6 +27,7 @@ public class TrieImplTest {
         this.test.put("Toodle",101);
         this.test.put("Tool",234);
         this.test.put("Too", 12345);
+        this.test.put("Tim",45);
     }
 
     @Test
