@@ -104,12 +104,15 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public List<Value> getAllSorted(String key, Comparator<Value> comparator) {
+        if(comparator == null){
+            throw new IllegalArgumentException();
+        }
         Node x = this.get(this.root,key, 0);
         if(x == null){
             return Collections.emptyList();
         }
         List<Value> result = new ArrayList<>(x.values);
-        result.sort(comparator);
+        result.sort(comparator.reversed());
         return result;
     }
 
@@ -124,12 +127,16 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public List<Value> getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
+        if(comparator == null){
+            throw new IllegalArgumentException();
+        }
         Node x = this.get(this.root,prefix,0);
         if(x == null){
             return Collections.emptyList();
         }
-        List<Value> result = new ArrayList<>(getAllLinksValues(x));
-        result.sort(comparator);
+        Set<Value> temp = new HashSet<>(getAllLinksValues(x));
+        ArrayList<Value> result = new ArrayList<>(temp);
+        result.sort(comparator.reversed());
         return result;
     }
 
@@ -192,7 +199,13 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Value delete(String key, Value val) {
+        if(val == null){
+            throw new IllegalArgumentException();
+        }
         Node x = this.get(this.root, key, 0);
+        if(x == null){
+            return null;
+        }
         if(x.values.remove(val)){
             checkIfEmpty(x);
             return val;
