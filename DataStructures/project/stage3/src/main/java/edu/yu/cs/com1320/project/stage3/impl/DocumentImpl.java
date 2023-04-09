@@ -77,6 +77,7 @@ public class DocumentImpl implements Document{
     public int wordCount(String word) {
         //if its binary
         if(this.txt == null) return 0;
+        if(!this.words.containsKey(word)) return 0;
         return this.words.get(word);
     }
 
@@ -92,7 +93,7 @@ public class DocumentImpl implements Document{
     }
 
     private void addWords(){
-        String cleaned = this.txt.replaceAll("[^a-zA-Z0-9\\s]", "");
+        String cleaned = this.txt.replaceAll("[^a-zA-Z0-9\\s]", "").replaceAll("[\r\n]", " ");
         String[] words = cleaned.split(" ");
         for(String word : words){
             if(word.equals(" ") || word.equals("")){
