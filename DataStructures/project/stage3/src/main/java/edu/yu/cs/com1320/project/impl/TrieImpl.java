@@ -6,19 +6,20 @@ import java.util.*;
 
 public class TrieImpl<Value> implements Trie<Value> {
 
-    private static final int alphabetSize = 62; //a-z A-Z 0-9
-    private Node<Value> root;
     private class Node<Value>{
         Set<Value> values;
         private Node[] links = new Node[TrieImpl.alphabetSize];
+        Node parent;
         private Node(){
-            values = new HashSet<>();
+            this.values = new HashSet<>();
             for(int i = 0; i < TrieImpl.alphabetSize; i++){
                 links[i] = null;
             }
+            this.parent = null;
         }
     }
-
+    private static final int alphabetSize = 62; //a-z A-Z 0-9
+    private Node<Value> root;
     public TrieImpl() {
         this.root = new Node<>();
     }
@@ -53,7 +54,9 @@ public class TrieImpl<Value> implements Trie<Value> {
         //forms the desired key
         char c = key.charAt(d);
         int temp = this.getArrayLoc(c);
+        Node par = x;
         x.links[temp] = this.put(x.links[temp], key, val, d + 1);
+        x.links[temp].parent = par;
         return x;
     }
 
@@ -189,13 +192,42 @@ public class TrieImpl<Value> implements Trie<Value> {
     @Override
     public Value delete(String key, Value val) {
         Node x = this.get(this.root, key, 0);
-//        if(x == null){
-//            return null; //might need to throw excpetion not return null
-//        }
         if(x.values.remove(val)){
-           return val;
+            checkIfEmpty(x);
+            return val;
         }
         return null;
 
+    }
+
+    private void checkIfEmpty(Node x){
+        if(x == null){
+            return;
+        }
+        Node z = x.parent;
+        if(z == null){
+            return;
+        }
+        if(isEmpty(x)){
+            List<Node> temp = Arrays.asList(z.links);
+            int index = temp.indexOf(x);
+            z.links[index] = null;
+            //x = null;
+        }
+        checkIfEmpty(z);
+    }
+
+    private boolean isEmpty(Node x){
+        boolean emptyValues = x.values.isEmpty();
+        boolean emptyLinks = true;
+        for(Node z : x.links){
+            if(z != null){
+                emptyLinks = false;
+            }
+        }
+        if(emptyValues && emptyLinks){
+            return true;
+        }
+        return false;
     }
 }

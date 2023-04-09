@@ -100,5 +100,31 @@ public class TrieImplTest {
         assertNull(this.test.delete("Too",123));
     }
 
+    @Test
+    void deleteTest3(){
+        this.test.put("Apple", 456);
+        this.test.put("App", 789);
+        this.test.put("Apples", 123);
+        this.test.put("Apendix", 1011);
+        //System.out.print(this.test.getAllWithPrefixSorted("Ap",Collections.reverseOrder()));
+        this.test.delete("App",789);
+        //System.out.print("\n" + this.test.getAllWithPrefixSorted("Ap",Collections.reverseOrder()));
+        this.test.delete("Apendix", 1011);
+        this.test.delete("Apples", 123);
+        this.test.delete("Apple", 456);
+        //this.test.deleteAllWithPrefix("App");
+        //System.out.print("\n" + this.test.getAllWithPrefixSorted("Ap",Collections.reverseOrder()));
+
+    }
+
+    @Test
+    void isEmptyTest(){
+        this.test.put("Test",402);
+        this.test.put("Test",403);
+        this.test.delete("Test",402);
+        this.test.delete("Test",403);
+        this.test.put("Abc",123);
+        String breakpoint = "Test";
+    }
 
 }
