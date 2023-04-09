@@ -8,9 +8,12 @@ import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage3.Document;
 import edu.yu.cs.com1320.project.stage3.DocumentStore;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -170,7 +173,8 @@ public class DocumentStoreImpl implements DocumentStore{
             if(tempCommand instanceof CommandSet<?>){
                 undoOnCommandSet((CommandSet) tempCommand, uri);
             }else{
-                if(tempCommand.equals(uri)){
+                GenericCommand tempComAsGen = (GenericCommand) tempCommand;
+                if(tempComAsGen.getTarget().equals(uri)){
                     tempCommand.undo();
                     found = true;
                     break;
@@ -205,7 +209,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> search(String keyword) {
-        return null;
+        return this.trie.getAllSorted(keyword,new docComp(keyword));
     }
 
     /**
@@ -218,7 +222,24 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> searchByPrefix(String keywordPrefix) {
-        return null;
+
+        Comparator<Document> tempComp = new Comparator<Document>() {
+            @Override
+            public int compare(Document o1, Document o2) {
+                return Integer.compare(prefCount(o1,keywordPrefix),prefCount(o2, keywordPrefix));
+            }
+            private int prefCount(Document doc, String pre){
+                Set<String> words = doc.getWords();
+                int prefixCount = 0;
+                for(String word : words){
+                    if(word.startsWith(pre)){
+                        prefixCount += doc.wordCount(word);
+                    }
+                }
+                return prefixCount;
+            }
+        };
+        return this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp);
     }
 
     /**
@@ -229,8 +250,26 @@ public class DocumentStoreImpl implements DocumentStore{
      * @return a Set of URIs of the documents that were deleted.
      */
     @Override
-    public Set<URI> deleteAll(String keyword) {
-        return null;
+    public Set<URI> deleteAll(String keyword){
+        Set<Document> docs = this.trie.deleteAll(keyword);
+        CommandSet<URI> tempCommandSet = new CommandSet<>();
+        for(Document doc : docs){
+            GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction(doc,keyword));
+            tempCommandSet.addCommand(tempGenericCom);
+        }
+        Set<URI> uris = new HashSet<>();
+        for(Document doc : docs){
+            uris.add(doc.getKey());
+        }
+        return uris;
+    }
+
+    private Function<URI,Boolean> createTrieDeleteFunction(Document doc, String keyword){
+        Function<URI,Boolean> result = (tempUri) ->{
+            this.trie.put(keyword,doc);
+            return true;
+        };
+        return result;
     }
 
     /**
@@ -242,7 +281,22 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Set<URI> deleteAllWithPrefix(String keywordPrefix) {
-        return null;
+        Set<Document> docs = this.trie.deleteAllWithPrefix(keywordPrefix);
+        Set<URI> uris = new HashSet<>();
+        for(Document doc : docs){
+            uris.add(doc.getKey());
+        }
+        return uris;
     }
 
+    private class docComp implements Comparator<Document>{
+        private String s;
+        private docComp(String s){
+            this.s = s;
+        }
+        @Override
+        public int compare(Document doc1, Document doc2){
+            return Integer.compare(doc1.wordCount(this.s), doc2.wordCount(this.s));
+        }
+    }
 }
