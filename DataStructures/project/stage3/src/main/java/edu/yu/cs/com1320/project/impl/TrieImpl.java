@@ -162,6 +162,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         for(int i = 0; i < alphabetSize; i++){
             x.links[i] = null;
         }
+        checkIfEmpty(x);
         return set;
     }
 
@@ -212,7 +213,6 @@ public class TrieImpl<Value> implements Trie<Value> {
             List<Node> temp = Arrays.asList(z.links);
             int index = temp.indexOf(x);
             z.links[index] = null;
-            //x = null;
         }
         checkIfEmpty(z);
     }
