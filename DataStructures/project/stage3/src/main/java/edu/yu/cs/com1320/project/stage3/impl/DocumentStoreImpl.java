@@ -8,7 +8,7 @@ import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage3.Document;
 import edu.yu.cs.com1320.project.stage3.DocumentStore;
 
-import javax.print.Doc;
+//import javax.print.Doc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -253,14 +253,13 @@ public class DocumentStoreImpl implements DocumentStore{
     public Set<URI> deleteAll(String keyword){
         Set<Document> docs = this.trie.deleteAll(keyword);
         CommandSet<URI> tempCommandSet = new CommandSet<>();
+        Set<URI> uris = new HashSet<>();
         for(Document doc : docs){
             GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction(doc,keyword));
             tempCommandSet.addCommand(tempGenericCom);
-        }
-        Set<URI> uris = new HashSet<>();
-        for(Document doc : docs){
             uris.add(doc.getKey());
         }
+        this.commandStack.push(tempCommandSet);
         return uris;
     }
 
@@ -283,9 +282,20 @@ public class DocumentStoreImpl implements DocumentStore{
     public Set<URI> deleteAllWithPrefix(String keywordPrefix) {
         Set<Document> docs = this.trie.deleteAllWithPrefix(keywordPrefix);
         Set<URI> uris = new HashSet<>();
+        CommandSet<URI> tempCommandSet = new CommandSet<>();
         for(Document doc : docs){
+            Set<String> words = doc.getWords();
+            Set<String> wordsWithPrefix = new HashSet<>();
+            for(String word : words){
+                if(word.startsWith(keywordPrefix)) {wordsWithPrefix.add(word);}
+            }
+            for(String prefixedWord : wordsWithPrefix){
+                GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction(doc,prefixedWord));
+                tempCommandSet.add(tempGenericCommand);
+            }
             uris.add(doc.getKey());
         }
+        this.commandStack.push(tempCommandSet);
         return uris;
     }
 
