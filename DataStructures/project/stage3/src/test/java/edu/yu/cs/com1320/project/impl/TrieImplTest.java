@@ -127,4 +127,23 @@ public class TrieImplTest {
         String breakpoint = "Test";
     }
 
+    @Test
+    void numberPutTest(){
+        this.test.put("124hello", 1685);
+        List<Integer> testList = new ArrayList<>();
+        testList.addAll(Arrays.asList(1685));
+        assertEquals(testList,this.test.getAllWithPrefixSorted("12",Collections.reverseOrder()));
+    }
+
+    @Test
+    void npcPutTest(){
+        assertThrows(IllegalArgumentException.class, ()-> this.test.put("$hhThisIsSecret", 1685));
+    }
+
+    @Test
+    void emptyListandSetTest(){
+        assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("boom",Collections.reverseOrder()));
+        assertEquals(Collections.emptySet(),this.test.deleteAllWithPrefix("xyz"));
+        assertEquals(Collections.emptySet(),this.test.deleteAll("x"));
+    }
 }
