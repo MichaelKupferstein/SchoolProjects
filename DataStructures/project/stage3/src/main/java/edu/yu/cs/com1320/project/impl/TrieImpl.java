@@ -75,7 +75,7 @@ public class TrieImpl<Value> implements Trie<Value> {
             return c+4;
         }
         //if its not a valid character, (not a-z, A-Z,0-9)
-        return -1;
+        throw new IllegalArgumentException("Character " + c + " is not a valid character (a-zA-Z1-9)");
     }
 
     private Node get(Node x, String key, int d) {
