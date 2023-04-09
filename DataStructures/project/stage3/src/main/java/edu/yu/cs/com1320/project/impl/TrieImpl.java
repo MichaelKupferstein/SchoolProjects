@@ -64,7 +64,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         if(65<= c && c <= 90){
             //upper case A-Z
             //math to put it in array
-            return (int) c-65;
+            return c-65;
         }
         if(97<= c && c<= 122){
             //lowerase a-z
