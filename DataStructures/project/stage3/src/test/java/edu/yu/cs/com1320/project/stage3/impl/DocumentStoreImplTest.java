@@ -13,9 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import static edu.yu.cs.com1320.project.stage3.DocumentStore.DocumentFormat.BINARY;
 import static edu.yu.cs.com1320.project.stage3.DocumentStore.DocumentFormat.TXT;
@@ -297,6 +295,43 @@ public class DocumentStoreImplTest {
         List<Document> tempList = this.docStore.search("is");
         List<Document> tempList2 = this.docStore.searchByPrefix("B");
         String breakPoint = "Test";
+    }
+
+    @Test
+    void newMethodTest()throws Exception{
+        URI uri1 = generateRandomURI();
+        URI uri2 = generateRandomURI();
+        URI uri3 = generateRandomURI();
+        String testTXT1 = "this document is going to contain a lot of words that start with the letters th, for example their, them " +
+                "this, that, through, tough, all of those words start with the prefix th, some are even just th. the next doucment wont have " +
+                "as much th's as this one and that is becuase i want it like that. this or that this or that there or their or even they're all " +
+                "those words have the correct prefix adding your faviorte yo-yo";
+        String testTXT2 = "Once upon a time there was a man. this man was testing his computer code for his assigment and he typed out all these " +
+                "long strings. but this string wont have as many th's as the one above it so it should come second or third when i get all with prefix " +
+                " however how many times does the prefix ho appear. even though im jewish i know santa says ho ho ho ho. i also know that that a hoe is " +
+                "a gardening tool and that a hole cant really be endless, however sometimes in movies or video games they are. hope i can test this properly " +
+                "i will hop if i do and jump through hoops, not basketball hoops but regular hoops with hopes in them like you";
+        String testTXT3 = "You dont know how many yous there are in a yogurt, as you can tell that sentance didnt make sense, thats because i hoped it wouldnt" +
+                " you see, im trying to write words with the prefix yo so there arent many, theres you, your, you're, yo, yogurt, yo-yo, yourself. I might have" +
+                " to do yoga to relax my brain and discover some words, or maybe i'll crack an egg and drink the yolk so i can yoddle. I feel like i have a yolk " +
+                "weighing me down like a yogi bear";
+        byte[] txt1In = testTXT1.getBytes();
+        byte[] txt2In = testTXT2.getBytes();
+        byte[] txt3In = testTXT3.getBytes();
+        DocumentImpl txt1 = new DocumentImpl(uri1,testTXT1);
+        DocumentImpl txt2 = new DocumentImpl(uri2,testTXT2);
+        DocumentImpl txt3 = new DocumentImpl(uri3,testTXT3);
+        this.docStore.put(new ByteArrayInputStream(txt1In),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt2In),uri2,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt3In),uri3,TXT);
+        List<Document> docsWithTh = new ArrayList<>(Arrays.asList(txt1,txt2,txt3));
+        assertEquals(docsWithTh, this.docStore.searchByPrefix("th"));
+        List<Document> docsWithHo = new ArrayList<>(Arrays.asList(txt2,txt3));
+        assertEquals(docsWithHo, this.docStore.searchByPrefix("ho"));
+        List<Document> docsWithYo = new ArrayList<>(Arrays.asList(txt3,txt1,txt2));
+        assertEquals(docsWithYo, this.docStore.searchByPrefix("yo"));
+
+
     }
 
     private InputStream readFileToInputStream(String filePath){
