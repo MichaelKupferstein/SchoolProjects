@@ -186,7 +186,13 @@ public class DocumentStoreImpl implements DocumentStore{
         while(this.commandStack.size() != 0){
             Undoable tempCommand = this.commandStack.pop();
             if(tempCommand instanceof CommandSet<?>){
-                undoOnCommandSet((CommandSet) tempCommand, uri);
+                if(undoOnCommandSet((CommandSet) tempCommand, uri)){
+                    if( ((CommandSet<?>) tempCommand).size() >= 1){
+                        this.commandStack.push(tempCommand);
+                    }
+                    found = true;
+                    break;
+                }
             }else{
                 GenericCommand tempComAsGen = (GenericCommand) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
@@ -208,11 +214,11 @@ public class DocumentStoreImpl implements DocumentStore{
         }
     }
 
-    private void undoOnCommandSet(CommandSet cmdSet, URI uri){
+    private Boolean undoOnCommandSet(CommandSet cmdSet, URI uri){
         if(!cmdSet.containsTarget(uri)){
-            return;
+            return false;
         }
-        cmdSet.undo(uri);
+        return cmdSet.undo(uri);
     }
     /**
      * Retrieve all documents whose text contains the given keyword.
@@ -269,17 +275,25 @@ public class DocumentStoreImpl implements DocumentStore{
         CommandSet<URI> tempCommandSet = new CommandSet<>();
         Set<URI> uris = new HashSet<>();
         for(Document doc : docs){
-            GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction(doc,keyword));
+            GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc));
             tempCommandSet.addCommand(tempGenericCom);
             uris.add(doc.getKey());
+            deleteFromTrie(doc.getKey());
+            this.hashTable.put(doc.getKey(),null);
+
         }
         this.commandStack.push(tempCommandSet);
         return uris;
     }
 
-    private Function<URI,Boolean> createTrieDeleteFunction(Document doc, String keyword){
+    private Function<URI,Boolean> createTrieDeleteFunction(DocumentImpl doc){
         Function<URI,Boolean> result = (tempUri) ->{
-            this.trie.put(keyword,doc);
+            Set<String> words = doc.getWords();
+            for(String word : words){
+                this.trie.put(word,doc);
+            }
+            //this.trie.put(keyword,doc);
+            this.hashTable.put(doc.getKey(),doc);
             return true;
         };
         return result;
@@ -303,11 +317,15 @@ public class DocumentStoreImpl implements DocumentStore{
             for(String word : words){
                 if(word.startsWith(keywordPrefix)) {wordsWithPrefix.add(word);}
             }
-            for(String prefixedWord : wordsWithPrefix){
-                GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction(doc,prefixedWord));
-                tempCommandSet.add(tempGenericCommand);
-            }
+//            for(String prefixedWord : wordsWithPrefix){
+//                GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc,prefixedWord));
+//                tempCommandSet.addCommand(tempGenericCommand);
+//            }
+            GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc));
+            tempCommandSet.addCommand(tempGenericCommand);
             uris.add(doc.getKey());
+            deleteFromTrie(doc.getKey());
+            this.hashTable.put(doc.getKey(),null);
         }
         this.commandStack.push(tempCommandSet);
         return uris;

@@ -363,6 +363,59 @@ public class DocumentStoreImplTest {
         assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
         assertEquals(Arrays.asList(txt3,txt1,txt2), this.docStore.searchByPrefix("yo"));
         assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.search("the"));
+
+        Set<URI> AllUriSet = new HashSet<>(Arrays.asList(uri1,uri2,uri3));
+        Set<URI> uriSetWithUri1 = new HashSet<>(Arrays.asList(uri1));
+        assertEquals(uriSetWithUri1,this.docStore.deleteAll("zoo"));
+        assertEquals(Collections.emptyList(),this.docStore.search("zoo"));
+        assertNull(this.docStore.get(uri1));
+        assertEquals(Arrays.asList(txt2,txt3), this.docStore.searchByPrefix("th"));
+        //---//
+        this.docStore.undo();
+        assertEquals(Arrays.asList(txt1), this.docStore.search("zoo"));
+        assertEquals(txt1, this.docStore.get(uri1));
+
+        assertEquals(uriSetWithUri1, this.docStore.deleteAllWithPrefix("zoo"));
+        assertEquals(Collections.emptyList(),this.docStore.search("zoo"));
+        assertEquals(Arrays.asList(txt2,txt3), this.docStore.searchByPrefix("th"));
+        assertNull(this.docStore.get(uri1));
+        this.docStore.undo();
+        assertEquals(Arrays.asList(txt1), this.docStore.search("zoo"));
+        assertEquals(txt1, this.docStore.get(uri1));
+
+        assertEquals(AllUriSet, this.docStore.deleteAllWithPrefix("th"));
+        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("th"));
+        assertNull(this.docStore.get(uri1));
+        assertNull(this.docStore.get(uri2));
+        assertNull(this.docStore.get(uri3));
+        this.docStore.undo(uri2);
+        assertNull(this.docStore.get(uri1));
+        assertEquals(txt2,this.docStore.get(uri2));
+        assertNull(this.docStore.get(uri3));
+        String breakpoint = "breakpont";
+        this.docStore.undo(uri3);
+        assertEquals(txt3,this.docStore.get(uri3));
+
+        this.docStore.undo(uri1);
+        assertEquals(txt1,this.docStore.get(uri1));
+        assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
+
+
+        assertEquals(AllUriSet, this.docStore.deleteAllWithPrefix("th"));
+        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("th"));
+        assertNull(this.docStore.get(uri1));
+        assertNull(this.docStore.get(uri2));
+        assertNull(this.docStore.get(uri3));
+        breakpoint = "breakpont";
+        this.docStore.undo();
+        breakpoint = "breakpont";
+        assertEquals(txt1,this.docStore.get(uri1));
+        assertEquals(txt2,this.docStore.get(uri2));
+        assertEquals(txt3,this.docStore.get(uri3));
+        assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
+
+
+
     }
 
     private InputStream readFileToInputStream(String filePath){
