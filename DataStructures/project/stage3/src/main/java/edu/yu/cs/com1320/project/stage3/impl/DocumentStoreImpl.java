@@ -8,7 +8,6 @@ import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage3.Document;
 import edu.yu.cs.com1320.project.stage3.DocumentStore;
 
-//import javax.print.Doc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -132,17 +131,32 @@ public class DocumentStoreImpl implements DocumentStore{
             DocumentImpl tempDoc = this.hashTable.get(uri);
             Function<URI, Boolean> func = (tempUri) ->{
                 this.hashTable.put(uri,tempDoc);
+                addToTrie(uri);
                 return true;
             };
             GenericCommand tempCommand = new GenericCommand(uri, func);
             this.commandStack.push(tempCommand);
+            deleteFromTrie(uri);
             this.hashTable.put(uri,null);
             return true;
         }
         //returns false if the document doesn't exist
         return false;
     }
-
+    private void addToTrie(URI uri){
+        DocumentImpl doc = this.hashTable.get(uri);
+        Set<String> words = doc.getWords();
+        for(String word : words){
+            this.trie.put(word,doc);
+        }
+    }
+    private void deleteFromTrie(URI uri){
+        DocumentImpl doc = this.hashTable.get(uri);
+        Set<String> words = doc.getWords();
+        for(String word : words){
+            this.trie.delete(word,doc);
+        }
+    }
     /**
      * undo the last put or delete command
      *
