@@ -48,20 +48,22 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         byte[] bytes = input.readAllBytes();
         input.close();
-        Function<URI, Boolean> func = createFunction(uri,null);
-        if(this.hashTable.containsKey(uri)){
-            DocumentImpl tempDoc = this.hashTable.get(uri);
-            func = createFunction(uri, tempDoc);
-        }
-        GenericCommand tempCommand = new GenericCommand(uri, func);
+//        Function<URI, Boolean> func = createFunction(uri,null);
+//        if(this.hashTable.containsKey(uri)){
+//            DocumentImpl tempDoc = this.hashTable.get(uri);
+//            func = createFunction(uri, tempDoc);
+//        }
+//        GenericCommand tempCommand = new GenericCommand(uri, func);
         if(format.equals(DocumentFormat.BINARY)){
             DocumentImpl temp = new DocumentImpl(uri,bytes);
+            GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),temp);
             DocumentImpl v = this.hashTable.put(uri,temp);
             this.commandStack.push(tempCommand);
             addWordsToTrie(temp, v);
             return returnValue(v);
         }else if(format.equals(DocumentFormat.TXT)){
             DocumentImpl temp = new DocumentImpl(uri, new String(bytes));
+            GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),temp);
             DocumentImpl v = this.hashTable.put(uri,temp);
             this.commandStack.push(tempCommand);
             addWordsToTrie(temp, v);
@@ -70,6 +72,26 @@ public class DocumentStoreImpl implements DocumentStore{
         return 0;
     }
 
+    private GenericCommand<URI> createGenericCom(URI uri, DocumentImpl replaceOrNull, DocumentImpl doc ){
+        Function<URI, Boolean> func = (tempUri) -> {
+            this.hashTable.put(uri,replaceOrNull);
+            Set<String> words = doc.getWords();
+            for(String word : words){
+                this.trie.delete(word,doc);
+            }
+            return true;
+        };
+//          if the table contained the uri then its a replace so
+//        if(this.hashTable.containsKey(uri)){
+//            DocumentImpl tempDoc = this.hashTable.get(uri);
+//            func = (tempUri) ->{
+//                    this.hashTable.put(uri,tempDoc);
+//                    return true;
+//            };
+//        }
+        GenericCommand<URI> results = new GenericCommand<>(uri,func);
+        return results;
+    }
     private void addWordsToTrie(DocumentImpl doc, DocumentImpl v){
         if(returnValue(v) != 0){
             //it already existed and this is a replace then delete its value from all its old words
@@ -84,13 +106,7 @@ public class DocumentStoreImpl implements DocumentStore{
             this.trie.put(word,doc);
         }
     }
-    private Function<URI,Boolean> createFunction(URI uri, DocumentImpl doc){
-        Function<URI, Boolean> func = (tempUri) -> {
-            this.hashTable.put(uri,doc);
-            return true;
-        };
-        return func;
-    }
+
     private int callDelete(URI uri){
         if(this.hashTable.containsKey(uri)){
             DocumentImpl temp = this.hashTable.get(uri);
@@ -222,7 +238,6 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> searchByPrefix(String keywordPrefix) {
-
         Comparator<Document> tempComp = new Comparator<Document>() {
             @Override
             public int compare(Document o1, Document o2) {
