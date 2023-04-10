@@ -48,30 +48,23 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         byte[] bytes = input.readAllBytes();
         input.close();
-//        Function<URI, Boolean> func = createFunction(uri,null);
-//        if(this.hashTable.containsKey(uri)){
-//            DocumentImpl tempDoc = this.hashTable.get(uri);
-//            func = createFunction(uri, tempDoc);
-//        }
-//        GenericCommand tempCommand = new GenericCommand(uri, func);
         if(format.equals(DocumentFormat.BINARY)){
             DocumentImpl temp = new DocumentImpl(uri,bytes);
-            GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),temp);
-            DocumentImpl v = this.hashTable.put(uri,temp);
-            this.commandStack.push(tempCommand);
-            addWordsToTrie(temp, v);
-            return returnValue(v);
+            return logicBlock(uri,temp);
         }else if(format.equals(DocumentFormat.TXT)){
             DocumentImpl temp = new DocumentImpl(uri, new String(bytes));
-            GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),temp);
-            DocumentImpl v = this.hashTable.put(uri,temp);
-            this.commandStack.push(tempCommand);
-            addWordsToTrie(temp, v);
-            return returnValue(v);
+            return logicBlock(uri,temp);
         }
         return 0;
     }
 
+    private int logicBlock(URI uri, DocumentImpl doc){
+        GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc);
+        DocumentImpl v = this.hashTable.put(uri,doc);
+        this.commandStack.push(tempCommand);
+        addWordsToTrie(doc, v);
+        return returnValue(v);
+    }
     private GenericCommand<URI> createGenericCom(URI uri, DocumentImpl replaceOrNull, DocumentImpl doc ){
         Function<URI, Boolean> func = (tempUri) -> {
             this.hashTable.put(uri,replaceOrNull);
@@ -81,14 +74,6 @@ public class DocumentStoreImpl implements DocumentStore{
             }
             return true;
         };
-//          if the table contained the uri then its a replace so
-//        if(this.hashTable.containsKey(uri)){
-//            DocumentImpl tempDoc = this.hashTable.get(uri);
-//            func = (tempUri) ->{
-//                    this.hashTable.put(uri,tempDoc);
-//                    return true;
-//            };
-//        }
         GenericCommand<URI> results = new GenericCommand<>(uri,func);
         return results;
     }
