@@ -310,7 +310,7 @@ public class DocumentStoreImplTest {
                 "long strings. but this string wont have as many th's as the one above it so it should come second or third when i get all with prefix " +
                 " however how many times does the prefix ho appear. even though im jewish i know santa says ho ho ho ho. i also know that that a hoe is " +
                 "a gardening tool and that a hole cant really be endless, however sometimes in movies or video games they are. hope i can test this properly " +
-                "i will hop if i do and jump through hoops, not basketball hoops but regular hoops with hopes in them like you";
+                "i will hop if i do and jump through hoops, not basketball hoops but regular hoops with hopes in them like you, the end";
         String testTXT3 = "You dont know how many yous there are in a yogurt, as you can tell that sentance didnt make sense, thats because i hoped it wouldnt" +
                 " you see, im trying to write words with the prefix yo so there arent many, theres you, your, you're, yo, yogurt, yo-yo, yourself. I might have" +
                 " to do yoga to relax my brain and discover some words, or maybe i'll crack an egg and drink the yolk so i can yoddle. I feel like i have a yolk " +
@@ -330,6 +330,11 @@ public class DocumentStoreImplTest {
         assertEquals(docsWithHo, this.docStore.searchByPrefix("ho"));
         List<Document> docsWithYo = new ArrayList<>(Arrays.asList(txt3,txt1,txt2));
         assertEquals(docsWithYo, this.docStore.searchByPrefix("yo"));
+        assertEquals(docsWithTh, this.docStore.search("the"));
+        List<Document> docWithHoops = new ArrayList<>(Arrays.asList(txt2));
+        assertEquals(docWithHoops, this.docStore.search("hoops"));
+        assertEquals(Collections.emptyList(),this.docStore.search("Supercalifragilisticexpialidocious"));
+        assertEquals(Arrays.asList(txt3),this.docStore.search("yoga"));
 
 
     }
