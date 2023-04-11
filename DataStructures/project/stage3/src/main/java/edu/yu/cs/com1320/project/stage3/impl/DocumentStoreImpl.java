@@ -292,7 +292,6 @@ public class DocumentStoreImpl implements DocumentStore{
             for(String word : words){
                 this.trie.put(word,doc);
             }
-            //this.trie.put(keyword,doc);
             this.hashTable.put(doc.getKey(),doc);
             return true;
         };
@@ -317,10 +316,6 @@ public class DocumentStoreImpl implements DocumentStore{
             for(String word : words){
                 if(word.startsWith(keywordPrefix)) {wordsWithPrefix.add(word);}
             }
-//            for(String prefixedWord : wordsWithPrefix){
-//                GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc,prefixedWord));
-//                tempCommandSet.addCommand(tempGenericCommand);
-//            }
             GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc));
             tempCommandSet.addCommand(tempGenericCommand);
             uris.add(doc.getKey());
