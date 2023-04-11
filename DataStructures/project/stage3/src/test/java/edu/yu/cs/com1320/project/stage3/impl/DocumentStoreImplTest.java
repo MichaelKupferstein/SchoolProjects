@@ -413,6 +413,7 @@ public class DocumentStoreImplTest {
         assertEquals(txt2,this.docStore.get(uri2));
         assertEquals(txt3,this.docStore.get(uri3));
         assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
+        breakpoint = "breakpont";
 
 
 
