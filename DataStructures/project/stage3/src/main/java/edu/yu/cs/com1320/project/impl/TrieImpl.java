@@ -35,6 +35,9 @@ public class TrieImpl<Value> implements Trie<Value> {
         if(val == null){
             return;
         }else{
+            if(key == null){
+                throw new IllegalArgumentException();
+            }
             this.root = put(this.root, key, val, 0);
         }
     }
@@ -104,7 +107,7 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public List<Value> getAllSorted(String key, Comparator<Value> comparator) {
-        if(comparator == null){
+        if(comparator == null || key == null){
             throw new IllegalArgumentException();
         }
         Node x = this.get(this.root,key, 0);
@@ -127,7 +130,7 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public List<Value> getAllWithPrefixSorted(String prefix, Comparator<Value> comparator) {
-        if(comparator == null){
+        if(comparator == null || prefix == null){
             throw new IllegalArgumentException();
         }
         Node x = this.get(this.root,prefix,0);
@@ -160,6 +163,9 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Set<Value> deleteAllWithPrefix(String prefix) {
+        if(prefix == null){
+            throw new IllegalArgumentException();
+        }
         Node x = this.get(this.root, prefix, 0);
         if(x == null){
             return Collections.emptySet();
@@ -181,6 +187,9 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Set<Value> deleteAll(String key) {
+        if(key == null){
+            throw new IllegalArgumentException();
+        }
         Node x = this.get(this.root, key, 0);
         if(x == null){
             return Collections.emptySet();
@@ -199,7 +208,7 @@ public class TrieImpl<Value> implements Trie<Value> {
      */
     @Override
     public Value delete(String key, Value val) {
-        if(val == null){
+        if(val == null || key == null){
             throw new IllegalArgumentException();
         }
         Node x = this.get(this.root, key, 0);
