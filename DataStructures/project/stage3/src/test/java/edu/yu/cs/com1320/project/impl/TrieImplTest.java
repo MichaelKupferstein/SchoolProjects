@@ -139,12 +139,26 @@ public class TrieImplTest {
     @Test
     void npcPutTest(){
         assertThrows(IllegalArgumentException.class, ()-> this.test.put("$hhThisIsSecret", 1685));
+        assertThrows(IllegalArgumentException.class, ()-> this.test.put("ShhThi$IsSecret", 1685));
+        assertThrows(IllegalArgumentException.class, ()-> this.test.put("ShhThisIsSecret$", 1685));
+
     }
+
 
     @Test
     void emptyListandSetTest(){
         assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("boom",Comparator.naturalOrder()));
         assertEquals(Collections.emptySet(),this.test.deleteAllWithPrefix("xyz"));
         assertEquals(Collections.emptySet(),this.test.deleteAll("x"));
+    }
+
+    @Test
+    void searchingWithAnInvalidInput(){
+        assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("Th$s",Comparator.naturalOrder()));
+        assertEquals(Collections.emptyList(),this.test.getAllWithPrefixSorted("Thi$",Comparator.naturalOrder()));
+        assertEquals(Collections.emptyList(),this.test.getAllSorted("%#$",Comparator.naturalOrder()));
+        assertEquals(Collections.emptySet(),this.test.deleteAll("thisssss$"));
+        assertEquals(Collections.emptySet(),this.test.deleteAllWithPrefix("$"));
+        assertNull(this.test.delete("%",3));
     }
 }
