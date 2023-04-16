@@ -96,6 +96,17 @@ public class TrieImpl<Value> implements Trie<Value> {
         char c = key.charAt(d);
         return this.get(x.links[getArrayLoc(c)], key, d + 1);
     }
+
+    private boolean isClean(String s){
+        for(int i = 0; i < s.length(); i++){
+            try{
+                getArrayLoc(s.charAt(i));
+            }catch(IllegalArgumentException e){
+                return false;
+            }
+        }
+        return true;
+    }
     /**
      * get all exact matches for the given key, sorted in descending order.
      * Search is CASE SENSITIVE.
@@ -109,6 +120,9 @@ public class TrieImpl<Value> implements Trie<Value> {
     public List<Value> getAllSorted(String key, Comparator<Value> comparator) {
         if(comparator == null || key == null){
             throw new IllegalArgumentException();
+        }
+        if(!isClean(key)){
+            return Collections.emptyList();
         }
         Node x = this.get(this.root,key, 0);
         if(x == null){
@@ -133,6 +147,9 @@ public class TrieImpl<Value> implements Trie<Value> {
         if(comparator == null || prefix == null){
             throw new IllegalArgumentException();
         }
+        if(!isClean(prefix)){
+            return Collections.emptyList();
+        }
         Node x = this.get(this.root,prefix,0);
         if(x == null){
             return Collections.emptyList();
@@ -142,6 +159,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         result.sort(comparator.reversed());
         return result;
     }
+
 
     private List<Value> getAllLinksValues(Node x){
         List<Value> all = new ArrayList<>();
@@ -165,6 +183,9 @@ public class TrieImpl<Value> implements Trie<Value> {
     public Set<Value> deleteAllWithPrefix(String prefix) {
         if(prefix == null){
             throw new IllegalArgumentException();
+        }
+        if(!isClean(prefix)){
+            return Collections.emptySet();
         }
         Node x = this.get(this.root, prefix, 0);
         if(x == null){
@@ -190,12 +211,16 @@ public class TrieImpl<Value> implements Trie<Value> {
         if(key == null){
             throw new IllegalArgumentException();
         }
+        if(!isClean(key)){
+            return Collections.emptySet();
+        }
         Node x = this.get(this.root, key, 0);
         if(x == null){
             return Collections.emptySet();
         }
         Set<Value> set = new HashSet<>(x.values);
         x.values.clear();
+        checkIfEmpty(x);
         return set;
     }
 
@@ -210,6 +235,9 @@ public class TrieImpl<Value> implements Trie<Value> {
     public Value delete(String key, Value val) {
         if(val == null || key == null){
             throw new IllegalArgumentException();
+        }
+        if(!isClean(key)){
+            return null;
         }
         Node x = this.get(this.root, key, 0);
         if(x == null){
