@@ -129,7 +129,7 @@ public class TrieImpl<Value> implements Trie<Value> {
             return Collections.emptyList();
         }
         List<Value> result = new ArrayList<>(x.values);
-        result.sort(comparator.reversed());
+        result.sort(comparator);
         return result;
     }
 
@@ -156,7 +156,7 @@ public class TrieImpl<Value> implements Trie<Value> {
         }
         Set<Value> temp = new HashSet<>(getAllLinksValues(x));
         ArrayList<Value> result = new ArrayList<>(temp);
-        result.sort(comparator.reversed());
+        result.sort(comparator);
         return result;
     }
 
