@@ -229,7 +229,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> search(String keyword) {
-        return this.trie.getAllSorted(keyword,new docComp(keyword));
+        return this.trie.getAllSorted(keyword,new docComp(keyword).reversed());
     }
 
     /**
@@ -258,7 +258,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 return prefixCount;
             }
         };
-        return this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp);
+        return this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp.reversed());
     }
 
     /**
