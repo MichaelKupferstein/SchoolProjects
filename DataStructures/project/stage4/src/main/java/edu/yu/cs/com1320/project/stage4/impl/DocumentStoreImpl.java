@@ -10,11 +10,9 @@ import edu.yu.cs.com1320.project.stage4.DocumentStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
+import static java.lang.System.nanoTime;
 
 public class DocumentStoreImpl implements DocumentStore{
     private HashTableImpl<URI,DocumentImpl> hashTable;
@@ -63,6 +61,7 @@ public class DocumentStoreImpl implements DocumentStore{
         DocumentImpl v = this.hashTable.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
+        doc.setLastUseTime(nanoTime());
         return returnValue(v);
     }
     private GenericCommand<URI> createGenericCom(URI uri, DocumentImpl replaceOrNull, DocumentImpl doc ){
@@ -116,7 +115,9 @@ public class DocumentStoreImpl implements DocumentStore{
     @Override
     public Document get(URI uri) {
         if(this.hashTable.containsKey(uri)) {
-            return this.hashTable.get(uri);
+            DocumentImpl t = this.hashTable.get(uri);
+            t.setLastUseTime(nanoTime());
+            return t;
         }
         return null;
     }
@@ -135,7 +136,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 addToTrie(uri);
                 return true;
             };
-            GenericCommand tempCommand = new GenericCommand(uri, func);
+            GenericCommand<URI> tempCommand = new GenericCommand<>(uri, func);
             this.commandStack.push(tempCommand);
             deleteFromTrie(uri);
             this.hashTable.put(uri,null);
@@ -168,7 +169,21 @@ public class DocumentStoreImpl implements DocumentStore{
         if(this.commandStack.size() == 0){
             throw new IllegalStateException();
         }
-        this.commandStack.pop().undo();
+        Undoable temp = this.commandStack.pop();
+        if(temp instanceof CommandSet<?>){
+            Iterator<?> iterator= ((CommandSet<?>) temp).iterator();
+            while(iterator.hasNext()){
+                Object o = iterator.next();
+                GenericCommand<URI> tempGC = (GenericCommand<URI>) o;
+                DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
+                tempDoc.setLastUseTime(nanoTime());
+            }
+        }else{
+            GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
+            DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
+            tempDoc.setLastUseTime(nanoTime());
+        }
+        temp.undo();
     }
 
     /**

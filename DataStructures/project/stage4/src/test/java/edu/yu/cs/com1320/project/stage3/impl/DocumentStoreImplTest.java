@@ -44,6 +44,7 @@ public class DocumentStoreImplTest {
         DocumentImpl temp = new DocumentImpl(uri,byteArray);
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,BINARY));
         assertEquals(temp,this.docStore.get(uri));
+        String breakPoint = "break";
     }
 
     @Test
