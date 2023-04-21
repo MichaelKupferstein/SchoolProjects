@@ -20,6 +20,8 @@ public class DocumentStoreImpl implements DocumentStore{
     private HashTableImpl<URI,DocumentImpl> hashTable;
     private StackImpl<Undoable> commandStack;
     private TrieImpl<Document> trie;
+    private int docLimit;
+    private int byteLimit;
 
     public DocumentStoreImpl() {
         this.hashTable = new HashTableImpl<>();
@@ -332,7 +334,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentCount(int limit) {
-
+        this.docLimit = limit;
     }
 
     /**
@@ -342,7 +344,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentBytes(int limit) {
-
+        this.byteLimit = limit;
     }
 
     private class docComp implements Comparator<Document>{
