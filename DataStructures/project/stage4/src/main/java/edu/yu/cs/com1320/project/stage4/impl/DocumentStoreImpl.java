@@ -7,6 +7,8 @@ import edu.yu.cs.com1320.project.impl.StackImpl;
 import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage4.Document;
 import edu.yu.cs.com1320.project.stage4.DocumentStore;
+
+import javax.print.Doc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -171,17 +173,21 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         Undoable temp = this.commandStack.pop();
         if(temp instanceof CommandSet<?>){
-            Iterator<?> iterator= ((CommandSet<?>) temp).iterator();
+            Iterator<?> iterator = ((CommandSet<?>) temp).iterator();
             while(iterator.hasNext()){
                 Object o = iterator.next();
                 GenericCommand<URI> tempGC = (GenericCommand<URI>) o;
                 DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
-                tempDoc.setLastUseTime(nanoTime());
+                if(tempDoc != null){
+                    tempDoc.setLastUseTime(nanoTime());
+                }
             }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
             DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
-            tempDoc.setLastUseTime(nanoTime());
+            if(tempDoc != null){
+                tempDoc.setLastUseTime(nanoTime());
+            }
         }
         temp.undo();
     }
@@ -212,6 +218,10 @@ public class DocumentStoreImpl implements DocumentStore{
             }else{
                 GenericCommand tempComAsGen = (GenericCommand) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
+                    DocumentImpl temp = this.hashTable.get(uri);
+                    if(temp != null){
+                        temp.setLastUseTime(nanoTime());
+                    }
                     tempCommand.undo();
                     found = true;
                     break;
@@ -233,6 +243,10 @@ public class DocumentStoreImpl implements DocumentStore{
     private Boolean undoOnCommandSet(CommandSet cmdSet, URI uri){
         if(!cmdSet.containsTarget(uri)){
             return false;
+        }
+        DocumentImpl temp = this.hashTable.get(uri);
+        if(temp != null){
+            temp.setLastUseTime(nanoTime());
         }
         return cmdSet.undo(uri);
     }
