@@ -3,6 +3,7 @@ import edu.yu.cs.com1320.project.CommandSet;
 import edu.yu.cs.com1320.project.GenericCommand;
 import edu.yu.cs.com1320.project.Undoable;
 import edu.yu.cs.com1320.project.impl.HashTableImpl;
+import edu.yu.cs.com1320.project.impl.MinHeapImpl;
 import edu.yu.cs.com1320.project.impl.StackImpl;
 import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage4.Document;
@@ -17,9 +18,10 @@ import java.util.function.Function;
 import static java.lang.System.nanoTime;
 
 public class DocumentStoreImpl implements DocumentStore{
-    private HashTableImpl<URI,DocumentImpl> hashTable;
+    private HashTableImpl<URI,Document> hashTable;
     private StackImpl<Undoable> commandStack;
     private TrieImpl<Document> trie;
+    private MinHeapImpl<Document> heap;
     private int docLimit;
     private int byteLimit;
 
@@ -27,6 +29,7 @@ public class DocumentStoreImpl implements DocumentStore{
         this.hashTable = new HashTableImpl<>();
         this.commandStack = new StackImpl<>();
         this.trie = new TrieImpl<>();
+        this.heap = new MinHeapImpl<>();
     }
 
     /**
@@ -49,24 +52,25 @@ public class DocumentStoreImpl implements DocumentStore{
         byte[] bytes = input.readAllBytes();
         input.close();
         if(format.equals(DocumentFormat.BINARY)){
-            DocumentImpl temp = new DocumentImpl(uri,bytes);
+            Document temp = new DocumentImpl(uri,bytes);
             return logicBlock(uri,temp);
         }else if(format.equals(DocumentFormat.TXT)){
-            DocumentImpl temp = new DocumentImpl(uri, new String(bytes));
+            Document temp = new DocumentImpl(uri, new String(bytes));
             return logicBlock(uri,temp);
         }
         return 0;
     }
 
-    private int logicBlock(URI uri, DocumentImpl doc){
+    private int logicBlock(URI uri, Document doc){
         GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc);
-        DocumentImpl v = this.hashTable.put(uri,doc);
+        Document v = this.hashTable.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
         doc.setLastUseTime(nanoTime());
+        this.heap.insert(doc);
         return returnValue(v);
     }
-    private GenericCommand<URI> createGenericCom(URI uri, DocumentImpl replaceOrNull, DocumentImpl doc ){
+    private GenericCommand<URI> createGenericCom(URI uri, Document replaceOrNull, Document doc ){
         Function<URI, Boolean> func = (tempUri) -> {
             this.hashTable.put(uri,replaceOrNull);
             Set<String> words = doc.getWords();
@@ -78,7 +82,7 @@ public class DocumentStoreImpl implements DocumentStore{
         GenericCommand<URI> results = new GenericCommand<>(uri,func);
         return results;
     }
-    private void addWordsToTrie(DocumentImpl doc, DocumentImpl v){
+    private void addWordsToTrie(Document doc, Document v){
         if(returnValue(v) != 0){
             //it already existed and this is a replace then delete its value from all its old words
             Set<String> words = doc.getWords();
@@ -95,14 +99,14 @@ public class DocumentStoreImpl implements DocumentStore{
 
     private int callDelete(URI uri){
         if(this.hashTable.containsKey(uri)){
-            DocumentImpl temp = this.hashTable.get(uri);
+            Document temp = this.hashTable.get(uri);
             delete(uri);
             return temp.hashCode();
         }
         return 0;
     }
 
-    private int returnValue(DocumentImpl v){
+    private int returnValue(Document v){
         if(v == null){
             return 0;
         }else{
@@ -117,8 +121,9 @@ public class DocumentStoreImpl implements DocumentStore{
     @Override
     public Document get(URI uri) {
         if(this.hashTable.containsKey(uri)) {
-            DocumentImpl t = this.hashTable.get(uri);
+            Document t = this.hashTable.get(uri);
             t.setLastUseTime(nanoTime());
+            this.heap.reHeapify(t);
             return t;
         }
         return null;
@@ -132,7 +137,7 @@ public class DocumentStoreImpl implements DocumentStore{
     public boolean delete(URI uri) {
         if(this.hashTable.containsKey(uri)){
             //used containsKey so it is known already that it exists in the HT, so put null with it so it deletes.
-            DocumentImpl tempDoc = this.hashTable.get(uri);
+            Document tempDoc = this.hashTable.get(uri);
             Function<URI, Boolean> func = (tempUri) ->{
                 this.hashTable.put(uri,tempDoc);
                 addToTrie(uri);
@@ -147,15 +152,16 @@ public class DocumentStoreImpl implements DocumentStore{
         //returns false if the document doesn't exist
         return false;
     }
+
     private void addToTrie(URI uri){
-        DocumentImpl doc = this.hashTable.get(uri);
+        Document doc = this.hashTable.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
             this.trie.put(word,doc);
         }
     }
     private void deleteFromTrie(URI uri){
-        DocumentImpl doc = this.hashTable.get(uri);
+        Document doc = this.hashTable.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
             this.trie.delete(word,doc);
@@ -177,14 +183,14 @@ public class DocumentStoreImpl implements DocumentStore{
             while(iterator.hasNext()){
                 Object o = iterator.next();
                 GenericCommand<URI> tempGC = (GenericCommand<URI>) o;
-                DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
+                Document tempDoc = this.hashTable.get(tempGC.getTarget());
                 if(tempDoc != null){
                     tempDoc.setLastUseTime(nanoTime());
                 }
             }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
-            DocumentImpl tempDoc = this.hashTable.get(tempGC.getTarget());
+            Document tempDoc = this.hashTable.get(tempGC.getTarget());
             if(tempDoc != null){
                 tempDoc.setLastUseTime(nanoTime());
             }
@@ -218,7 +224,7 @@ public class DocumentStoreImpl implements DocumentStore{
             }else{
                 GenericCommand tempComAsGen = (GenericCommand) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
-                    DocumentImpl temp = this.hashTable.get(uri);
+                    Document temp = this.hashTable.get(uri);
                     if(temp != null){
                         temp.setLastUseTime(nanoTime());
                     }
@@ -244,7 +250,7 @@ public class DocumentStoreImpl implements DocumentStore{
         if(!cmdSet.containsTarget(uri)){
             return false;
         }
-        DocumentImpl temp = this.hashTable.get(uri);
+        Document temp = this.hashTable.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
         }
@@ -260,9 +266,16 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> search(String keyword) {
-        return this.trie.getAllSorted(keyword,new docComp(keyword).reversed());
+        List<Document> tempList = this.trie.getAllSorted(keyword,new docComp(keyword).reversed());
+        setListOfDocsNanoTime(tempList);
+        return tempList;
     }
 
+    private void setListOfDocsNanoTime(List<Document> docs){
+        for(Document doc : docs){
+            doc.setLastUseTime(nanoTime());
+        }
+    }
     /**
      * Retrieve all documents whose text starts with the given prefix
      * Documents are returned in sorted, descending order, sorted by the number of times the prefix appears in the document.
@@ -289,7 +302,9 @@ public class DocumentStoreImpl implements DocumentStore{
                 return prefixCount;
             }
         };
-        return this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp.reversed());
+        List<Document> tempList = this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp.reversed());
+        setListOfDocsNanoTime(tempList);
+        return tempList;
     }
 
     /**
@@ -363,6 +378,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentCount(int limit) {
+        if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.docLimit = limit;
     }
 
@@ -373,9 +389,19 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentBytes(int limit) {
+        if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.byteLimit = limit;
     }
 
+    private int getDocumentLength(Document doc){
+        if(doc == null) return 0;
+        if(doc.getWords() == null){
+            return doc.getDocumentBinaryData().length;
+        } else if (doc.getDocumentBinaryData() == null) {
+            return doc.getDocumentTxt().getBytes().length;
+        }
+        return 0;
+    }
     private class docComp implements Comparator<Document>{
         private String s;
         private docComp(String s){

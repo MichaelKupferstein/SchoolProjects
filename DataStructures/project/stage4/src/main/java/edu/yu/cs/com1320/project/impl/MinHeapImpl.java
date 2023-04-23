@@ -13,12 +13,12 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
 
     @Override
     public void reHeapify(E element) {
+        if(element == null) throw new NoSuchElementException();
         int index = getArrayIndex(element);
         for(int i = index; i < this.elements.length - 1; i++){
             this.elements[i] = this.elements[i + 1];
         }
         this.elements[this.count] = element;
-        //percolate it up to maintain heap order property
         this.upHeap(this.count);
     }
 
