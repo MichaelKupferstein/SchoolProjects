@@ -25,6 +25,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
     @Override
     protected int getArrayIndex(E element) {
         for(int i = 1; i < this.elements.length; i++){
+            if(this.elements[i] == null) throw new NoSuchElementException("Reached end of heap");
             if(this.elements[i].equals(element)){
                 return i;
             }
