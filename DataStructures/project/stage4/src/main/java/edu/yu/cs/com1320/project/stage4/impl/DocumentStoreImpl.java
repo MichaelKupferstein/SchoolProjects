@@ -118,6 +118,7 @@ public class DocumentStoreImpl implements DocumentStore{
         Document temp = this.hashTable.get(uri);
         if(temp != null){
             temp.setLastUseTime(-100);
+            this.heap.reHeapify(temp);
             this.heap.remove();
         }
     }
