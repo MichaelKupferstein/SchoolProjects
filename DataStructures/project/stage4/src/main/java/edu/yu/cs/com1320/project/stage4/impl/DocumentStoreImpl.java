@@ -68,13 +68,18 @@ public class DocumentStoreImpl implements DocumentStore{
         //so this.hashTable.get will return null and do it accordingly, but if its a replace then this.hashTable.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
         //was just created. CONT to method for logic
+        heapLogic(this.hashTable.get(uri),doc);
         Document v = this.hashTable.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
         doc.setLastUseTime(nanoTime());
-        heapLogic(v,doc);
-        this.byteCount += getDocumentLength(doc);
-        this.docCount++;
+        if(v == null){ //meaning its new
+            this.byteCount += getDocumentLength(doc);
+            this.docCount++;
+        }else{ //meaning its old
+            this.byteCount -= getDocumentLength(v);
+            this.byteCount += getDocumentLength(doc);
+        }
         return returnValue(v);
     }
 

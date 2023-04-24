@@ -54,11 +54,14 @@ public class DocumentStoreImplTest {
         String str = generateRandomString();
         DocumentImpl temp = new DocumentImpl(uri,str);
         byte[] byteArray = str.getBytes();
+
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
         assertEquals(temp,this.docStore.get(uri));
+
         String str2 = generateRandomString();
         byte[] byteArray2 = str2.getBytes();
         DocumentImpl temp2 = new DocumentImpl(uri,str2);
+
         assertEquals(temp.hashCode(),this.docStore.put(new ByteArrayInputStream(byteArray2),uri,TXT));
         assertEquals(temp2,this.docStore.get(uri));
     }
@@ -245,18 +248,24 @@ public class DocumentStoreImplTest {
     @Test
     @DisplayName("Undo by uri the contents of a doc being replaced")
     void undoOverwriteByURI() throws Exception{
+        //creates a document
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
         DocumentImpl temp = new DocumentImpl(uri,str);
+        //puts that document in the docStore
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         assertEquals(temp,this.docStore.get(uri));
+        //creates a second different string with the same uri and makes a new doc
         String str2 = generateRandomString();
         byte[] bytes2 = str2.getBytes();
         DocumentImpl temp2 = new DocumentImpl(uri,str2);
+        //puts that new doc in the docStore, but it just acts as a replace
         this.docStore.put(new ByteArrayInputStream(bytes2),uri,TXT);
         assertEquals(temp2,this.docStore.get(uri));
+        //undo that, so now it goes back to orginal document
         this.docStore.undo(uri);
+        //the get should now return the orgianl document
         assertEquals(temp,this.docStore.get(uri));
     }
 
@@ -328,7 +337,7 @@ public class DocumentStoreImplTest {
         this.docStore.put(new ByteArrayInputStream(txt1In),uri1,TXT);
         this.docStore.put(new ByteArrayInputStream(txt2In),uri2,TXT);
         this.docStore.put(new ByteArrayInputStream(txt3In),uri3,TXT);
-
+        String b = "b";
         assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
         assertEquals(Arrays.asList(txt2,txt3), this.docStore.searchByPrefix("ho"));
         assertEquals(Arrays.asList(txt3,txt1,txt2), this.docStore.searchByPrefix("yo"));
