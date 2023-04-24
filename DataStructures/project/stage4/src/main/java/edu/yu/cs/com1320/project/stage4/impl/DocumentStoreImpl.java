@@ -284,11 +284,11 @@ public class DocumentStoreImpl implements DocumentStore{
             }else{
                 GenericCommand tempComAsGen = (GenericCommand) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
+                    tempCommand.undo();
                     Document temp = this.hashTable.get(uri);
                     if(temp != null){
                         temp.setLastUseTime(nanoTime());
                     }
-                    tempCommand.undo();
                     found = true;
                     break;
                 }
@@ -310,11 +310,12 @@ public class DocumentStoreImpl implements DocumentStore{
         if(!cmdSet.containsTarget(uri)){
             return false;
         }
+        Boolean results = cmdSet.undo(uri);
         Document temp = this.hashTable.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
         }
-        return cmdSet.undo(uri);
+        return results;
     }
     /**
      * Retrieve all documents whose text contains the given keyword.
