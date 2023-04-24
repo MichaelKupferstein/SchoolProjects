@@ -22,14 +22,15 @@ public class DocumentStoreImpl implements DocumentStore{
     private StackImpl<Undoable> commandStack;
     private TrieImpl<Document> trie;
     private MinHeapImpl<Document> heap;
-    private int docLimit;
-    private int byteLimit;
+    private int docLimit, byteLimit, docCount, byteCount;
 
     public DocumentStoreImpl() {
         this.hashTable = new HashTableImpl<>();
         this.commandStack = new StackImpl<>();
         this.trie = new TrieImpl<>();
         this.heap = new MinHeapImpl<>();
+        this.docCount = 0;
+        this.byteCount = 0;
     }
 
     /**
@@ -51,6 +52,7 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         byte[] bytes = input.readAllBytes();
         input.close();
+
         if(format.equals(DocumentFormat.BINARY)){
             Document temp = new DocumentImpl(uri,bytes);
             return logicBlock(uri,temp);
@@ -62,26 +64,76 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int logicBlock(URI uri, Document doc){
-        GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc);
+        GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
+        //so this.hashTable.get will return null and do it accordingly, but if its a replace then this.hashTable.get will return the old document, the undo function
+        //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
+        //was just created. CONT to method for logic
         Document v = this.hashTable.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
         doc.setLastUseTime(nanoTime());
-        this.heap.insert(doc);
+        heapLogic(v,doc);
+        this.byteCount += getDocumentLength(doc);
+        this.docCount++;
         return returnValue(v);
     }
+
     private GenericCommand<URI> createGenericCom(URI uri, Document replaceOrNull, Document doc ){
-        Function<URI, Boolean> func = (tempUri) -> {
-            this.hashTable.put(uri,replaceOrNull);
-            Set<String> words = doc.getWords();
-            for(String word : words){
-                this.trie.delete(word,doc);
-            }
-            return true;
-        };
-        GenericCommand<URI> results = new GenericCommand<>(uri,func);
-        return results;
+                                                //uri      //either null or old       //new doc with same uri
+                                                        //null means this undo should delete the document with this uri, if its not null, then its the old value and
+                                                            //so an undo shoudl return it back to that, doc is the new one that is replacing it
+        if(replaceOrNull == null){
+            Function<URI, Boolean> funcIfUndoDeletes = (tempUri) ->{
+                deleteFromHeap(uri);
+                this.hashTable.put(uri,null);
+                for(String word : doc.getWords()){
+                    this.trie.delete(word, doc);
+                }
+                this.docCount--;
+                this.byteCount -= getDocumentLength(doc);
+                return true;
+            };
+            return new GenericCommand<URI>(uri,funcIfUndoDeletes);
+        }else{
+            Function<URI,Boolean> funcIfReplace = (tempUri) ->{
+                //the undo function should revert to the orginal document
+                deleteFromHeap(uri);
+                this.hashTable.put(uri,replaceOrNull);
+                for(String word : doc.getWords()){
+                    this.trie.delete(word,replaceOrNull);
+                }
+                this.byteCount -= getDocumentLength(doc);
+                for(String word : replaceOrNull.getWords()){
+                    this.trie.put(word,replaceOrNull);
+                }
+                this.byteCount += getDocumentLength(replaceOrNull);
+                this.heap.insert(replaceOrNull);
+                return true;
+            };
+            return new GenericCommand<URI>(uri,funcIfReplace);
+        }
     }
+
+    private void deleteFromHeap(URI uri){
+        Document temp = this.hashTable.get(uri);
+        if(temp != null){
+            temp.setLastUseTime(-100);
+            this.heap.remove();
+        }
+    }
+    private void heapLogic(Document oldOrNull, Document newDoc){
+        //if its null then its new
+        if(oldOrNull == null){
+            this.heap.insert(newDoc);
+        }else{
+            //its a replace
+            deleteFromHeap(oldOrNull.getKey());
+            newDoc.setLastUseTime(nanoTime());
+            this.heap.insert(newDoc);
+        }
+    }
+
+
     private void addWordsToTrie(Document doc, Document v){
         if(returnValue(v) != 0){
             //it already existed and this is a replace then delete its value from all its old words
@@ -141,11 +193,13 @@ public class DocumentStoreImpl implements DocumentStore{
             Function<URI, Boolean> func = (tempUri) ->{
                 this.hashTable.put(uri,tempDoc);
                 addToTrie(uri);
+                this.heap.insert(tempDoc);
                 return true;
             };
             GenericCommand<URI> tempCommand = new GenericCommand<>(uri, func);
             this.commandStack.push(tempCommand);
             deleteFromTrie(uri);
+            deleteFromHeap(uri);
             this.hashTable.put(uri,null);
             return true;
         }
@@ -324,6 +378,7 @@ public class DocumentStoreImpl implements DocumentStore{
             tempCommandSet.addCommand(tempGenericCom);
             uris.add(doc.getKey());
             deleteFromTrie(doc.getKey());
+            deleteFromHeap(doc.getKey());
             this.hashTable.put(doc.getKey(),null);
 
         }
@@ -338,6 +393,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 this.trie.put(word,doc);
             }
             this.hashTable.put(doc.getKey(),doc);
+            this.heap.insert(doc);
             return true;
         };
         return result;
@@ -365,6 +421,7 @@ public class DocumentStoreImpl implements DocumentStore{
             tempCommandSet.addCommand(tempGenericCommand);
             uris.add(doc.getKey());
             deleteFromTrie(doc.getKey());
+            deleteFromHeap(doc.getKey());
             this.hashTable.put(doc.getKey(),null);
         }
         this.commandStack.push(tempCommandSet);
