@@ -282,7 +282,7 @@ public class DocumentStoreImpl implements DocumentStore{
                     break;
                 }
             }else{
-                GenericCommand tempComAsGen = (GenericCommand) tempCommand;
+                GenericCommand<URI> tempComAsGen = (GenericCommand<URI>) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
                     tempCommand.undo();
                     Document temp = this.hashTable.get(uri);
@@ -300,9 +300,6 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         if(found == false){
             throw new IllegalStateException();
-        }
-        for(int i = 0; i < tempStack.size(); i++){
-            this.commandStack.push(tempStack.pop());
         }
     }
 
@@ -444,8 +441,63 @@ public class DocumentStoreImpl implements DocumentStore{
     public void setMaxDocumentCount(int limit) {
         if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.docLimit = limit;
+        if(this.docCount > limit){
+            while(this.docCount > limit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
     }
 
+    private void deleteFromEverywhere(Document garbage){
+        deleteFromTrie(garbage.getKey());
+        deleteFromCommandStack(garbage);
+        this.hashTable.put(garbage.getKey(),null);
+        this.docCount--;
+        this.byteCount -= getDocumentLength(garbage);
+    }
+
+    private void deleteFromCommandStack(Document doc){
+        StackImpl<Undoable> tempStack = new StackImpl<>();
+        boolean found = false;
+        while(this.commandStack.size() != 0){
+            Undoable tempCommand = this.commandStack.pop();
+            if(tempCommand instanceof CommandSet<?>){
+                CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) tempCommand;
+                if(tempAsCmdSet.containsTarget(doc.getKey())) {
+                    deleteFromCommandSet(tempAsCmdSet, doc.getKey());
+                    if (tempAsCmdSet.size() >= 1) {
+                        this.commandStack.push(tempCommand);
+                    }
+                    found = true;
+                    break;
+                }
+            }else{
+                GenericCommand<URI> tempAsGC = (GenericCommand<URI>) tempCommand;
+                if(tempAsGC.getTarget().equals(doc.getKey())){
+                    found = true;
+                    break;
+                }
+            }
+            tempStack.push(tempCommand);
+        }
+        while(tempStack.size() != 0){
+            this.commandStack.push(tempStack.pop());
+        }
+        if(found == false){
+            throw new IllegalStateException();
+        }
+    }
+
+    private void deleteFromCommandSet(CommandSet<URI> cmdSet, URI uri){
+            Iterator<GenericCommand<URI>> iterator = cmdSet.iterator();
+            while(iterator.hasNext()){
+                GenericCommand<URI> temp = iterator.next();
+                if(temp.getTarget().equals(uri)){
+                    iterator.remove();
+                }
+            }
+    }
     /**
      * set maximum number of bytes of memory that may be used by all the documents in memory combined
      *
@@ -455,6 +507,12 @@ public class DocumentStoreImpl implements DocumentStore{
     public void setMaxDocumentBytes(int limit) {
         if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.byteLimit = limit;
+        if(this.byteCount > limit){
+            while(this.byteCount > limit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
     }
 
     private int getDocumentLength(Document doc){
