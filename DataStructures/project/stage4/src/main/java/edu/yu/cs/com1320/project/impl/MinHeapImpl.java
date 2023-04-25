@@ -19,7 +19,8 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
             this.elements[i] = this.elements[i + 1];
         }
         this.elements[this.count] = element;
-        this.upHeap(this.count);
+        upHeap(this.count);
+        downHeap(this.count);
     }
 
     @Override
