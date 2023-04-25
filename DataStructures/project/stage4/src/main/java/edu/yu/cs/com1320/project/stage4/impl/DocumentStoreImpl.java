@@ -64,7 +64,7 @@ public class DocumentStoreImpl implements DocumentStore{
 
     private int logicBlock(URI uri, Document doc){
         Document oldOrNull = this.hashTable.get(uri);
-        checkLimitLogic(doc,oldOrNull);//might not belong here
+        checkLimitLogic(doc);//might not belong here
         GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
         //so this.hashTable.get will return null and do it accordingly, but if its a replace then this.hashTable.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
@@ -82,7 +82,8 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         return returnValue(v);
     }
-    private void checkLimitLogic(Document doc,Document oldOrNull){
+    private void checkLimitLogic(Document doc){
+        Document oldOrNull = this.hashTable.get(doc.getKey());
         if(this.byteLimit == 0 && this.docLimit == 0) return; //meaning they were never initilized
         if(this.docLimit != 0) {//if docLimit was initilized
             if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
@@ -229,6 +230,8 @@ public class DocumentStoreImpl implements DocumentStore{
             deleteFromTrie(uri);
             deleteFromHeap(uri);
             this.hashTable.put(uri,null);
+            this.docCount--;
+            this.byteCount -= getDocumentLength(tempDoc);
             return true;
         }
         //returns false if the document doesn't exist
@@ -261,13 +264,14 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         Undoable temp = this.commandStack.pop();
         if(temp instanceof CommandSet<?>){
-            Iterator<?> iterator = ((CommandSet<?>) temp).iterator();
+            CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) temp;
+            Iterator<GenericCommand<URI>> iterator = tempAsCmdSet.iterator();
             while(iterator.hasNext()){
-                Object o = iterator.next();
-                GenericCommand<URI> tempGC = (GenericCommand<URI>) o;
+                GenericCommand<URI> tempGC = iterator.next();
                 Document tempDoc = this.hashTable.get(tempGC.getTarget());
                 if(tempDoc != null){
                     tempDoc.setLastUseTime(nanoTime());
+                    this.heap.reHeapify(tempDoc);
                 }
             }
         }else{
@@ -275,9 +279,23 @@ public class DocumentStoreImpl implements DocumentStore{
             Document tempDoc = this.hashTable.get(tempGC.getTarget());
             if(tempDoc != null){
                 tempDoc.setLastUseTime(nanoTime());
+                this.heap.reHeapify(tempDoc);
             }
         }
         temp.undo();
+        if(this.byteLimit == 0 && this.docLimit == 0) return;
+        if(this.docLimit != 0){
+            while(this.docCount > this.docLimit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
+        if(this.byteLimit != 0){
+            while(this.byteCount > this.byteLimit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
     }
 
     /**
@@ -308,8 +326,9 @@ public class DocumentStoreImpl implements DocumentStore{
                 if(tempComAsGen.getTarget().equals(uri)){
                     tempCommand.undo();
                     Document temp = this.hashTable.get(uri);
-                    if(temp != null){
+                    if(temp != null){//meanings its either an undo on a delete or an undo on a reaplace
                         temp.setLastUseTime(nanoTime());
+                        this.heap.reHeapify(temp);
                     }
                     found = true;
                     break;
@@ -323,6 +342,22 @@ public class DocumentStoreImpl implements DocumentStore{
         if(found == false){
             throw new IllegalStateException();
         }
+        overloadingCheckAfterUndo();
+    }
+    private void overloadingCheckAfterUndo(){
+        if(this.byteLimit == 0 && this.docLimit == 0) return;
+        if(this.docLimit != 0){
+            while(this.docCount > this.docLimit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
+        if(this.byteLimit != 0){
+            while(this.byteCount > this.byteLimit){
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
     }
 
     private Boolean undoOnCommandSet(CommandSet cmdSet, URI uri){
@@ -333,6 +368,7 @@ public class DocumentStoreImpl implements DocumentStore{
         Document temp = this.hashTable.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
+            this.heap.reHeapify(temp);
         }
         return results;
     }
