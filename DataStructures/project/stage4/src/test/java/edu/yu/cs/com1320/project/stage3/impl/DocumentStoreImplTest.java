@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import javax.print.Doc;
+import javax.swing.event.DocumentEvent;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -462,7 +464,226 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic(){
+    void testingOverFlowLogic1a()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for txt docs
+        this.docStore.setMaxDocumentCount(8);
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        String b = "breakpoint";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+    }
+    @Test
+    void testingOverFlowLogic1b()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for binary
+        this.docStore.setMaxDocumentCount(8);
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(50);
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        String b = "breakpoint";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+
+    }
+
+    @Test
+    void testingOverFlowLogic2a()throws Exception{//tests when there is a limit on doc limit, after docs are already in,for TXT doc
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        String b = "breakpoint";
+        this.docStore.setMaxDocumentCount(8);
+        b = "b";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+
+    }
+
+    @Test
+    void testingOverFlowLogic2b()throws Exception{//tests when there is a limit on doc dimit after docs are already in, for Binary
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(50);
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        String b = "breakpoint";
+        this.docStore.setMaxDocumentCount(8);
+        b = "b";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+    }
+
+
+
+    @Test
+    void testingOverFlowLogic3a()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for txt docs
+        this.docStore.setMaxDocumentBytes(400);
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        String b = "breakpoint";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+    }
+
+    @Test
+    void testingOverFlowLogic3b()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for binary
+        this.docStore.setMaxDocumentBytes(400);
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(50);
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        String b = "breakpoint";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+
+    }
+
+    @Test
+    void testingOverFlowLogic4a()throws Exception{//tests when there is a limit on byte limit, after docs are already in,for TXT doc
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        String b = "breakpoint";
+        this.docStore.setMaxDocumentBytes(400);
+        b = "b";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+
+    }
+
+    @Test
+    void testingOverFlowLogic4b()throws Exception{//tests when there is a limit on byte dimit after docs are already in, for Binary
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(50);
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        String b = "breakpoint";
+        this.docStore.setMaxDocumentBytes(400);
+        b = "b";
+        for(int i = 0; i  < 10; i++){
+            if(i < 2){
+                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }else {
+                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
+            }
+        }
+    }
+
+    @Test
+    void testingOverFlowLogic5a()throws Exception{//tests when there is a limit on both, before any documents are put in, for TXT and Binary
+        this.docStore.setMaxDocumentBytes(750);
+        this.docStore.setMaxDocumentCount(16);
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        Random rand = new Random();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(rand.nextInt(50));
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(rand.nextInt(50));
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        String b = "breakpoint";
+
+    }
+    @Test
+    void testingOverFlowLogic5b()throws Exception{//tests when there is a limit on both, after  documents are put in, for TXT and Binary
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        Random rand = new Random();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(rand.nextInt(50));
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(rand.nextInt(50));
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        this.docStore.setMaxDocumentBytes(750);
+        this.docStore.setMaxDocumentCount(16);
+        String b = "breakpoint";
 
     }
 
@@ -527,6 +748,15 @@ public class DocumentStoreImplTest {
      * */
     private byte[] generateRandomByteArray() {
         byte[] temp = new byte[10];
+        String validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random rand = new Random();
+        for (int i = 0; i < temp.length; i++) {
+            temp[i] = (byte) validChars.charAt(rand.nextInt(validChars.length()));
+        }
+        return temp;
+    }
+    private byte[] generateRandomByteArray(int length) {
+        byte[] temp = new byte[length];
         String validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         Random rand = new Random();
         for (int i = 0; i < temp.length; i++) {

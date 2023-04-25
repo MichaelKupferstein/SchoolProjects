@@ -283,19 +283,7 @@ public class DocumentStoreImpl implements DocumentStore{
             }
         }
         temp.undo();
-        if(this.byteLimit == 0 && this.docLimit == 0) return;
-        if(this.docLimit != 0){
-            while(this.docCount > this.docLimit){
-                Document garbage = this.heap.remove();
-                deleteFromEverywhere(garbage);
-            }
-        }
-        if(this.byteLimit != 0){
-            while(this.byteCount > this.byteLimit){
-                Document garbage = this.heap.remove();
-                deleteFromEverywhere(garbage);
-            }
-        }
+        overloadingCheckAfterUndo();
     }
 
     /**
@@ -575,7 +563,7 @@ public class DocumentStoreImpl implements DocumentStore{
 
     private int getDocumentLength(Document doc){
         if(doc == null) return 0;
-        if(doc.getWords() == null){
+        if(doc.getDocumentTxt() == null){
             return doc.getDocumentBinaryData().length;
         } else if (doc.getDocumentBinaryData() == null) {
             return doc.getDocumentTxt().getBytes().length;
