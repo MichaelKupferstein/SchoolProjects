@@ -424,8 +424,45 @@ public class DocumentStoreImplTest {
         assertEquals(txt3,this.docStore.get(uri3));
         assertEquals(Arrays.asList(txt1,txt2,txt3), this.docStore.searchByPrefix("th"));
         breakpoint = "breakpont";
+    }
 
+    @Test
+    void heapTests()throws Exception{
+        URI uri1 = generateRandomURI();
+        String txt1 = generateRandomString();
+        Document doc1 = new DocumentImpl(uri1,txt1);
+        byte[] bytes1 = txt1.getBytes();
 
+        URI uri2 = generateRandomURI();
+        String txt2 = generateRandomString();
+        Document doc2 = new DocumentImpl(uri2,txt2);
+        byte[] bytes2 = txt2.getBytes();
+
+        URI uri3 = generateRandomURI();
+        String txt3 = generateRandomString();
+        Document doc3 = new DocumentImpl(uri3,txt3);
+        byte[] bytes3 = txt3.getBytes();
+
+        URI uri4 = generateRandomURI();
+        String txt4 = generateRandomString();
+        Document doc4 = new DocumentImpl(uri4,txt4);
+        byte[] bytes4 = txt4.getBytes();
+
+        this.docStore.put(new ByteArrayInputStream(bytes1),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(bytes2),uri2,TXT);
+        this.docStore.put(new ByteArrayInputStream(bytes3),uri3,TXT);
+        this.docStore.put(new ByteArrayInputStream(bytes4),uri4,TXT);
+        String b = "breakpoint";
+        this.docStore.get(uri1);
+        b = "b";
+        this.docStore.setMaxDocumentBytes(20);
+        b = "b";
+        this.docStore.setMaxDocumentCount(1);
+        b = "b";
+    }
+
+    @Test
+    void testingOverFlowLogic(){
 
     }
 
@@ -470,6 +507,15 @@ public class DocumentStoreImplTest {
         Random rand = new Random();
         StringBuilder sb = new StringBuilder(10);
         for (int i = 0; i < 10; i++) {
+            sb.append(CHARACTERS.charAt(rand.nextInt(CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+    private String generateRandomString(int length) {
+        final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
             sb.append(CHARACTERS.charAt(rand.nextInt(CHARACTERS.length())));
         }
         return sb.toString();

@@ -9,7 +9,6 @@ import edu.yu.cs.com1320.project.impl.TrieImpl;
 import edu.yu.cs.com1320.project.stage4.Document;
 import edu.yu.cs.com1320.project.stage4.DocumentStore;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -64,25 +63,46 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int logicBlock(URI uri, Document doc){
+        Document oldOrNull = this.hashTable.get(uri);
+        checkLimitLogic(doc,oldOrNull);//might not belong here
         GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
         //so this.hashTable.get will return null and do it accordingly, but if its a replace then this.hashTable.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
         //was just created. CONT to method for logic
-        heapLogic(this.hashTable.get(uri),doc);
+        heapLogic(oldOrNull,doc);
         Document v = this.hashTable.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
-        doc.setLastUseTime(nanoTime());
         if(v == null){ //meaning its new
             this.byteCount += getDocumentLength(doc);
             this.docCount++;
-        }else{ //meaning its old
+        }else{ //meaning its old and a replace
             this.byteCount -= getDocumentLength(v);
             this.byteCount += getDocumentLength(doc);
         }
         return returnValue(v);
     }
+    private void checkLimitLogic(Document doc,Document oldOrNull){
+        if(this.byteLimit == 0 && this.docLimit == 0) return; //meaning they were never initilized
+        if(this.docLimit != 0) {//if docLimit was initilized
+            if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
+                if (this.docCount + 1 > this.docLimit) {//if adding this doc will cause an overflow on docLimt
+                    Document garbage = this.heap.remove();//remove only one bc we only need one extra space
+                    deleteFromEverywhere(garbage);//delete it from everywhere
+                }
+            }
+        }
+        if(this.byteLimit != 0) { // if byteLimit was initilized
+            if (getDocumentLength(doc) > this.byteLimit) { // if its larger then the limit
+                throw new IllegalArgumentException("Document larger then limit, Document length: " + getDocumentLength(doc) + " limit: " + this.byteLimit);
+            }
+            while(getDocumentLength(doc) + this.byteCount > this.byteLimit){//if adding will cause an overflow
+                Document garbage = this.heap.remove();
+                deleteFromEverywhere(garbage);
+            }
+        }
 
+    }
     private GenericCommand<URI> createGenericCom(URI uri, Document replaceOrNull, Document doc ){
                                                 //uri      //either null or old       //new doc with same uri
                                                         //null means this undo should delete the document with this uri, if its not null, then its the old value and
@@ -128,14 +148,16 @@ public class DocumentStoreImpl implements DocumentStore{
         }
     }
     private void heapLogic(Document oldOrNull, Document newDoc){
+        newDoc.setLastUseTime(nanoTime());
         //if its null then its new
         if(oldOrNull == null){
             this.heap.insert(newDoc);
+            this.heap.reHeapify(newDoc);
         }else{
             //its a replace
             deleteFromHeap(oldOrNull.getKey());
-            newDoc.setLastUseTime(nanoTime());
             this.heap.insert(newDoc);
+            this.heap.reHeapify(newDoc);
         }
     }
 
@@ -439,7 +461,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentCount(int limit) {
-        if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
+        if(limit <= 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.docLimit = limit;
         if(this.docCount > limit){
             while(this.docCount > limit){
@@ -505,7 +527,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentBytes(int limit) {
-        if(limit < 0) throw new IllegalArgumentException("Limit must be greater than 0");
+        if(limit <= 0) throw new IllegalArgumentException("Limit must be greater than 0");
         this.byteLimit = limit;
         if(this.byteCount > limit){
             while(this.byteCount > limit){
