@@ -265,6 +265,7 @@ public class DocumentStoreImpl implements DocumentStore{
         Undoable temp = this.commandStack.pop();
         if(temp instanceof CommandSet<?>){
             CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) temp;
+            tempAsCmdSet.undo();
             Iterator<GenericCommand<URI>> iterator = tempAsCmdSet.iterator();
             while(iterator.hasNext()){
                 GenericCommand<URI> tempGC = iterator.next();
@@ -272,15 +273,25 @@ public class DocumentStoreImpl implements DocumentStore{
                 if(tempDoc != null){
                     tempDoc.setLastUseTime(nanoTime());
                     this.heap.reHeapify(tempDoc);
+                    this.docCount++;
+                    this.byteCount += getDocumentLength(tempDoc);
                 }
             }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
+            Document nullOrold = this.hashTable.get(tempGC.getTarget());
+            tempGC.undo();
             Document tempDoc = this.hashTable.get(tempGC.getTarget());
             if(tempDoc != null){
                 tempDoc.setLastUseTime(nanoTime());
                 this.heap.reHeapify(tempDoc);
+                if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
+                    this.docCount++;
+                    this.byteCount += getDocumentLength(tempDoc);
+                }
             }
+            overloadingCheckAfterUndo();
+            return;
         }
         temp.undo();
         overloadingCheckAfterUndo();
@@ -312,11 +323,16 @@ public class DocumentStoreImpl implements DocumentStore{
             }else{
                 GenericCommand<URI> tempComAsGen = (GenericCommand<URI>) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
+                    Document nullOrold = this.hashTable.get(tempComAsGen.getTarget());
                     tempCommand.undo();
                     Document temp = this.hashTable.get(uri);
                     if(temp != null){//meanings its either an undo on a delete or an undo on a reaplace
                         temp.setLastUseTime(nanoTime());
                         this.heap.reHeapify(temp);
+                        if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
+                            this.docCount++;
+                            this.byteCount += getDocumentLength(temp);
+                        }
                     }
                     found = true;
                     break;
@@ -352,11 +368,16 @@ public class DocumentStoreImpl implements DocumentStore{
         if(!cmdSet.containsTarget(uri)){
             return false;
         }
+        Document nullOrold = this.hashTable.get(uri);
         Boolean results = cmdSet.undo(uri);
         Document temp = this.hashTable.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
             this.heap.reHeapify(temp);
+            if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
+                this.docCount++;
+                this.byteCount += getDocumentLength(temp);
+            }
         }
         return results;
     }
