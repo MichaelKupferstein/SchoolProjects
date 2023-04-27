@@ -464,7 +464,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic1a()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for txt docs
+    void testingOverFlowLogicOnPut1a()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for txt docs
         this.docStore.setMaxDocumentCount(8);
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
@@ -484,7 +484,7 @@ public class DocumentStoreImplTest {
         }
     }
     @Test
-    void testingOverFlowLogic1b()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for binary
+    void testingOverFlowLogicOnPut1b()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for binary
         this.docStore.setMaxDocumentCount(8);
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
@@ -506,7 +506,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic2a()throws Exception{//tests when there is a limit on doc limit, after docs are already in,for TXT doc
+    void testingOverFlowLogicOnPut2a()throws Exception{//tests when there is a limit on doc limit, after docs are already in,for TXT doc
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
@@ -529,7 +529,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic2b()throws Exception{//tests when there is a limit on doc dimit after docs are already in, for Binary
+    void testingOverFlowLogicOnPut2b()throws Exception{//tests when there is a limit on doc dimit after docs are already in, for Binary
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
@@ -553,7 +553,7 @@ public class DocumentStoreImplTest {
 
 
     @Test
-    void testingOverFlowLogic3a()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for txt docs
+    void testingOverFlowLogicOnPut3a()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for txt docs
         this.docStore.setMaxDocumentBytes(400);
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
@@ -574,7 +574,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic3b()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for binary
+    void testingOverFlowLogicOnPut3b()throws Exception{//tests when there is a limit on byte limit, before any docs are put in, for binary
         this.docStore.setMaxDocumentBytes(400);
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
@@ -596,7 +596,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic4a()throws Exception{//tests when there is a limit on byte limit, after docs are already in,for TXT doc
+    void testingOverFlowLogicOnPut4a()throws Exception{//tests when there is a limit on byte limit, after docs are already in,for TXT doc
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
@@ -619,7 +619,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic4b()throws Exception{//tests when there is a limit on byte dimit after docs are already in, for Binary
+    void testingOverFlowLogicOnPut4b()throws Exception{//tests when there is a limit on byte dimit after docs are already in, for Binary
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
@@ -641,7 +641,7 @@ public class DocumentStoreImplTest {
     }
 
     @Test
-    void testingOverFlowLogic5a()throws Exception{//tests when there is a limit on both, before any documents are put in, for TXT and Binary
+    void testingOverFlowLogicOnPut5a()throws Exception{//tests when there is a limit on both, before any documents are put in, for TXT and Binary
         this.docStore.setMaxDocumentBytes(750);
         this.docStore.setMaxDocumentCount(16);
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
@@ -664,7 +664,7 @@ public class DocumentStoreImplTest {
 
     }
     @Test
-    void testingOverFlowLogic5b()throws Exception{//tests when there is a limit on both, after  documents are put in, for TXT and Binary
+    void testingOverFlowLogicOnPut5b()throws Exception{//tests when there is a limit on both, after  documents are put in, for TXT and Binary
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         Random rand = new Random();
         for(int i = 0; i < 10; i++){
@@ -684,8 +684,50 @@ public class DocumentStoreImplTest {
         this.docStore.setMaxDocumentBytes(750);
         this.docStore.setMaxDocumentCount(16);
         String b = "breakpoint";
-
     }
+
+    @Test
+    void puttingADocumentLargerThenLimitIn()throws Exception{
+        byte[] bytes = generateRandomByteArray(100);
+        Document temp = new DocumentImpl(generateRandomURI(),bytes);
+        this.docStore.setMaxDocumentBytes(50);
+        assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+    }
+    @Test
+    void testingOverFlowLogicOnundo1() throws Exception{//there is a limit after an undo is done, using regular undo()
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            byte[] tempByte = generateRandomByteArray(50);
+            Document temp = new DocumentImpl(tempUri,tempByte);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempByte),tempUri,BINARY);
+        }
+        ArrayList<Document> deletedDocs = new ArrayList<>();
+        Random random = new Random();
+        for(int i = 0; i < 10; i++){
+            Document deleted = listOfAllCreatedDocs.remove(random.nextInt((listOfAllCreatedDocs.size())));
+            deletedDocs.add(deleted);
+            this.docStore.delete(deleted.getKey());
+        }
+        String b = "b";
+        for(int i = 0; i < 10; i++){
+            this.docStore.undo();
+        }
+        String b1 = "b";
+
+        for(Document doc : deletedDocs){
+            assertEquals(doc, this.docStore.get(doc.getKey()));
+        }
+    }
+
 
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
