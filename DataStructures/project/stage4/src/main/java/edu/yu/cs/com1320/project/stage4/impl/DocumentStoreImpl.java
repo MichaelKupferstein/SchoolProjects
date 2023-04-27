@@ -265,18 +265,28 @@ public class DocumentStoreImpl implements DocumentStore{
         Undoable temp = this.commandStack.pop();
         if(temp instanceof CommandSet<?>){
             CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) temp;
-            tempAsCmdSet.undo();
-            Iterator<GenericCommand<URI>> iterator = tempAsCmdSet.iterator();
-            while(iterator.hasNext()){
-                GenericCommand<URI> tempGC = iterator.next();
-                Document tempDoc = this.hashTable.get(tempGC.getTarget());
-                if(tempDoc != null){
-                    tempDoc.setLastUseTime(nanoTime());
-                    this.heap.reHeapify(tempDoc);
-                    this.docCount++;
-                    this.byteCount += getDocumentLength(tempDoc);
-                }
+            Iterator<GenericCommand<URI>> tempIterator = tempAsCmdSet.iterator();
+            Set<GenericCommand<URI>> setOfCmds = new HashSet<>();
+            while(tempIterator.hasNext()){
+                setOfCmds.add(tempIterator.next());
             }
+            tempAsCmdSet.undo();
+            for(GenericCommand<URI> gc : setOfCmds){
+                Document tempDoc = this.hashTable.get(gc.getTarget());
+                tempDoc.setLastUseTime(nanoTime());
+                this.heap.reHeapify(tempDoc);
+                this.docCount++;
+                this.byteCount += getDocumentLength(tempDoc);
+            }
+//            while(iterator.hasNext()){
+//                GenericCommand<URI> tempGC = iterator.next();
+//                Document tempDoc = this.hashTable.get(tempGC.getTarget());
+//                tempDoc.setLastUseTime(nanoTime());
+//                this.heap.reHeapify(tempDoc);
+//                this.docCount++;
+//                this.byteCount += getDocumentLength(tempDoc);
+//
+//            }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
             Document nullOrold = this.hashTable.get(tempGC.getTarget());
@@ -451,6 +461,8 @@ public class DocumentStoreImpl implements DocumentStore{
             deleteFromTrie(doc.getKey());
             deleteFromHeap(doc.getKey());
             this.hashTable.put(doc.getKey(),null);
+            this.docCount--;
+            this.byteCount -= getDocumentLength(doc);
 
         }
         this.commandStack.push(tempCommandSet);
@@ -494,6 +506,8 @@ public class DocumentStoreImpl implements DocumentStore{
             deleteFromTrie(doc.getKey());
             deleteFromHeap(doc.getKey());
             this.hashTable.put(doc.getKey(),null);
+            this.docCount--;
+            this.byteCount -= getDocumentLength(doc);
         }
         this.commandStack.push(tempCommandSet);
         return uris;
