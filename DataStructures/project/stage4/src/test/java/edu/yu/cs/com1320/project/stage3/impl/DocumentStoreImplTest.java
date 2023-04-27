@@ -694,7 +694,7 @@ public class DocumentStoreImplTest {
         assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
     }
     @Test
-    void testingOverFlowLogicOnundo1() throws Exception{//there is a limit after an undo is done, using regular undo()
+    void testingOverFlowLogicOnundo1() throws Exception{//there is a limit after an undo is done, using regular undo() on GC
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
@@ -728,6 +728,28 @@ public class DocumentStoreImplTest {
         }
     }
 
+    @Test
+    void testingOverFlowLogicOnundo1b() throws Exception {//there is a limit after an undo is done, using regular undo() on CmdSet
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 5;i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = "Test " + generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        for(int i = 0; i < 10;i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString(50);
+            Document temp = new DocumentImpl(tempUri,tempTxt);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        ArrayList<URI> deletedDocs = new ArrayList<>(this.docStore.deleteAllWithPrefix("Test"));
+        String b = "b";
+        this.docStore.undo();
+        b = "b";
+    }
 
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
