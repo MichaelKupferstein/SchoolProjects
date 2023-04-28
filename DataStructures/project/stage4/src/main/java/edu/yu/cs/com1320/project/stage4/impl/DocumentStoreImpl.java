@@ -546,20 +546,12 @@ public class DocumentStoreImpl implements DocumentStore{
                         tempStack.push(tempAsCmdSet);
                     }
                 }
-//                    deleteFromCommandSet(tempAsCmdSet, doc.getKey());
-//                    if (tempAsCmdSet.size() >= 1) {
-//                        this.commandStack.push(tempCommand);
-//                    }
-//                    found = true;
-//                    break;
-                //}
             }else{
                 GenericCommand<URI> tempAsGC = (GenericCommand<URI>) tempCommand;
                 if(!tempAsGC.getTarget().equals(doc.getKey())){
                     tempStack.push(tempAsGC);
                 }
             }
-//            tempStack.push(tempCommand);
         }
         while(tempStack.size() != 0){
             this.commandStack.push(tempStack.pop());
