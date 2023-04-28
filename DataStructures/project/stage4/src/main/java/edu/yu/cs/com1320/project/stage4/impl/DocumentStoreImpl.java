@@ -271,22 +271,14 @@ public class DocumentStoreImpl implements DocumentStore{
                 setOfCmds.add(tempIterator.next());
             }
             tempAsCmdSet.undo();
+            long nanoTime = nanoTime();
             for(GenericCommand<URI> gc : setOfCmds){
                 Document tempDoc = this.hashTable.get(gc.getTarget());
-                tempDoc.setLastUseTime(nanoTime());
+                tempDoc.setLastUseTime(nanoTime);
                 this.heap.reHeapify(tempDoc);
                 this.docCount++;
                 this.byteCount += getDocumentLength(tempDoc);
             }
-//            while(iterator.hasNext()){
-//                GenericCommand<URI> tempGC = iterator.next();
-//                Document tempDoc = this.hashTable.get(tempGC.getTarget());
-//                tempDoc.setLastUseTime(nanoTime());
-//                this.heap.reHeapify(tempDoc);
-//                this.docCount++;
-//                this.byteCount += getDocumentLength(tempDoc);
-//
-//            }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
             Document nullOrold = this.hashTable.get(tempGC.getTarget());
@@ -407,8 +399,9 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private void setListOfDocsNanoTime(List<Document> docs){
+        long nanoTime = nanoTime();
         for(Document doc : docs){
-            doc.setLastUseTime(nanoTime());
+            doc.setLastUseTime(nanoTime);
         }
     }
     /**
@@ -545,28 +538,31 @@ public class DocumentStoreImpl implements DocumentStore{
             Undoable tempCommand = this.commandStack.pop();
             if(tempCommand instanceof CommandSet<?>){
                 CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) tempCommand;
-                if(tempAsCmdSet.containsTarget(doc.getKey())) {
+                if(!tempAsCmdSet.containsTarget(doc.getKey())) {
+                    tempStack.push(tempAsCmdSet);
+                }else{
                     deleteFromCommandSet(tempAsCmdSet, doc.getKey());
-                    if (tempAsCmdSet.size() >= 1) {
-                        this.commandStack.push(tempCommand);
+                    if(tempAsCmdSet.size() > 0){
+                        tempStack.push(tempAsCmdSet);
                     }
-                    found = true;
-                    break;
                 }
+//                    deleteFromCommandSet(tempAsCmdSet, doc.getKey());
+//                    if (tempAsCmdSet.size() >= 1) {
+//                        this.commandStack.push(tempCommand);
+//                    }
+//                    found = true;
+//                    break;
+                //}
             }else{
                 GenericCommand<URI> tempAsGC = (GenericCommand<URI>) tempCommand;
-                if(tempAsGC.getTarget().equals(doc.getKey())){
-                    found = true;
-                    break;
+                if(!tempAsGC.getTarget().equals(doc.getKey())){
+                    tempStack.push(tempAsGC);
                 }
             }
-            tempStack.push(tempCommand);
+//            tempStack.push(tempCommand);
         }
         while(tempStack.size() != 0){
             this.commandStack.push(tempStack.pop());
-        }
-        if(found == false){
-            throw new IllegalStateException();
         }
     }
 

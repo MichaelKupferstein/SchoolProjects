@@ -717,6 +717,7 @@ public class DocumentStoreImplTest {
             deletedDocs.add(deleted);
             this.docStore.delete(deleted.getKey());
         }
+        this.docStore.setMaxDocumentCount(15);
         String b = "b";
         for(int i = 0; i < 10; i++){
             this.docStore.undo();
@@ -747,8 +748,52 @@ public class DocumentStoreImplTest {
         }
         ArrayList<URI> deletedDocs = new ArrayList<>(this.docStore.deleteAllWithPrefix("Test"));
         String b = "b";
+        this.docStore.setMaxDocumentBytes(500);
         this.docStore.undo();
+        for(URI doc : deletedDocs){
+            assertNotNull(this.docStore.get(doc));
+        }
         b = "b";
+    }
+
+    @Test
+    void testDeleteFromCommandStackOnCmdSet()throws Exception{//when a doc is in a cmdset and then its removed as the result of overflow it should be removed from commandStack
+        ArrayList<Document> allCreatedDoc = new ArrayList<>();
+        URI testUri = generateRandomURI();
+        String testTxt = "Test" + generateRandomString(50);
+        Document testDoc = new DocumentImpl(testUri,testTxt);
+        this.docStore.put(new ByteArrayInputStream(testTxt.getBytes()),testUri,TXT);//put in main testDoc
+        allCreatedDoc.add(testDoc);
+        for(int i = 0; i < 5; i++){
+            Document temp = new DocumentImpl(generateRandomURI(),"Test" + generateRandomString(50));
+            allCreatedDoc.add(temp);
+            this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in docs with same prefix
+        }
+        for(int i = 0; i < 5; i++){//adding another set of docs that can be deleted and make a command set to make sure that command set stays
+            Document temp = new DocumentImpl(generateRandomURI(),"Temp" + generateRandomString(50));
+            allCreatedDoc.add(temp);
+            this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in docs with same prefix
+        }
+        this.docStore.deleteAllWithPrefix("Temp");
+        ArrayList<Document> fillerDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            allCreatedDoc.add(temp);
+            fillerDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in other docs to fill it up
+        }
+        ArrayList<URI> deletedDocs = new ArrayList<>(this.docStore.deleteAllWithPrefix("Test"));//delete 6 docs including the testDoc
+        String b = "b";
+        this.docStore.put(new ByteArrayInputStream(testTxt.getBytes()),testUri,TXT);//put main testDoc back in so its now part of it
+        b = "b";
+        for(Document doc : fillerDocs){//move all this above the testDoc in the heap
+            this.docStore.get(doc.getKey());
+        }
+        b = "b"; //check that testDoc is now last in heap
+        this.docStore.setMaxDocumentCount(10);//so now testDoc is forced to be deleted from every where, including cmdSet
+        b = "b";
+        assertThrows(IllegalStateException.class, () -> this.docStore.undo(testUri));
+
     }
 
     private InputStream readFileToInputStream(String filePath){
