@@ -796,6 +796,34 @@ public class DocumentStoreImplTest {
 
     }
 
+    @Test
+    void settingLimitTo0()throws Exception{
+        ArrayList<Document> allCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            allCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);
+        }
+        this.docStore.setMaxDocumentCount(0);
+        for(Document doc : allCreatedDocs){
+            assertNull(this.docStore.get(doc.getKey()));
+        }
+    }
+
+    @Test
+    void settingLimitTo0b()throws Exception{
+        ArrayList<Document> allCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10; i++){
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            allCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);
+        }
+        this.docStore.setMaxDocumentBytes(0);
+        for(Document doc : allCreatedDocs){
+            assertNull(this.docStore.get(doc.getKey()));
+        }
+    }
+
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
 

@@ -30,6 +30,8 @@ public class DocumentStoreImpl implements DocumentStore{
         this.heap = new MinHeapImpl<>();
         this.docCount = 0;
         this.byteCount = 0;
+        this.docLimit = -1;
+        this.byteLimit = -1;
     }
 
     /**
@@ -84,8 +86,8 @@ public class DocumentStoreImpl implements DocumentStore{
     }
     private void checkLimitLogic(Document doc){
         Document oldOrNull = this.hashTable.get(doc.getKey());
-        if(this.byteLimit == 0 && this.docLimit == 0) return; //meaning they were never initilized
-        if(this.docLimit != 0) {//if docLimit was initilized
+        if(this.byteLimit == -1 && this.docLimit == -1) return; //meaning they were never initilized
+        if(this.docLimit != -1) {//if docLimit was initilized
             if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
                 if (this.docCount + 1 > this.docLimit) {//if adding this doc will cause an overflow on docLimt
                     Document garbage = this.heap.remove();//remove only one bc we only need one extra space
@@ -93,7 +95,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 }
             }
         }
-        if(this.byteLimit != 0) { // if byteLimit was initilized
+        if(this.byteLimit != -1) { // if byteLimit was initilized
             if (getDocumentLength(doc) > this.byteLimit) { // if its larger then the limit
                 throw new IllegalArgumentException("Document larger then limit, Document length: " + getDocumentLength(doc) + " limit: " + this.byteLimit);
             }
@@ -351,14 +353,14 @@ public class DocumentStoreImpl implements DocumentStore{
         overloadingCheckAfterUndo();
     }
     private void overloadingCheckAfterUndo(){
-        if(this.byteLimit == 0 && this.docLimit == 0) return;
-        if(this.docLimit != 0){
+        if(this.byteLimit == -1 && this.docLimit == -1) return;
+        if(this.docLimit != -1){
             while(this.docCount > this.docLimit){
                 Document garbage = this.heap.remove();
                 deleteFromEverywhere(garbage);
             }
         }
-        if(this.byteLimit != 0){
+        if(this.byteLimit != -1){
             while(this.byteCount > this.byteLimit){
                 Document garbage = this.heap.remove();
                 deleteFromEverywhere(garbage);
@@ -513,7 +515,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentCount(int limit) {
-        if(limit <= 0) throw new IllegalArgumentException("Limit must be greater than 0");
+        if(limit < 0) throw new IllegalArgumentException("Limit must not be negative");
         this.docLimit = limit;
         if(this.docCount > limit){
             while(this.docCount > limit){
@@ -574,7 +576,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public void setMaxDocumentBytes(int limit) {
-        if(limit <= 0) throw new IllegalArgumentException("Limit must be greater than 0");
+        if(limit < 0) throw new IllegalArgumentException("Limit must not be negative");
         this.byteLimit = limit;
         if(this.byteCount > limit){
             while(this.byteCount > limit){
