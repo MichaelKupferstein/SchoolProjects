@@ -824,6 +824,63 @@ public class DocumentStoreImplTest {
         }
     }
 
+    @Test
+    void stage3SearchTxtByPrefix()throws Exception{//does searching by prefix in doc store work when all docs are txt?
+        URI uri1 = generateRandomURI();
+        String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
+        Document doc1 = new DocumentImpl(uri1,txt1);
+        URI uri2 = generateRandomURI();
+        String txt2 = "contains only test once, but the other contains it twice";
+        Document doc2 = new DocumentImpl(uri2,txt2);
+        this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
+
+        assertEquals(Arrays.asList(doc1,doc2),this.docStore.searchByPrefix("test"));
+
+    }
+    @Test
+    void stage4TestMaxDocBytesViaSearch()throws Exception{//test that a doc returned from a search has its lastUseTime updated and
+        // therefore is NOT the first doc to be pushed out when we go over the max bytes limit
+        URI uri1 = generateRandomURI();
+        String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
+        Document doc1 = new DocumentImpl(uri1,txt1);
+        URI uri2 = generateRandomURI();
+        String txt2 = "doesnt contain it at all but the other contains it twice";
+        Document doc2 = new DocumentImpl(uri2,txt2);
+        this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
+        assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));
+        assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
+        this.docStore.setMaxDocumentBytes(91);
+        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
+        assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
+
+    }
+
+    @Test
+    void stage3SearchBinaryByPrefix()throws Exception{ //does searching by prefix in doc store work when some docs are txt and some are bin?
+
+    }
+
+    @Test
+    void stage4TestMaxDocCountViaSearch()throws Exception{//test that a doc returned from a search has its
+        // lastUseTime updated and therefore is NOT the first doc to be pushed out when we go over the max docs limit
+        URI uri1 = generateRandomURI();
+        String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
+        Document doc1 = new DocumentImpl(uri1,txt1);
+        URI uri2 = generateRandomURI();
+        String txt2 = "doesnt contain it at all but the other contains it twice";
+        Document doc2 = new DocumentImpl(uri2,txt2);
+        this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
+        assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));
+        assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
+        this.docStore.setMaxDocumentCount(1);
+        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
+        assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
+
+    }
+
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
 

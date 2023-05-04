@@ -404,6 +404,7 @@ public class DocumentStoreImpl implements DocumentStore{
         long nanoTime = nanoTime();
         for(Document doc : docs){
             doc.setLastUseTime(nanoTime);
+            this.heap.reHeapify(doc);
         }
     }
     /**
