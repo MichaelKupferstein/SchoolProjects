@@ -411,8 +411,7 @@ public class WrongBTree<Key extends Comparable<Key>, Value>
         return k1.compareTo(k2) < 0;
     }
 
-    private static boolean isEqual(Comparable k1, Comparable k2)
-    {
+    private static boolean isEqual(Comparable k1, Comparable k2) {
         return k1.compareTo(k2) == 0;
     }
 
