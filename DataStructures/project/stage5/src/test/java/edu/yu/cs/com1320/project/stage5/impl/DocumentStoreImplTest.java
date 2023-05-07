@@ -1,6 +1,6 @@
-package edu.yu.cs.com1320.project.stage4.impl;
+package edu.yu.cs.com1320.project.stage5.impl;
 
-import edu.yu.cs.com1320.project.stage4.Document;
+import edu.yu.cs.com1320.project.stage5.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,8 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static edu.yu.cs.com1320.project.stage4.DocumentStore.DocumentFormat.BINARY;
-import static edu.yu.cs.com1320.project.stage4.DocumentStore.DocumentFormat.TXT;
+import static edu.yu.cs.com1320.project.stage5.DocumentStore.DocumentFormat.BINARY;
+import static edu.yu.cs.com1320.project.stage5.DocumentStore.DocumentFormat.TXT;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DocumentStoreImplTest {
