@@ -13,6 +13,11 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
     private Node leftMostExternalNode;
     private int height; //height of the B-tree
     private int n; //number of key-value pairs in the B-tree
+
+    public BTreeImpl() {
+        this.root = new Node(0);
+        this.leftMostExternalNode = this.root;
+    }
     @Override
     public Value get(Key k) {
         if (k == null) {
@@ -80,8 +85,8 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         //Set the old root to be new root's first entry.
         //Set the node returned from the call to put to be new root's second entry
         Node newRoot = new Node(2);
-        newRoot.entries[0] = new Entry((Key) this.root.entries[0].key, null, this.root);
-        newRoot.entries[1] = new Entry((Key) newNode.entries[0].key, null, newNode);
+        newRoot.entries[0] = new Entry(this.root.entries[0].key, null, this.root);
+        newRoot.entries[1] = new Entry(newNode.entries[0].key, null, newNode);
         this.root = newRoot;
         //a split at the root always increases the tree height by 1
         this.height++;
@@ -161,10 +166,10 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     }
 
-    private boolean isEqual(Comparable k1, Comparable k2) {
+    private boolean isEqual(Key k1, Key k2) {
         return k1.compareTo(k2) == 0;
     }
-    private boolean less(Comparable k1, Comparable k2) {
+    private boolean less(Key k1, Key k2) {
         return k1.compareTo(k2) < 0;
     }
 
@@ -192,7 +197,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     private class Node {
         private int entryCount; // number of entries
-        private BTreeImpl.Entry[] entries = new BTreeImpl.Entry[MAX]; // the array of children
+        private Entry[] entries = new BTreeImpl.Entry[MAX]; // the array of children
         private Node next;
         private Node previous;
 
@@ -230,10 +235,10 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             this.val = val;
             this.child = child;
         }
-        public Object getValue() {
+        public Value getValue() {
             return this.val;
         }
-        public Comparable getKey() {
+        public Key getKey() {
             return this.key;
         }
     }
