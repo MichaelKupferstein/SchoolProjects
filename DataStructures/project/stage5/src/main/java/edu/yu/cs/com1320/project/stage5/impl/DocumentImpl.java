@@ -125,7 +125,7 @@ public class DocumentImpl implements Document{
 
     @Override
     public Map<String, Integer> getWordMap() {
-        return null;
+        return Collections.unmodifiableMap(this.words);
     }
 
     @Override
