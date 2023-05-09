@@ -28,6 +28,16 @@ public class DocumentImpl implements Document{
         this.binaryData = binaryData;
     }
 
+    public DocumentImpl(URI uri, String documentContent, Map<String, Integer> wordMap) {
+        if(uri == null || documentContent == null){
+            throw new IllegalArgumentException();
+        }
+        this.uri = uri;
+        this.txt = documentContent;
+        this.words = wordMap;
+        this.addWords();
+    }
+
     /**
      * @return content of text document
      */
@@ -125,7 +135,7 @@ public class DocumentImpl implements Document{
 
     @Override
     public Map<String, Integer> getWordMap() {
-        return Collections.unmodifiableMap(this.words);
+        return Map.copyOf(this.words);
     }
 
     @Override
