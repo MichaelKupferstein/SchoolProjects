@@ -2,6 +2,7 @@ package edu.yu.cs.com1320.project.stage5.impl;
 
 import com.google.gson.*;
 
+import com.google.gson.reflect.TypeToken;
 import edu.yu.cs.com1320.project.stage5.Document;
 import edu.yu.cs.com1320.project.stage5.PersistenceManager;
 
@@ -53,7 +54,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         File jsonFile = new File(path.toFile(),fileName);//create the new file
         try {
             FileWriter fileWriter = new FileWriter(jsonFile);
-            fileWriter.write(this.gson.toJson(val).toString());
+            fileWriter.write(this.gson.toJson(val,DocumentImpl.class).toString());
             fileWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,21 +65,21 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
 
     @Override
-    public Document deserialize(URI uri) throws IOException {
+    public Document deserialize(URI uri) throws IOException {//if its byte need to decode!!
         String authority = uri.getAuthority();//get the begining of the uri
         String uriPath = uri.getRawPath();//get the uri as a path
         String fileName = getFileNameFromUri(uri);
 
         //File file = new File(uriPath.toString(),fileName);
         Path path = Path.of(this.baseDir + "\\" + authority + uriPath + ".json");
-        System.out.println("inDes " + path);
+        System.out.println("inDes Path:" + path);
         String file = new String(Files.readAllBytes(path));
-        System.out.println("inDes File: " + file);
-        JsonObject jsonObject = this.gson.fromJson(file,JsonObject.class);
+        System.out.println("inDes File: " + file + "\n");
+        JsonObject jsonObject = this.gson.fromJson(file, JsonObject.class);
 
+//        Document temp = new DocumentImpl(uri,jsonObject.get("DocumentContent").toString());
+        Document temp = this.gson.fromJson(jsonObject,DocumentImpl.class);
 
-
-        Document temp = new DocumentImpl(uri,jsonObject.get("DocumentContent").toString());
         return temp;
     }
 
@@ -104,10 +105,13 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
                 jsonObject.add("DocumentContent", new JsonPrimitive(base64Encoded));
             }else if(document.getDocumentBinaryData() == null) {//i.e its a text doc
                 jsonObject.add("DocumentContent",new JsonPrimitive(document.getDocumentTxt()));
-                jsonObject.add("WordMap", createMapAsJsonObject(document.getWordMap()));
+
+//                String gsonMapString = gson.toJson(document.getWordMap());
+                String jsonMap = gson.toJson(document.getWordMap());
+                jsonObject.add("WordMap", new JsonPrimitive(jsonMap));
             }
 
-            System.out.println("inDocSer JSON file: " + jsonObject);
+            System.out.println("inDocSer JSON file: " + jsonObject + "\n");
             return jsonObject;
         }
     }
@@ -120,22 +124,26 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         return results;
     }
 
+
     private class DocumentDeserializer implements JsonDeserializer<Document>{
         @Override
         public Document deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             Document results;
-            String uriAsString = jsonObject.get("uri").toString();
+            String uriAsString = jsonObject.get("uri").toString().replaceAll("\"", "");
             URI uri;
-            Map<String, Integer> wordMap = (Map<String, Integer>) jsonObject.get("WordMap");
+            JsonElement wordMap = jsonObject.get("WordMap");
             try {
                 uri = new URI(uriAsString);
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
-            results = new DocumentImpl(uri, String.valueOf(jsonObject.get("DocumentContent")));
-            results.setWordMap(wordMap);
-            System.out.println("inDocDes got here");
+            if(wordMap != null){//i.e its text doc
+                results = new DocumentImpl(uri, String.valueOf(jsonObject.get("DocumentContent")));
+            }else {//i.e its binary... NEEDS DECODING
+                results = new DocumentImpl(uri, String.valueOf(jsonObject.get("DocumentContent")));
+            }
+            System.out.println("inDocDes got here\n");
             return results;
         }
     }
@@ -154,8 +162,8 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         dp.serialize(uri2,doc2);
 
         Document test = dp.deserialize(uri);
-        System.out.println("inMain " + test);
+        System.out.println("inMain " + test + "\n");
         Document test2 = dp.deserialize(uri2);
-        System.out.println("inMain " + test2);
+        System.out.println("inMain " + test2 + "\n");
     }
 }
