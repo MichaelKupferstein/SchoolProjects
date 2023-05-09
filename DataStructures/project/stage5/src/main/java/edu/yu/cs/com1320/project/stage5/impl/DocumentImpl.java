@@ -34,8 +34,11 @@ public class DocumentImpl implements Document{
         }
         this.uri = uri;
         this.txt = documentContent;
-        this.words = wordMap;
-        this.addWords();
+        if(wordMap != null) {
+            this.words = wordMap;
+            this.addWords();
+        }
+
     }
 
     /**
@@ -140,7 +143,7 @@ public class DocumentImpl implements Document{
 
     @Override
     public void setWordMap(Map<String, Integer> wordMap) {
-
+        this.words = wordMap;
     }
 
     @Override
