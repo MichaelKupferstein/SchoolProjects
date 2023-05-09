@@ -159,7 +159,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     @Override
     public void moveToDisk(Key k) throws Exception {
-
+        this.pm.serialize(k,get(k));
     }
 
     @Override
