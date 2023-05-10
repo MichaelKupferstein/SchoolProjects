@@ -1,11 +1,9 @@
 package edu.yu.cs.com1320.project.stage5.impl;
+import edu.yu.cs.com1320.project.BTree;
 import edu.yu.cs.com1320.project.CommandSet;
 import edu.yu.cs.com1320.project.GenericCommand;
 import edu.yu.cs.com1320.project.Undoable;
-import edu.yu.cs.com1320.project.impl.HashTableImpl;
-import edu.yu.cs.com1320.project.impl.MinHeapImpl;
-import edu.yu.cs.com1320.project.impl.StackImpl;
-import edu.yu.cs.com1320.project.impl.TrieImpl;
+import edu.yu.cs.com1320.project.impl.*;
 import edu.yu.cs.com1320.project.stage5.Document;
 import edu.yu.cs.com1320.project.stage5.DocumentStore;
 
@@ -17,14 +15,16 @@ import java.util.function.Function;
 import static java.lang.System.nanoTime;
 
 public class DocumentStoreImpl implements DocumentStore{
-    private HashTableImpl<URI,Document> hashTable;
+//    private HashTableImpl<URI,Document> hashTable;
+    private BTreeImpl<URI,Document> bTree;
     private StackImpl<Undoable> commandStack;
     private TrieImpl<Document> trie;
     private MinHeapImpl<Document> heap;
     private int docLimit, byteLimit, docCount, byteCount;
 
     public DocumentStoreImpl() {
-        this.hashTable = new HashTableImpl<>();
+//        this.hashTable = new HashTableImpl<>();
+        this.bTree = new BTreeImpl<>();
         this.commandStack = new StackImpl<>();
         this.trie = new TrieImpl<>();
         this.heap = new MinHeapImpl<>();
@@ -65,14 +65,14 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int logicBlock(URI uri, Document doc){
-        Document oldOrNull = this.hashTable.get(uri);
+        Document oldOrNull = this.bTree.get(uri);
         checkLimitLogic(doc);//might not belong here
-        GenericCommand<URI> tempCommand = createGenericCom(uri,this.hashTable.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
-        //so this.hashTable.get will return null and do it accordingly, but if its a replace then this.hashTable.get will return the old document, the undo function
+        GenericCommand<URI> tempCommand = createGenericCom(uri,this.bTree.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
+        //so this.bTree.get will return null and do it accordingly, but if its a replace then this.bTree.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
         //was just created. CONT to method for logic
         heapLogic(oldOrNull,doc);
-        Document v = this.hashTable.put(uri,doc);
+        Document v = this.bTree.put(uri,doc);
         this.commandStack.push(tempCommand);
         addWordsToTrie(doc, v);
         if(v == null){ //meaning its new
@@ -85,7 +85,7 @@ public class DocumentStoreImpl implements DocumentStore{
         return returnValue(v);
     }
     private void checkLimitLogic(Document doc){
-        Document oldOrNull = this.hashTable.get(doc.getKey());
+        Document oldOrNull = this.bTree.get(doc.getKey());
         if(this.byteLimit == -1 && this.docLimit == -1) return; //meaning they were never initilized
         if(this.docLimit != -1) {//if docLimit was initilized
             if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
@@ -113,7 +113,7 @@ public class DocumentStoreImpl implements DocumentStore{
         if(replaceOrNull == null){
             Function<URI, Boolean> funcIfUndoDeletes = (tempUri) ->{
                 deleteFromHeap(uri);
-                this.hashTable.put(uri,null);
+                this.bTree.put(uri,null);
                 for(String word : doc.getWords()){
                     this.trie.delete(word, doc);
                 }
@@ -126,7 +126,7 @@ public class DocumentStoreImpl implements DocumentStore{
             Function<URI,Boolean> funcIfReplace = (tempUri) ->{
                 //the undo function should revert to the orginal document
                 deleteFromHeap(uri);
-                this.hashTable.put(uri,replaceOrNull);
+                this.bTree.put(uri,replaceOrNull);
                 for(String word : doc.getWords()){
                     this.trie.delete(word,replaceOrNull);
                 }
@@ -143,7 +143,7 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private void deleteFromHeap(URI uri){
-        Document temp = this.hashTable.get(uri);
+        Document temp = this.bTree.get(uri);
         if(temp != null){
             temp.setLastUseTime(-100);
             this.heap.reHeapify(temp);
@@ -181,8 +181,8 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int callDelete(URI uri){
-        if(this.hashTable.containsKey(uri)){
-            Document temp = this.hashTable.get(uri);
+        if(this.bTree.containsKey(uri)){
+            Document temp = this.bTree.get(uri);
             delete(uri);
             return temp.hashCode();
         }
@@ -203,8 +203,8 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Document get(URI uri) {
-        if(this.hashTable.containsKey(uri)) {
-            Document t = this.hashTable.get(uri);
+        if(this.bTree.containsKey(uri)) {
+            Document t = this.bTree.get(uri);
             t.setLastUseTime(nanoTime());
             this.heap.reHeapify(t);
             return t;
@@ -218,11 +218,11 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public boolean delete(URI uri) {
-        if(this.hashTable.containsKey(uri)){
+        if(this.bTree.containsKey(uri)){
             //used containsKey so it is known already that it exists in the HT, so put null with it so it deletes.
-            Document tempDoc = this.hashTable.get(uri);
+            Document tempDoc = this.bTree.get(uri);
             Function<URI, Boolean> func = (tempUri) ->{
-                this.hashTable.put(uri,tempDoc);
+                this.bTree.put(uri,tempDoc);
                 addToTrie(uri);
                 this.heap.insert(tempDoc);
                 return true;
@@ -231,7 +231,7 @@ public class DocumentStoreImpl implements DocumentStore{
             this.commandStack.push(tempCommand);
             deleteFromTrie(uri);
             deleteFromHeap(uri);
-            this.hashTable.put(uri,null);
+            this.bTree.put(uri,null);
             this.docCount--;
             this.byteCount -= getDocumentLength(tempDoc);
             return true;
@@ -241,14 +241,14 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private void addToTrie(URI uri){
-        Document doc = this.hashTable.get(uri);
+        Document doc = this.bTree.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
             this.trie.put(word,doc);
         }
     }
     private void deleteFromTrie(URI uri){
-        Document doc = this.hashTable.get(uri);
+        Document doc = this.bTree.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
             this.trie.delete(word,doc);
@@ -275,7 +275,7 @@ public class DocumentStoreImpl implements DocumentStore{
             tempAsCmdSet.undo();
             long nanoTime = nanoTime();
             for(GenericCommand<URI> gc : setOfCmds){
-                Document tempDoc = this.hashTable.get(gc.getTarget());
+                Document tempDoc = this.bTree.get(gc.getTarget());
                 tempDoc.setLastUseTime(nanoTime);
                 this.heap.reHeapify(tempDoc);
                 this.docCount++;
@@ -283,9 +283,9 @@ public class DocumentStoreImpl implements DocumentStore{
             }
         }else{
             GenericCommand<URI> tempGC = (GenericCommand<URI>) temp;
-            Document nullOrold = this.hashTable.get(tempGC.getTarget());
+            Document nullOrold = this.bTree.get(tempGC.getTarget());
             tempGC.undo();
-            Document tempDoc = this.hashTable.get(tempGC.getTarget());
+            Document tempDoc = this.bTree.get(tempGC.getTarget());
             if(tempDoc != null){
                 tempDoc.setLastUseTime(nanoTime());
                 this.heap.reHeapify(tempDoc);
@@ -327,9 +327,9 @@ public class DocumentStoreImpl implements DocumentStore{
             }else{
                 GenericCommand<URI> tempComAsGen = (GenericCommand<URI>) tempCommand;
                 if(tempComAsGen.getTarget().equals(uri)){
-                    Document nullOrold = this.hashTable.get(tempComAsGen.getTarget());
+                    Document nullOrold = this.bTree.get(tempComAsGen.getTarget());
                     tempCommand.undo();
-                    Document temp = this.hashTable.get(uri);
+                    Document temp = this.bTree.get(uri);
                     if(temp != null){//meanings its either an undo on a delete or an undo on a reaplace
                         temp.setLastUseTime(nanoTime());
                         this.heap.reHeapify(temp);
@@ -372,9 +372,9 @@ public class DocumentStoreImpl implements DocumentStore{
         if(!cmdSet.containsTarget(uri)){
             return false;
         }
-        Document nullOrold = this.hashTable.get(uri);
+        Document nullOrold = this.bTree.get(uri);
         Boolean results = cmdSet.undo(uri);
-        Document temp = this.hashTable.get(uri);
+        Document temp = this.bTree.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
             this.heap.reHeapify(temp);
@@ -456,7 +456,7 @@ public class DocumentStoreImpl implements DocumentStore{
             uris.add(doc.getKey());
             deleteFromTrie(doc.getKey());
             deleteFromHeap(doc.getKey());
-            this.hashTable.put(doc.getKey(),null);
+            this.bTree.put(doc.getKey(),null);
             this.docCount--;
             this.byteCount -= getDocumentLength(doc);
 
@@ -471,7 +471,7 @@ public class DocumentStoreImpl implements DocumentStore{
             for(String word : words){
                 this.trie.put(word,doc);
             }
-            this.hashTable.put(doc.getKey(),doc);
+            this.bTree.put(doc.getKey(),doc);
             this.heap.insert(doc);
             return true;
         };
@@ -501,7 +501,7 @@ public class DocumentStoreImpl implements DocumentStore{
             uris.add(doc.getKey());
             deleteFromTrie(doc.getKey());
             deleteFromHeap(doc.getKey());
-            this.hashTable.put(doc.getKey(),null);
+            this.bTree.put(doc.getKey(),null);
             this.docCount--;
             this.byteCount -= getDocumentLength(doc);
         }
@@ -529,7 +529,7 @@ public class DocumentStoreImpl implements DocumentStore{
     private void deleteFromEverywhere(Document garbage){
         deleteFromTrie(garbage.getKey());
         deleteFromCommandStack(garbage);
-        this.hashTable.put(garbage.getKey(),null);
+        this.bTree.put(garbage.getKey(),null);
         this.docCount--;
         this.byteCount -= getDocumentLength(garbage);
     }
