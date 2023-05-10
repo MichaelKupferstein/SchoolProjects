@@ -25,6 +25,9 @@ class BTreeImplTest {
         assertEquals( "twelve", tree.get(12));
         assertEquals( "thirty", tree.get(30));
         assertNull(null, tree.get(7));
+
+        assertEquals("ten",tree.put(10,null));
+        assertNull(tree.get(10));
     }
 
 }

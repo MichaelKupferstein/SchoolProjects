@@ -58,7 +58,7 @@ public class DocumentStoreImpl implements DocumentStore{
             Document temp = new DocumentImpl(uri,bytes);
             return logicBlock(uri,temp);
         }else if(format.equals(DocumentFormat.TXT)){
-            Document temp = new DocumentImpl(uri, new String(bytes));
+            Document temp = new DocumentImpl(uri, new String(bytes),null);
             return logicBlock(uri,temp);
         }
         return 0;
