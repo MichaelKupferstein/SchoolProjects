@@ -11,15 +11,7 @@ public class DocumentImpl implements Document{
     private byte[] binaryData;
     private Map<String,Integer> words;
     private long timeInNano;
-    public DocumentImpl(URI uri, String txt) {
-        if(uri == null || txt == null){
-            throw new IllegalArgumentException();
-        }
-        this.uri = uri;
-        this.txt = txt;
-        this.words = new HashMap<>();
-        this.addWords();
-    }
+
     public DocumentImpl(URI uri, byte[] binaryData){
         if(uri == null || binaryData == null){
             throw new IllegalArgumentException();
