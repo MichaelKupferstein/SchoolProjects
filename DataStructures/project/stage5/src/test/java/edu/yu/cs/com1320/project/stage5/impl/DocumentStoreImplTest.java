@@ -5,8 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.print.Doc;
-import javax.swing.event.DocumentEvent;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,7 +31,7 @@ public class DocumentStoreImplTest {
     void initialPutAndGetWithTXTDoc() throws Exception {
         URI uri = generateRandomURI();
         String str = generateRandomString();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         byte[] byteArray = str.getBytes();
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
         assertEquals(temp,this.docStore.get(uri));
@@ -54,7 +52,7 @@ public class DocumentStoreImplTest {
     void testingReplace() throws Exception{
         URI uri = generateRandomURI();
         String str = generateRandomString();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         byte[] byteArray = str.getBytes();
 
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
@@ -62,7 +60,7 @@ public class DocumentStoreImplTest {
 
         String str2 = generateRandomString();
         byte[] byteArray2 = str2.getBytes();
-        DocumentImpl temp2 = new DocumentImpl(uri,str2);
+        DocumentImpl temp2 = new DocumentImpl(uri,str2, null);
 
         assertEquals(temp.hashCode(),this.docStore.put(new ByteArrayInputStream(byteArray2),uri,TXT));
         assertEquals(temp2,this.docStore.get(uri));
@@ -86,7 +84,7 @@ public class DocumentStoreImplTest {
     void puttingNull() throws Exception {
         URI uri = generateRandomURI();
         String str = generateRandomString();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         byte[] byteArray = str.getBytes();
         assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(byteArray),uri,null));
         assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(byteArray),null,TXT));
@@ -98,7 +96,7 @@ public class DocumentStoreImplTest {
     void testingDelete() throws Exception{
         URI uri = generateRandomURI();
         String str = generateRandomString();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         byte[] byteArray = str.getBytes();
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(byteArray),uri,TXT));
         assertEquals(temp,this.docStore.get(uri));
@@ -120,7 +118,7 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT));
         assertEquals(temp,this.docStore.get(uri));
         assertTrue(this.docStore.delete(uri));
@@ -139,7 +137,7 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT));
         //assertEquals(1, this.docStore.commandStack.size());
         assertTrue(this.docStore.delete(uri));
@@ -159,8 +157,8 @@ public class DocumentStoreImplTest {
         String str2 = generateRandomString();
         byte[] bytes = str.getBytes();
         byte[] bytes2 = str2.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
-        DocumentImpl temp2 = new DocumentImpl(uri2,str2);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
+        DocumentImpl temp2 = new DocumentImpl(uri2,str2, null);
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         this.docStore.put(new ByteArrayInputStream(bytes2),uri2,TXT);
         assertEquals(temp, this.docStore.get(uri));
@@ -178,7 +176,7 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         assertEquals(temp, this.docStore.get(uri));
         assertTrue(this.docStore.delete(uri));
@@ -193,7 +191,7 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         assertEquals(temp,this.docStore.get(uri));
         for(int i = 0; i < 10; i++){
@@ -212,7 +210,7 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         assertEquals(temp,this.docStore.get(uri));
         assertTrue(this.docStore.delete(uri));
@@ -254,14 +252,14 @@ public class DocumentStoreImplTest {
         URI uri = generateRandomURI();
         String str = generateRandomString();
         byte[] bytes = str.getBytes();
-        DocumentImpl temp = new DocumentImpl(uri,str);
+        DocumentImpl temp = new DocumentImpl(uri,str, null);
         //puts that document in the docStore
         this.docStore.put(new ByteArrayInputStream(bytes),uri,TXT);
         assertEquals(temp,this.docStore.get(uri));
         //creates a second different string with the same uri and makes a new doc
         String str2 = generateRandomString();
         byte[] bytes2 = str2.getBytes();
-        DocumentImpl temp2 = new DocumentImpl(uri,str2);
+        DocumentImpl temp2 = new DocumentImpl(uri,str2, null);
         //puts that new doc in the docStore, but it just acts as a replace
         this.docStore.put(new ByteArrayInputStream(bytes2),uri,TXT);
         assertEquals(temp2,this.docStore.get(uri));
@@ -292,12 +290,12 @@ public class DocumentStoreImplTest {
         InputStream inTxt4 = readFileToInputStream("C:/Users/mkupf/OneDrive/Documents/text4.txt");
         InputStream inTxt5 = readFileToInputStream("C:/Users/mkupf/OneDrive/Documents/text5.txt");
         InputStream inTxt6 = readFileToInputStream("C:/Users/mkupf/OneDrive/Documents/text6.txt");
-        DocumentImpl text1 = new DocumentImpl(uriForTxt1,txt1);
-        DocumentImpl text2 = new DocumentImpl(uriForTxt2,txt2);
-        DocumentImpl text3 = new DocumentImpl(uriForTxt3,txt3);
-        DocumentImpl text4 = new DocumentImpl(uriForTxt4,txt4);
-        DocumentImpl text5 = new DocumentImpl(uriForTxt5,txt5);
-        DocumentImpl text6 = new DocumentImpl(uriForTxt6,txt6);
+        DocumentImpl text1 = new DocumentImpl(uriForTxt1,txt1, null);
+        DocumentImpl text2 = new DocumentImpl(uriForTxt2,txt2, null);
+        DocumentImpl text3 = new DocumentImpl(uriForTxt3,txt3, null);
+        DocumentImpl text4 = new DocumentImpl(uriForTxt4,txt4, null);
+        DocumentImpl text5 = new DocumentImpl(uriForTxt5,txt5, null);
+        DocumentImpl text6 = new DocumentImpl(uriForTxt6,txt6, null);
         this.docStore.put(inTxt1,uriForTxt1,TXT);
         this.docStore.put(inTxt2,uriForTxt2,TXT);
         this.docStore.put(inTxt3,uriForTxt3,TXT);
@@ -332,9 +330,9 @@ public class DocumentStoreImplTest {
         byte[] txt2In = testTXT2.getBytes();
         byte[] txt3In = testTXT3.getBytes();
 
-        DocumentImpl txt1 = new DocumentImpl(uri1,testTXT1);
-        DocumentImpl txt2 = new DocumentImpl(uri2,testTXT2);
-        DocumentImpl txt3 = new DocumentImpl(uri3,testTXT3);
+        DocumentImpl txt1 = new DocumentImpl(uri1,testTXT1, null);
+        DocumentImpl txt2 = new DocumentImpl(uri2,testTXT2, null);
+        DocumentImpl txt3 = new DocumentImpl(uri3,testTXT3, null);
 
         this.docStore.put(new ByteArrayInputStream(txt1In),uri1,TXT);
         this.docStore.put(new ByteArrayInputStream(txt2In),uri2,TXT);
@@ -432,22 +430,22 @@ public class DocumentStoreImplTest {
     void heapTests()throws Exception{
         URI uri1 = generateRandomURI();
         String txt1 = generateRandomString();
-        Document doc1 = new DocumentImpl(uri1,txt1);
+        Document doc1 = new DocumentImpl(uri1,txt1, null);
         byte[] bytes1 = txt1.getBytes();
 
         URI uri2 = generateRandomURI();
         String txt2 = generateRandomString();
-        Document doc2 = new DocumentImpl(uri2,txt2);
+        Document doc2 = new DocumentImpl(uri2,txt2, null);
         byte[] bytes2 = txt2.getBytes();
 
         URI uri3 = generateRandomURI();
         String txt3 = generateRandomString();
-        Document doc3 = new DocumentImpl(uri3,txt3);
+        Document doc3 = new DocumentImpl(uri3,txt3, null);
         byte[] bytes3 = txt3.getBytes();
 
         URI uri4 = generateRandomURI();
         String txt4 = generateRandomString();
-        Document doc4 = new DocumentImpl(uri4,txt4);
+        Document doc4 = new DocumentImpl(uri4,txt4, null);
         byte[] bytes4 = txt4.getBytes();
 
         this.docStore.put(new ByteArrayInputStream(bytes1),uri1,TXT);
@@ -470,7 +468,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -511,7 +509,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -559,7 +557,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -601,7 +599,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -649,7 +647,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(rand.nextInt(50));
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -670,7 +668,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(rand.nextInt(50));
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -699,7 +697,7 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 10; i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -735,14 +733,14 @@ public class DocumentStoreImplTest {
         for(int i = 0; i < 5;i++){
             URI tempUri = generateRandomURI();
             String tempTxt = "Test " + generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
         for(int i = 0; i < 10;i++){
             URI tempUri = generateRandomURI();
             String tempTxt = generateRandomString(50);
-            Document temp = new DocumentImpl(tempUri,tempTxt);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
         }
@@ -761,23 +759,23 @@ public class DocumentStoreImplTest {
         ArrayList<Document> allCreatedDoc = new ArrayList<>();
         URI testUri = generateRandomURI();
         String testTxt = "Test" + generateRandomString(50);
-        Document testDoc = new DocumentImpl(testUri,testTxt);
+        Document testDoc = new DocumentImpl(testUri,testTxt, null);
         this.docStore.put(new ByteArrayInputStream(testTxt.getBytes()),testUri,TXT);//put in main testDoc
         allCreatedDoc.add(testDoc);
         for(int i = 0; i < 5; i++){
-            Document temp = new DocumentImpl(generateRandomURI(),"Test" + generateRandomString(50));
+            Document temp = new DocumentImpl(generateRandomURI(),"Test" + generateRandomString(50), null);
             allCreatedDoc.add(temp);
             this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in docs with same prefix
         }
         for(int i = 0; i < 5; i++){//adding another set of docs that can be deleted and make a command set to make sure that command set stays
-            Document temp = new DocumentImpl(generateRandomURI(),"Temp" + generateRandomString(50));
+            Document temp = new DocumentImpl(generateRandomURI(),"Temp" + generateRandomString(50), null);
             allCreatedDoc.add(temp);
             this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in docs with same prefix
         }
         this.docStore.deleteAllWithPrefix("Temp");
         ArrayList<Document> fillerDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
-            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50), null);
             allCreatedDoc.add(temp);
             fillerDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);//put in other docs to fill it up
@@ -800,7 +798,7 @@ public class DocumentStoreImplTest {
     void settingLimitTo0()throws Exception{
         ArrayList<Document> allCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
-            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50), null);
             allCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);
         }
@@ -814,7 +812,7 @@ public class DocumentStoreImplTest {
     void settingLimitTo0b()throws Exception{
         ArrayList<Document> allCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 10; i++){
-            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50));
+            Document temp = new DocumentImpl(generateRandomURI(),generateRandomString(50), null);
             allCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(temp.getDocumentTxt().getBytes()),temp.getKey(),TXT);
         }
@@ -828,10 +826,10 @@ public class DocumentStoreImplTest {
     void stage3SearchTxtByPrefix()throws Exception{//does searching by prefix in doc store work when all docs are txt?
         URI uri1 = generateRandomURI();
         String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
-        Document doc1 = new DocumentImpl(uri1,txt1);
+        Document doc1 = new DocumentImpl(uri1,txt1, null);
         URI uri2 = generateRandomURI();
         String txt2 = "contains only test once, but the other contains it twice";
-        Document doc2 = new DocumentImpl(uri2,txt2);
+        Document doc2 = new DocumentImpl(uri2,txt2, null);
         this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
         this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
 
@@ -843,10 +841,10 @@ public class DocumentStoreImplTest {
         // therefore is NOT the first doc to be pushed out when we go over the max bytes limit
         URI uri1 = generateRandomURI();
         String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
-        Document doc1 = new DocumentImpl(uri1,txt1);
+        Document doc1 = new DocumentImpl(uri1,txt1, null);
         URI uri2 = generateRandomURI();
         String txt2 = "doesnt contain it at all but the other contains it twice";
-        Document doc2 = new DocumentImpl(uri2,txt2);
+        Document doc2 = new DocumentImpl(uri2,txt2, null);
         this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
         this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
         assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));
@@ -867,10 +865,10 @@ public class DocumentStoreImplTest {
         // lastUseTime updated and therefore is NOT the first doc to be pushed out when we go over the max docs limit
         URI uri1 = generateRandomURI();
         String txt1 = "This is a test doc. I am using this to test my code and see if it does what its supposed to";
-        Document doc1 = new DocumentImpl(uri1,txt1);
+        Document doc1 = new DocumentImpl(uri1,txt1, null);
         URI uri2 = generateRandomURI();
         String txt2 = "doesnt contain it at all but the other contains it twice";
-        Document doc2 = new DocumentImpl(uri2,txt2);
+        Document doc2 = new DocumentImpl(uri2,txt2, null);
         this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
         this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
         assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));

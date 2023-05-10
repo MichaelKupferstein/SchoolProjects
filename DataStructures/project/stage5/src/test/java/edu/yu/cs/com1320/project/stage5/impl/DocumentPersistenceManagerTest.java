@@ -21,7 +21,7 @@ class DocumentPersistenceManagerTest{
     void setUp() throws Exception{
         this.dp = new DocumentPersistenceManager(new File(System.getProperty("user.dir")));
         this.uri1 = new URI("https://www.yu.edu/documents/doc1");
-        this.doc1 = new DocumentImpl(uri1,"This is a test document to test this class");
+        this.doc1 = new DocumentImpl(uri1,"This is a test document to test this class", null);
 
 
         this.uri2 = new URI("https://www.yu.edu/documents/doc2");
