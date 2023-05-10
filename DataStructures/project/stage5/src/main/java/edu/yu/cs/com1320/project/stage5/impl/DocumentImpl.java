@@ -24,12 +24,13 @@ public class DocumentImpl implements Document{
         if(uri == null || documentContent == null){
             throw new IllegalArgumentException();
         }
+        this.words = new HashMap<>();
         this.uri = uri;
         this.txt = documentContent;
-        if(wordMap != null) {
-            this.words = wordMap;
-        }else{
+        if(wordMap == null) {
             this.addWords();
+        }else{
+            this.words = wordMap;
         }
 
     }
