@@ -36,18 +36,15 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         this.gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DocumentImpl.class, new DocumentSerializer());
         gsonBuilder.registerTypeAdapter(DocumentImpl.class, new DocumentDeserializer());
+        gsonBuilder.enableComplexMapKeySerialization();
         this.gson = gsonBuilder.create();
 
     }
 
     @Override
     public void serialize(URI uri, Document val) throws IOException {
-        String authority = uri.getAuthority();//get the begining of the uri
-        String uriPath = uri.getRawPath();//get the uri as a path
         String fileName = getFileNameFromUri(uri);
-        String absoluteFileName = fileName.replace(".json","");
-
-        Path path = Path.of(this.baseDir + "\\" + authority + uriPath.replace(absoluteFileName, ""));//create a path using all the stuff
+        Path path = getPathFromURI(uri);
         Files.createDirectories(path);//create the acutal file path
 
         File jsonFile = new File(path.toFile(),fileName);//create the new file
@@ -64,7 +61,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
 
     @Override
-    public Document deserialize(URI uri) throws IOException {//if its byte need to decode!!
+    public Document deserialize(URI uri) throws IOException {
         String authority = uri.getAuthority();//get the begining of the uri
         String uriPath = uri.getRawPath();//get the uri as a path
         String fileName = getFileNameFromUri(uri);
@@ -87,23 +84,44 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
     @Override
     public boolean delete(URI uri) throws IOException {
-        return false;
+        Path path = getPathFromURI(uri);
+        String fileName = getFileNameFromUri(uri);
+        Path fullPath = Path.of(path.toString(),fileName);
+
+        if(Files.exists(fullPath)){
+            try{
+                Files.delete(fullPath);
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }else{
+            return false;
+        }
+
+    }
+
+    private Path getPathFromURI(URI uri){
+        String authority = (uri.getAuthority() == null) ? "" : uri.getAuthority();//get the begining of the uri
+        String uriPath = uri.getPath();//get the uri as a path
+        String fileName = getFileNameFromUri(uri);
+        String absoluteFileName = fileName.replace(".json","");
+        return Path.of(this.baseDir + "\\" + authority + uriPath.replace(absoluteFileName, ""));
     }
 
     private class DocumentSerializer implements JsonSerializer<Document>{
         @Override
         public JsonElement serialize(Document document, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonObject jsonObject = new JsonObject();
-            jsonObject.add("uri", new JsonPrimitive(document.getKey().toString()));
+            jsonObject.addProperty("uri", document.getKey().toString());
             if(document.getDocumentTxt() == null){//i.e its binary doc
                 String base64Encoded = DatatypeConverter.printBase64Binary(document.getDocumentBinaryData());
-                jsonObject.add("DocumentContent", new JsonPrimitive(base64Encoded));
+                jsonObject.addProperty("DocumentContent",base64Encoded);
             }else if(document.getDocumentBinaryData() == null) {//i.e its a text doc
-                jsonObject.add("DocumentContent",new JsonPrimitive(document.getDocumentTxt()));
-
-//                String gsonMapString = gson.toJson(document.getWordMap());
+                jsonObject.addProperty("DocumentContent",document.getDocumentTxt());
                 String jsonMap = gson.toJson(document.getWordMap());
-                jsonObject.add("WordMap", new JsonPrimitive(jsonMap));
+                jsonObject.addProperty("WordMap",jsonMap);
+
             }
 
             return jsonObject;
@@ -118,14 +136,19 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
             String uriAsString = jsonObject.get("uri").toString().replaceAll("\"", "");
             URI uri;
             JsonElement wordMap = jsonObject.get("WordMap");
+            TypeToken<Map<String,Integer>> mapType = new TypeToken<Map<String,Integer>>(){};
+            Map<String,Integer> wordMapAsMap = null;
+            if(wordMap != null) {
+                wordMapAsMap = gson.fromJson(wordMap.getAsString(), mapType.getType());
+            }
             try {
                 uri = new URI(uriAsString);
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
-            if(wordMap != null){//i.e its text doc
+            if(wordMap != null){//i.e its text doc.. NEEDS MAP
                 String text = String.valueOf(jsonObject.get("DocumentContent")).replaceAll("\"","");
-                results = new DocumentImpl(uri,text);
+                results = new DocumentImpl(uri,text,wordMapAsMap);
             }else {//i.e its binary... NEEDS DECODING
                 String encodedString = String.valueOf(jsonObject.get("DocumentContent"));
                 byte[] base64Decoded = DatatypeConverter.parseBase64Binary(encodedString);
@@ -135,25 +158,4 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         }
     }
 
-    public static void main(String[] args) throws URISyntaxException, IOException {
-        DocumentPersistenceManager dp = new DocumentPersistenceManager(new File(System.getProperty("user.dir")));
-        URI uri = new URI("https://www.yu.edu/documents/doc1");
-        Document doc1 = new DocumentImpl(uri,"This is a test document to test this class");
-        dp.serialize(uri,doc1);
-
-        URI uri2 = new URI("https://www.yu.edu/documents/doc2");
-        String btyes = "This is a test for binary documents";
-        byte[] byteArray = btyes.getBytes();
-        Document doc2 = new DocumentImpl(uri2,byteArray);
-        dp.serialize(uri2,doc2);
-
-        Document test1 = dp.deserialize(uri);
-
-        Document test2 = dp.deserialize(uri2);
-
-
-        System.out.println(test1.equals(doc1));
-        System.out.println(test1.getWordMap().equals(doc1.getWordMap()));
-        System.out.println(test2.equals(doc2));
-    }
 }

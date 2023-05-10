@@ -36,6 +36,7 @@ public class DocumentImpl implements Document{
         this.txt = documentContent;
         if(wordMap != null) {
             this.words = wordMap;
+        }else{
             this.addWords();
         }
 
