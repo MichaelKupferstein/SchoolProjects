@@ -62,14 +62,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         }
     }
 
-    public boolean containsKey(Key key){//Will prob be deleted but oh well i need it for testing
-        if(get(this.root,key,this.height) == null) return false;
-        if(get(this.root,key,this.height).val != null ){
-            return true;
-        }else{
-            return false;
-        }
-    }
 
     @Override
     public Value put(Key k, Value v) {
