@@ -10,12 +10,18 @@ class BTreeImplTest {
     @Test
     public void testPutAndGet() {
         BTree<Integer, String> tree = new BTreeImpl<Integer,String>();
+//        WrongBTree<Integer, String> tree = new WrongBTree<>();
+
         tree.put(10, "ten");
         tree.put(20, "twenty");
         tree.put(5, "five");
         tree.put(6, "six");
         tree.put(12, "twelve");
         tree.put(30, "thirty");
+        tree.put(2, "two");
+        tree.put(3, "three");
+        tree.put(4, "four");
+        tree.put(7, "seven");
 
 
         assertEquals("ten", tree.get(10));
@@ -26,6 +32,7 @@ class BTreeImplTest {
         assertEquals( "thirty", tree.get(30));
         assertNull(null, tree.get(7));
 
+//        tree.put(10,null);
         assertEquals("ten",tree.put(10,null));
         assertNull(tree.get(10));
     }

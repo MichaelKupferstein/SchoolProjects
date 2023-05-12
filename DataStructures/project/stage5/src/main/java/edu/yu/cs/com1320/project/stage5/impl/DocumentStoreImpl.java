@@ -181,12 +181,20 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int callDelete(URI uri){
-        if(this.bTree.containsKey(uri)){
+        if(bTreeContainsKey(uri)){
             Document temp = this.bTree.get(uri);
             delete(uri);
             return temp.hashCode();
         }
         return 0;
+    }
+
+    public boolean bTreeContainsKey(URI key){
+        if(this.bTree.get(key) != null){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     private int returnValue(Document v){
@@ -203,7 +211,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Document get(URI uri) {
-        if(this.bTree.containsKey(uri)) {
+        if(bTreeContainsKey(uri)) {
             Document t = this.bTree.get(uri);
             t.setLastUseTime(nanoTime());
             this.heap.reHeapify(t);
@@ -218,7 +226,7 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public boolean delete(URI uri) {
-        if(this.bTree.containsKey(uri)){
+        if(bTreeContainsKey(uri)){
             //used containsKey so it is known already that it exists in the HT, so put null with it so it deletes.
             Document tempDoc = this.bTree.get(uri);
             Function<URI, Boolean> func = (tempUri) ->{
