@@ -1,9 +1,16 @@
 package edu.yu.cs.com1320.project.impl;
 
 import edu.yu.cs.com1320.project.BTree;
+import edu.yu.cs.com1320.project.stage5.Document;
 import edu.yu.cs.com1320.project.stage5.PersistenceManager;
+import edu.yu.cs.com1320.project.stage5.impl.DocumentPersistenceManager;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key, Value> {
 
@@ -13,7 +20,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
     private Node leftMostExternalNode;
     private int height; //height of the B-tree
     private int n; //number of key-value pairs in the B-tree
-    private PersistenceManager<Key,Value> pm;
+    private DocumentPersistenceManager pm;
 
     public BTreeImpl() {
         this.root = new Node(0);
@@ -25,7 +32,18 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             throw new IllegalArgumentException("argument to get() is null");
         }
         Entry entry = this.get(this.root, k, this.height);
+        Document entryAsDoc = null;
         if(entry != null) {
+            if(entry instanceof Document){
+                entryAsDoc = (Document)entry;
+            }
+            if(entryAsDoc instanceof BTreeImpl.JsonDocument){
+                try {
+                    Document temp = this.pm.deserialize(entryAsDoc.getKey());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             return (Value)entry.val;
         }
         return null;
@@ -161,11 +179,15 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
     @Override
     public void moveToDisk(Key k) throws Exception {
         this.pm.serialize(k,get(k));
+        //Path path = getPathFromURI((URI)k);
+        Document jSon = new JsonDocument((URI)k);
+        this.put(k,(Value)jSon);
     }
+
 
     @Override
     public void setPersistenceManager(PersistenceManager<Key, Value> pm) {
-        this.pm = pm;
+        this.pm = (DocumentPersistenceManager)pm;
     }
 
     private boolean isEqual(Key k1, Key k2) {
@@ -195,6 +217,56 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             currentNode.setNext(newNode);
         }
         return newNode;
+    }
+
+    private class JsonDocument implements Document{
+
+        private URI uri;
+
+        public JsonDocument(URI uri){
+            this.uri = uri;
+        }
+
+        @Override
+        public URI getKey() {
+            return this.uri;
+        }
+        @Override
+        public String getDocumentTxt() {
+            return null;
+        }
+        @Override
+        public byte[] getDocumentBinaryData() {
+            return new byte[0];
+        }
+        @Override
+        public int wordCount(String word) {
+            return 0;
+        }
+        @Override
+        public Set<String> getWords() {
+            return null;
+        }
+        @Override
+        public long getLastUseTime() {
+            return 0;
+        }
+        @Override
+        public void setLastUseTime(long timeInNanoseconds) {
+
+        }
+        @Override
+        public Map<String, Integer> getWordMap() {
+            return null;
+        }
+        @Override
+        public void setWordMap(Map<String, Integer> wordMap) {
+
+        }
+        @Override
+        public int compareTo(Document o) {
+            return 0;
+        }
     }
 
     private class Node {
