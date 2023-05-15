@@ -15,12 +15,12 @@ import java.util.Set;
 public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key, Value> {
 
     //max children per B-tree node = MAX-1 (must be an even number and greater than 2)
-    private static final int MAX = 4;
+    private final int MAX = 4;
     private Node root; //root of the B-tree
     private Node leftMostExternalNode;
     private int height; //height of the B-tree
     private int n; //number of key-value pairs in the B-tree
-    private DocumentPersistenceManager pm;
+    private PersistenceManager<Key,Value> pm;
 
     public BTreeImpl() {
         this.root = new Node(0);
@@ -39,7 +39,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             }
             if(entryAsDoc instanceof BTreeImpl.JsonDocument){
                 try {
-                    Document temp = this.pm.deserialize(entryAsDoc.getKey());
+                    Document temp = (Document) this.pm.deserialize((Key)entryAsDoc.getKey());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -51,7 +51,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     private Entry get(Node currentNode, Key key, int height) {
         Entry[] entries = currentNode.entries;
-
         //current node is external (i.e. height == 0)
         if (height == 0) {
             for (int j = 0; j < currentNode.entryCount; j++) {
@@ -187,7 +186,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     @Override
     public void setPersistenceManager(PersistenceManager<Key, Value> pm) {
-        this.pm = (DocumentPersistenceManager)pm;
+        this.pm = pm;
     }
 
     private boolean isEqual(Key k1, Key k2) {
