@@ -3,6 +3,7 @@ package edu.yu.cs.com1320.project.impl;
 import edu.yu.cs.com1320.project.BTree;
 import edu.yu.cs.com1320.project.stage5.Document;
 import edu.yu.cs.com1320.project.stage5.PersistenceManager;
+import edu.yu.cs.com1320.project.stage5.impl.DocumentImpl;
 import edu.yu.cs.com1320.project.stage5.impl.DocumentPersistenceManager;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key, Value> {
@@ -33,16 +35,17 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         }
         Entry entry = this.get(this.root, k, this.height);
         Document entryAsDoc = null;
-        if(entry != null) {
-            if(entry instanceof Document){
-                entryAsDoc = (Document)entry;
-            }
+        Document temp = null;
+        if(entry.val != null) {
+            entryAsDoc = (Document) entry.val;
             if(entryAsDoc instanceof BTreeImpl.JsonDocument){
                 try {
-                    Document temp = (Document) this.pm.deserialize((Key)entryAsDoc.getKey());
+                    temp = (DocumentImpl) this.pm.deserialize((Key)entryAsDoc.getKey());
+                    //this.pm.delete((Key) temp.getKey());// Dont use this bc its called in .put
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                this.put((Key) temp.getKey(),(Value) temp);
             }
             return (Value)entry.val;
         }
@@ -85,16 +88,22 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         if (k == null) {
             throw new IllegalArgumentException("argument key to put() is null");
         }
+        if(v == null){
+            this.n--;
+        }
         //if the key already exists in the b-tree, simply replace the value
         Entry alreadyThere = this.get(this.root, k, this.height);
         if(alreadyThere != null) {
-            Value old = alreadyThere.val;
+            Value old = checkIfItIsAJsonDoc(alreadyThere.val);
             alreadyThere.val = v;
             return old;
         }
 
         Node newNode = this.put(this.root, k, v, this.height);
-        this.n++;
+        if(v != null){
+            this.n++;
+        }
+
         if (newNode == null) {
             return null;
         }
@@ -112,6 +121,22 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
         //MIGHT BE WRONG
         return null;
+    }
+
+    private Value checkIfItIsAJsonDoc(Value val){
+        if(val instanceof BTreeImpl.JsonDocument){
+            Document temp = (Document) val;
+            Document res = null;
+            try {
+                res = (Document) this.pm.deserialize((Key) temp.getKey());
+                this.pm.delete((Key) temp.getKey());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return (Value) res;
+        }else{
+            return val;
+        }
     }
 
     private Node put(Node currentNode, Key key, Value val, int height) {
@@ -177,7 +202,14 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     @Override
     public void moveToDisk(Key k) throws Exception {
-        this.pm.serialize(k,get(k));
+        if(k == null){
+            throw new IllegalArgumentException("Key can't be null");
+        }
+        Value val = get(k);
+        if(val == null){
+            throw new NoSuchElementException("Element doesn't exist in this tree");
+        }
+        this.pm.serialize(k,val);
         //Path path = getPathFromURI((URI)k);
         Document jSon = new JsonDocument((URI)k);
         this.put(k,(Value)jSon);
@@ -278,7 +310,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         private Node(int k) {
             this.entryCount = k;
         }
-
         private void setNext(Node next) {
             this.next = next;
         }
@@ -287,13 +318,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         }
         private void setPrevious(Node previous) {
             this.previous = previous;
-        }
-        private Node getPrevious() {
-            return this.previous;
-        }
-
-        private Entry[] getEntries() {
-            return Arrays.copyOf(this.entries, this.entryCount);
         }
 
     }
