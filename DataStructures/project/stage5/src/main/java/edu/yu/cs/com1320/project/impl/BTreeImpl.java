@@ -34,6 +34,9 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             throw new IllegalArgumentException("argument to get() is null");
         }
         Entry entry = this.get(this.root, k, this.height);
+        if(entry == null){
+            return null;
+        }
         Document entryAsDoc = null;
         Document temp = null;
         if(entry.val != null) {
