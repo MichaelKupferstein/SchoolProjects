@@ -29,10 +29,12 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
     private GsonBuilder gsonBuilder;
     private Gson gson;
-    private File baseDir;
+    private File baseDir = new File(System.getProperty("user.dir"));
 
     public DocumentPersistenceManager(File baseDir){
-        this.baseDir = baseDir;
+        if(baseDir != null) {
+            this.baseDir = baseDir;
+        }
         this.gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DocumentImpl.class, new DocumentSerializer());
         gsonBuilder.registerTypeAdapter(DocumentImpl.class, new DocumentDeserializer());
@@ -66,7 +68,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         String uriPath = uri.getRawPath();//get the uri as a path
         String fileName = getFileNameFromUri(uri);
 
-        Path path = Path.of(this.baseDir + "\\" + authority + uriPath + ".json");
+        Path path = Path.of(this.baseDir + this.baseDir.separator + authority + uriPath + ".json");
         String file = new String(Files.readAllBytes(path));
         JsonObject jsonObject = this.gson.fromJson(file, JsonObject.class);
 
@@ -106,7 +108,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         String uriPath = uri.getPath();//get the uri as a path
         String fileName = getFileNameFromUri(uri);
         String absoluteFileName = fileName.replace(".json","");
-        return Path.of(this.baseDir + "\\" + authority + uriPath.replace(absoluteFileName, ""));
+        return Path.of(this.baseDir + this.baseDir.separator + authority + uriPath.replace(absoluteFileName, ""));
     }
 
     private class DocumentSerializer implements JsonSerializer<Document>{
