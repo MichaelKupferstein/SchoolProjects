@@ -19,7 +19,7 @@ public class DocumentStoreImpl implements DocumentStore{
     private BTreeImpl<URI,Document> bTree;
     private StackImpl<Undoable> commandStack;
     private TrieImpl<URI> trie;
-    private MinHeapImpl<Document> heap;
+    private MinHeapImpl<DocNode> heap;
     private int docLimit, byteLimit, docCount, byteCount;
 
     public DocumentStoreImpl() {
@@ -90,7 +90,7 @@ public class DocumentStoreImpl implements DocumentStore{
         if(this.docLimit != -1) {//if docLimit was initilized
             if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
                 if (this.docCount + 1 > this.docLimit) {//if adding this doc will cause an overflow on docLimt
-                    Document garbage = this.heap.remove();//remove only one bc we only need one extra space
+                    Document garbage = this.bTree.get(this.heap.remove().getUri());//remove only one bc we only need one extra space
                     deleteFromEverywhere(garbage);//delete it from everywhere
                 }
             }
@@ -100,7 +100,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 throw new IllegalArgumentException("Document larger then limit, Document length: " + getDocumentLength(doc) + " limit: " + this.byteLimit);
             }
             while(getDocumentLength(doc) + this.byteCount > this.byteLimit){//if adding will cause an overflow
-                Document garbage = this.heap.remove();
+                Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
@@ -135,7 +135,7 @@ public class DocumentStoreImpl implements DocumentStore{
                     this.trie.put(word,replaceOrNull.getKey());
                 }
                 this.byteCount += getDocumentLength(replaceOrNull);
-                this.heap.insert(replaceOrNull);
+                this.heap.insert(new DocNode(replaceOrNull.getKey(),replaceOrNull.getLastUseTime()));
                 return true;
             };
             return new GenericCommand<URI>(uri,funcIfReplace);
@@ -146,21 +146,23 @@ public class DocumentStoreImpl implements DocumentStore{
         Document temp = this.bTree.get(uri);
         if(temp != null){
             temp.setLastUseTime(-100);
-            this.heap.reHeapify(temp);
+            DocNode garbageNode = new DocNode(uri,temp.getLastUseTime());
+            this.heap.reHeapify(garbageNode);
             this.heap.remove();
         }
     }
     private void heapLogic(Document oldOrNull, Document newDoc){
         newDoc.setLastUseTime(nanoTime());
+        DocNode tempDocNode = new DocNode(newDoc.getKey(),newDoc.getLastUseTime());
         //if its null then its new
         if(oldOrNull == null){
-            this.heap.insert(newDoc);
-            this.heap.reHeapify(newDoc);
+            this.heap.insert(tempDocNode);
+            this.heap.reHeapify(tempDocNode);
         }else{
             //its a replace
             deleteFromHeap(oldOrNull.getKey());
-            this.heap.insert(newDoc);
-            this.heap.reHeapify(newDoc);
+            this.heap.insert(tempDocNode);
+            this.heap.reHeapify(tempDocNode);
         }
     }
 
@@ -214,7 +216,8 @@ public class DocumentStoreImpl implements DocumentStore{
         if(bTreeContainsKey(uri)) {
             Document t = this.bTree.get(uri);
             t.setLastUseTime(nanoTime());
-            this.heap.reHeapify(t);
+            DocNode tempDocNode = new DocNode(uri,t.getLastUseTime());
+            this.heap.reHeapify(tempDocNode);
             return t;
         }
         return null;
@@ -232,7 +235,8 @@ public class DocumentStoreImpl implements DocumentStore{
             Function<URI, Boolean> func = (tempUri) ->{
                 this.bTree.put(uri,tempDoc);
                 addToTrie(uri);
-                this.heap.insert(tempDoc);
+                DocNode tempDocNode = new DocNode(uri,0);
+                this.heap.insert(tempDocNode);
                 return true;
             };
             GenericCommand<URI> tempCommand = new GenericCommand<>(uri, func);
@@ -285,7 +289,8 @@ public class DocumentStoreImpl implements DocumentStore{
             for(GenericCommand<URI> gc : setOfCmds){
                 Document tempDoc = this.bTree.get(gc.getTarget());
                 tempDoc.setLastUseTime(nanoTime);
-                this.heap.reHeapify(tempDoc);
+                DocNode tempDocNode = new DocNode(tempDoc.getKey(),tempDoc.getLastUseTime());
+                this.heap.reHeapify(tempDocNode);
                 this.docCount++;
                 this.byteCount += getDocumentLength(tempDoc);
             }
@@ -296,7 +301,8 @@ public class DocumentStoreImpl implements DocumentStore{
             Document tempDoc = this.bTree.get(tempGC.getTarget());
             if(tempDoc != null){
                 tempDoc.setLastUseTime(nanoTime());
-                this.heap.reHeapify(tempDoc);
+                DocNode tempDocNode = new DocNode(tempDoc.getKey(),tempDoc.getLastUseTime());
+                this.heap.reHeapify(tempDocNode);
                 if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
                     this.docCount++;
                     this.byteCount += getDocumentLength(tempDoc);
@@ -340,7 +346,8 @@ public class DocumentStoreImpl implements DocumentStore{
                     Document temp = this.bTree.get(uri);
                     if(temp != null){//meanings its either an undo on a delete or an undo on a reaplace
                         temp.setLastUseTime(nanoTime());
-                        this.heap.reHeapify(temp);
+                        DocNode tempDocNode = new DocNode(temp.getKey(),temp.getLastUseTime());
+                        this.heap.reHeapify(tempDocNode);
                         if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
                             this.docCount++;
                             this.byteCount += getDocumentLength(temp);
@@ -364,13 +371,13 @@ public class DocumentStoreImpl implements DocumentStore{
         if(this.byteLimit == -1 && this.docLimit == -1) return;
         if(this.docLimit != -1){
             while(this.docCount > this.docLimit){
-                Document garbage = this.heap.remove();
+                Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
         if(this.byteLimit != -1){
             while(this.byteCount > this.byteLimit){
-                Document garbage = this.heap.remove();
+                Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
@@ -385,7 +392,8 @@ public class DocumentStoreImpl implements DocumentStore{
         Document temp = this.bTree.get(uri);
         if(temp != null){
             temp.setLastUseTime(nanoTime());
-            this.heap.reHeapify(temp);
+            DocNode tempDocNode = new DocNode(temp.getKey(), temp.getLastUseTime());
+            this.heap.reHeapify(tempDocNode);
             if(nullOrold == null){//if its null that means in undoing a delete else its undoing a replace
                 this.docCount++;
                 this.byteCount += getDocumentLength(temp);
@@ -417,7 +425,8 @@ public class DocumentStoreImpl implements DocumentStore{
         long nanoTime = nanoTime();
         for(Document doc : docs){
             doc.setLastUseTime(nanoTime);
-            this.heap.reHeapify(doc);
+            DocNode tempDocNode = new DocNode(doc.getKey(),doc.getLastUseTime());
+            this.heap.reHeapify(tempDocNode);
         }
     }
     /**
@@ -490,7 +499,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 this.trie.put(word,doc.getKey());
             }
             this.bTree.put(doc.getKey(),doc);
-            this.heap.insert(doc);
+            this.heap.insert(new DocNode(doc.getKey(),doc.getLastUseTime()));
             return true;
         };
         return result;
@@ -538,7 +547,7 @@ public class DocumentStoreImpl implements DocumentStore{
         this.docLimit = limit;
         if(this.docCount > limit){
             while(this.docCount > limit){
-                Document garbage = this.heap.remove();
+                Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
@@ -599,7 +608,7 @@ public class DocumentStoreImpl implements DocumentStore{
         this.byteLimit = limit;
         if(this.byteCount > limit){
             while(this.byteCount > limit){
-                Document garbage = this.heap.remove();
+                Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
@@ -622,6 +631,47 @@ public class DocumentStoreImpl implements DocumentStore{
         @Override
         public int compare(Document doc1, Document doc2){
             return Integer.compare(doc1.wordCount(this.s), doc2.wordCount(this.s));
+        }
+    }
+
+    private class DocNode implements Comparable<DocNode>{
+
+        private URI uri;
+        private long timeInNano;
+        public DocNode(URI uri,long timeInNano){
+            this.uri = uri;
+            this.timeInNano = timeInNano;
+        }
+        private URI getUri() {
+            return uri;
+        }
+        private void setUri(URI uri) {
+            this.uri = uri;
+        }
+
+        private long getTimeInNano() {
+            return timeInNano;
+        }
+
+        private void setTimeInNano(long timeInNano) {
+            this.timeInNano = timeInNano;
+        }
+
+        @Override
+        public int compareTo(DocNode o) {
+            return Long.compare(timeInNano,o.getTimeInNano());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof DocNode docNode)) return false;
+            return Objects.equals(getUri(), docNode.getUri());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getUri());
         }
     }
 }

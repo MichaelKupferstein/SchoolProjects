@@ -456,9 +456,13 @@ public class DocumentStoreImplTest {
         this.docStore.get(uri1);
         b = "b";
         this.docStore.setMaxDocumentBytes(20);
+        assertNull(this.docStore.get(uri2));
+        assertNull(this.docStore.get(uri3));
         b = "b";
         this.docStore.setMaxDocumentCount(1);
+        assertNull(this.docStore.get(uri4));
         b = "b";
+        assertEquals(doc1,this.docStore.get(uri1));
     }
 
     @Test
