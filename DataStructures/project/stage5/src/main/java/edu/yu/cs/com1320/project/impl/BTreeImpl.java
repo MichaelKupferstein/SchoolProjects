@@ -91,9 +91,9 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         if (k == null) {
             throw new IllegalArgumentException("argument key to put() is null");
         }
-        if(v == null){
-            this.n--;
-        }
+//        if(v == null){
+//            this.n--;
+//        }
         //if the key already exists in the b-tree, simply replace the value
         Entry alreadyThere = this.get(this.root, k, this.height);
         if(alreadyThere != null) {

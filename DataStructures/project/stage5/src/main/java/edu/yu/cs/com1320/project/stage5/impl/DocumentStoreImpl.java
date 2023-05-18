@@ -18,7 +18,7 @@ public class DocumentStoreImpl implements DocumentStore{
 //    private HashTableImpl<URI,Document> hashTable;
     private BTreeImpl<URI,Document> bTree;
     private StackImpl<Undoable> commandStack;
-    private TrieImpl<Document> trie;
+    private TrieImpl<URI> trie;
     private MinHeapImpl<Document> heap;
     private int docLimit, byteLimit, docCount, byteCount;
 
@@ -115,7 +115,7 @@ public class DocumentStoreImpl implements DocumentStore{
                 deleteFromHeap(uri);
                 this.bTree.put(uri,null);
                 for(String word : doc.getWords()){
-                    this.trie.delete(word, doc);
+                    this.trie.delete(word, doc.getKey());
                 }
                 this.docCount--;
                 this.byteCount -= getDocumentLength(doc);
@@ -128,11 +128,11 @@ public class DocumentStoreImpl implements DocumentStore{
                 deleteFromHeap(uri);
                 this.bTree.put(uri,replaceOrNull);
                 for(String word : doc.getWords()){
-                    this.trie.delete(word,replaceOrNull);
+                    this.trie.delete(word,replaceOrNull.getKey());
                 }
                 this.byteCount -= getDocumentLength(doc);
                 for(String word : replaceOrNull.getWords()){
-                    this.trie.put(word,replaceOrNull);
+                    this.trie.put(word,replaceOrNull.getKey());
                 }
                 this.byteCount += getDocumentLength(replaceOrNull);
                 this.heap.insert(replaceOrNull);
@@ -170,13 +170,13 @@ public class DocumentStoreImpl implements DocumentStore{
             //it already existed and this is a replace then delete its value from all its old words
             Set<String> words = doc.getWords();
             for(String word : words){
-                this.trie.delete(word,doc);
+                this.trie.delete(word,doc.getKey());
             }
         }
         //if its new add it all to the trie if its old still add all the words.
         Set<String> words = doc.getWords();
         for(String word : words){
-            this.trie.put(word,doc);
+            this.trie.put(word,doc.getKey());
         }
     }
 
@@ -252,14 +252,14 @@ public class DocumentStoreImpl implements DocumentStore{
         Document doc = this.bTree.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
-            this.trie.put(word,doc);
+            this.trie.put(word,doc.getKey());
         }
     }
     private void deleteFromTrie(URI uri){
         Document doc = this.bTree.get(uri);
         Set<String> words = doc.getWords();
         for(String word : words){
-            this.trie.delete(word,doc);
+            this.trie.delete(word,doc.getKey());
         }
     }
     /**
@@ -403,7 +403,12 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public List<Document> search(String keyword) {
-        List<Document> tempList = this.trie.getAllSorted(keyword,new docComp(keyword).reversed());
+        List<URI> tempURIList = this.trie.getAllSorted(keyword,Comparator.naturalOrder());
+        List<Document> tempList = new ArrayList<>();
+        for(URI uri : tempURIList){
+            tempList.add(this.bTree.get(uri));
+        }
+        tempList.sort(new docComp(keyword).reversed());
         setListOfDocsNanoTime(tempList);
         return tempList;
     }
@@ -441,7 +446,12 @@ public class DocumentStoreImpl implements DocumentStore{
                 return prefixCount;
             }
         };
-        List<Document> tempList = this.trie.getAllWithPrefixSorted(keywordPrefix,tempComp.reversed());
+        List<URI> tempURIList = this.trie.getAllWithPrefixSorted(keywordPrefix,Comparator.naturalOrder());
+        List<Document> tempList = new ArrayList<>();
+        for(URI uri : tempURIList){
+            tempList.add(this.bTree.get(uri));
+        }
+        tempList.sort(tempComp.reversed());
         setListOfDocsNanoTime(tempList);
         return tempList;
     }
@@ -455,18 +465,18 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Set<URI> deleteAll(String keyword){
-        Set<Document> docs = this.trie.deleteAll(keyword);
+        Set<URI> docs = this.trie.deleteAll(keyword);
         CommandSet<URI> tempCommandSet = new CommandSet<>();
         Set<URI> uris = new HashSet<>();
-        for(Document doc : docs){
-            GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc));
+        for(URI doc : docs){
+            GenericCommand<URI> tempGenericCom = new GenericCommand<>(doc,createTrieDeleteFunction((DocumentImpl) this.bTree.get(doc)));
             tempCommandSet.addCommand(tempGenericCom);
-            uris.add(doc.getKey());
-            deleteFromTrie(doc.getKey());
-            deleteFromHeap(doc.getKey());
-            this.bTree.put(doc.getKey(),null);
+            uris.add(doc);
+            deleteFromTrie(doc);
+            deleteFromHeap(doc);
+            this.bTree.put(doc,null);
             this.docCount--;
-            this.byteCount -= getDocumentLength(doc);
+            this.byteCount -= getDocumentLength(this.bTree.get(doc));
 
         }
         this.commandStack.push(tempCommandSet);
@@ -477,7 +487,7 @@ public class DocumentStoreImpl implements DocumentStore{
         Function<URI,Boolean> result = (tempUri) ->{
             Set<String> words = doc.getWords();
             for(String word : words){
-                this.trie.put(word,doc);
+                this.trie.put(word,doc.getKey());
             }
             this.bTree.put(doc.getKey(),doc);
             this.heap.insert(doc);
@@ -495,23 +505,23 @@ public class DocumentStoreImpl implements DocumentStore{
      */
     @Override
     public Set<URI> deleteAllWithPrefix(String keywordPrefix) {
-        Set<Document> docs = this.trie.deleteAllWithPrefix(keywordPrefix);
+        Set<URI> docs = this.trie.deleteAllWithPrefix(keywordPrefix);
         Set<URI> uris = new HashSet<>();
         CommandSet<URI> tempCommandSet = new CommandSet<>();
-        for(Document doc : docs){
-            Set<String> words = doc.getWords();
+        for(URI doc : docs){
+            Set<String> words = this.bTree.get(doc).getWords();
             Set<String> wordsWithPrefix = new HashSet<>();
             for(String word : words){
                 if(word.startsWith(keywordPrefix)) {wordsWithPrefix.add(word);}
             }
-            GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc.getKey(),createTrieDeleteFunction((DocumentImpl) doc));
+            GenericCommand<URI> tempGenericCommand = new GenericCommand<>(doc,createTrieDeleteFunction((DocumentImpl) this.bTree.get(doc)));
             tempCommandSet.addCommand(tempGenericCommand);
-            uris.add(doc.getKey());
-            deleteFromTrie(doc.getKey());
-            deleteFromHeap(doc.getKey());
-            this.bTree.put(doc.getKey(),null);
+            uris.add(doc);
+            deleteFromTrie(doc);
+            deleteFromHeap(doc);
+            this.bTree.put(doc,null);
             this.docCount--;
-            this.byteCount -= getDocumentLength(doc);
+            this.byteCount -= getDocumentLength(this.bTree.get(doc));
         }
         this.commandStack.push(tempCommandSet);
         return uris;

@@ -732,7 +732,7 @@ public class DocumentStoreImplTest {
         ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
         for(int i = 0; i < 5;i++){
             URI tempUri = generateRandomURI();
-            String tempTxt = "Test " + generateRandomString(50);
+            String tempTxt = "Test " + generateRandomString(45);
             Document temp = new DocumentImpl(tempUri,tempTxt, null);
             listOfAllCreatedDocs.add(temp);
             this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
