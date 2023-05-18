@@ -205,6 +205,9 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
 
     @Override
     public void moveToDisk(Key k) throws Exception {
+        if(this.pm == null){
+            throw new IllegalStateException("PersistanceManager can't be null");
+        }
         if(k == null){
             throw new IllegalArgumentException("Key can't be null");
         }
