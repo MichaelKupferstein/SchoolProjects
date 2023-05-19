@@ -6,7 +6,9 @@ import edu.yu.cs.com1320.project.Undoable;
 import edu.yu.cs.com1320.project.impl.*;
 import edu.yu.cs.com1320.project.stage5.Document;
 import edu.yu.cs.com1320.project.stage5.DocumentStore;
+import edu.yu.cs.com1320.project.stage5.PersistenceManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -21,10 +23,26 @@ public class DocumentStoreImpl implements DocumentStore{
     private TrieImpl<URI> trie;
     private MinHeapImpl<DocNode> heap;
     private int docLimit, byteLimit, docCount, byteCount;
+    private DocumentPersistenceManager dp;
+
 
     public DocumentStoreImpl() {
 //        this.hashTable = new HashTableImpl<>();
         this.bTree = new BTreeImpl<>();
+        this.dp = new DocumentPersistenceManager(null);
+        this.bTree.setPersistenceManager(this.dp); //can be anything, but if its null then defualt is user.dir
+        this.commandStack = new StackImpl<>();
+        this.trie = new TrieImpl<>();
+        this.heap = new MinHeapImpl<>();
+        this.docCount = 0;
+        this.byteCount = 0;
+        this.docLimit = -1;
+        this.byteLimit = -1;
+    }
+    public DocumentStoreImpl(File baseDir){
+        this.bTree = new BTreeImpl<>();
+        this.dp = new DocumentPersistenceManager(baseDir);
+        this.bTree.setPersistenceManager(this.dp);
         this.commandStack = new StackImpl<>();
         this.trie = new TrieImpl<>();
         this.heap = new MinHeapImpl<>();
@@ -215,12 +233,59 @@ public class DocumentStoreImpl implements DocumentStore{
     public Document get(URI uri) {
         if(bTreeContainsKey(uri)) {
             Document t = this.bTree.get(uri);
+            if(t instanceof JsonDocument){
+                t = jsonDocLogic(uri);
+            }
             t.setLastUseTime(nanoTime());
+            //addBackAfterGet(uri);
             DocNode tempDocNode = new DocNode(uri,t.getLastUseTime());
             this.heap.reHeapify(tempDocNode);
+            overFlowLogicOnGet(uri);
             return t;
         }
         return null;
+    }
+
+    private Document jsonDocLogic(URI uri){
+        Document jsConvert = null;
+        try {
+            jsConvert = this.dp.deserialize(uri);
+            this.dp.delete(uri);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if(jsConvert != null) {
+            this.bTree.put(uri, jsConvert);
+            this.heap.insert(new DocNode(uri,jsConvert.getLastUseTime()));
+            this.docCount++;
+            this.byteCount += getDocumentLength(jsConvert);
+            return jsConvert;
+
+        }
+        return null;
+    }
+
+    private void overFlowLogicOnGet(URI uri){
+        if(this.docLimit != -1){//meaning it was initizlied
+            setMaxDocumentCount(this.docLimit);
+        }
+        if(this.byteLimit != -1){//meaning it was inizlized
+            setMaxDocumentBytes(this.byteLimit);
+        }
+    }
+//    private void addBackAfterGet(URI uri){
+//        addToTrie(uri);
+//        if(!heapContains(uri)){
+//            this.heap.insert(new DocNode(uri,this.bTree.get(uri).getLastUseTime()));
+//        }
+//    }
+    private boolean heapContains(URI uri){
+        try{
+            this.heap.reHeapify(new DocNode(uri,this.bTree.get(uri).getLastUseTime()));
+        }catch(NoSuchElementException e){
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -556,7 +621,13 @@ public class DocumentStoreImpl implements DocumentStore{
     private void deleteFromEverywhere(Document garbage){
         deleteFromTrie(garbage.getKey());
         deleteFromCommandStack(garbage);
-        this.bTree.put(garbage.getKey(),null);
+
+        try {
+            this.bTree.moveToDisk(garbage.getKey());
+            this.bTree.put(garbage.getKey(),new JsonDocument(garbage.getKey()));
+        }
+        catch (Exception e) {throw new RuntimeException(e);}
+
         this.docCount--;
         this.byteCount -= getDocumentLength(garbage);
     }
@@ -672,6 +743,56 @@ public class DocumentStoreImpl implements DocumentStore{
         @Override
         public int hashCode() {
             return Objects.hash(getUri());
+        }
+    }
+
+    private class JsonDocument implements Document{
+
+        private URI uri;
+
+        public JsonDocument(URI uri){
+            this.uri = uri;
+        }
+
+        @Override
+        public URI getKey() {
+            return this.uri;
+        }
+        @Override
+        public String getDocumentTxt() {
+            return null;
+        }
+        @Override
+        public byte[] getDocumentBinaryData() {
+            return new byte[0];
+        }
+        @Override
+        public int wordCount(String word) {
+            return 0;
+        }
+        @Override
+        public Set<String> getWords() {
+            return null;
+        }
+        @Override
+        public long getLastUseTime() {
+            return 0;
+        }
+        @Override
+        public void setLastUseTime(long timeInNanoseconds) {
+
+        }
+        @Override
+        public Map<String, Integer> getWordMap() {
+            return null;
+        }
+        @Override
+        public void setWordMap(Map<String, Integer> wordMap) {
+
+        }
+        @Override
+        public int compareTo(Document o) {
+            return 0;
         }
     }
 }

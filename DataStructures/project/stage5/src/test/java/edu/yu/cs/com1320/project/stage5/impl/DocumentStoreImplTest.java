@@ -1,6 +1,7 @@
 package edu.yu.cs.com1320.project.stage5.impl;
 
 import edu.yu.cs.com1320.project.stage5.Document;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -25,6 +27,31 @@ public class DocumentStoreImplTest {
     @BeforeEach
     void setUp() throws URISyntaxException {
         this.docStore = new DocumentStoreImpl();
+    }
+
+    @AfterEach
+    void cleanUp(){
+        final String FOLDER_PATH = "C:\\Users\\mkupf\\Desktop\\Michael_Kupferstein_800737361\\DataStructures\\project\\stage5\\test.com";
+        Path directory = Paths.get(FOLDER_PATH);
+        if (Files.exists(directory)) {
+            try {
+                Files.walk(directory)
+                        .sorted((a, b) -> b.toString().length() - a.toString().length())
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+
+                Files.deleteIfExists(directory);
+                //System.out.println("Folder deleted successfully.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
     @Test
     @DisplayName("Testing putting and getting with a TXT document")
@@ -456,11 +483,11 @@ public class DocumentStoreImplTest {
         this.docStore.get(uri1);
         b = "b";
         this.docStore.setMaxDocumentBytes(20);
-        assertNull(this.docStore.get(uri2));
-        assertNull(this.docStore.get(uri3));
+        //assertNull(this.docStore.get(uri2));
+        //assertNull(this.docStore.get(uri3));
         b = "b";
         this.docStore.setMaxDocumentCount(1);
-        assertNull(this.docStore.get(uri4));
+        //assertNull(this.docStore.get(uri4));
         b = "b";
         assertEquals(doc1,this.docStore.get(uri1));
     }
@@ -478,12 +505,9 @@ public class DocumentStoreImplTest {
         }
         String b = "breakpoint";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
+        b = "b";
     }
     @Test
     void testingOverFlowLogicOnPut1b()throws Exception{//tests when there is a limit on doc limit, before any docs are put in, for binary
@@ -498,11 +522,7 @@ public class DocumentStoreImplTest {
         }
         String b = "breakpoint";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
 
     }
@@ -521,11 +541,7 @@ public class DocumentStoreImplTest {
         this.docStore.setMaxDocumentCount(8);
         b = "b";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
 
     }
@@ -544,11 +560,7 @@ public class DocumentStoreImplTest {
         this.docStore.setMaxDocumentCount(8);
         b = "b";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
     }
 
@@ -567,11 +579,7 @@ public class DocumentStoreImplTest {
         }
         String b = "breakpoint";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
     }
 
@@ -588,11 +596,7 @@ public class DocumentStoreImplTest {
         }
         String b = "breakpoint";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
 
     }
@@ -611,11 +615,7 @@ public class DocumentStoreImplTest {
         this.docStore.setMaxDocumentBytes(400);
         b = "b";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
 
     }
@@ -634,11 +634,7 @@ public class DocumentStoreImplTest {
         this.docStore.setMaxDocumentBytes(400);
         b = "b";
         for(int i = 0; i  < 10; i++){
-            if(i < 2){
-                assertNull(this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }else {
-                assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
-            }
+            assertEquals(listOfAllCreatedDocs.get(i), this.docStore.get(listOfAllCreatedDocs.get(i).getKey()));
         }
     }
 
@@ -808,7 +804,7 @@ public class DocumentStoreImplTest {
         }
         this.docStore.setMaxDocumentCount(0);
         for(Document doc : allCreatedDocs){
-            assertNull(this.docStore.get(doc.getKey()));
+            assertEquals(doc,this.docStore.get(doc.getKey()));
         }
     }
 
@@ -822,7 +818,7 @@ public class DocumentStoreImplTest {
         }
         this.docStore.setMaxDocumentBytes(0);
         for(Document doc : allCreatedDocs){
-            assertNull(this.docStore.get(doc.getKey()));
+            assertEquals(doc,this.docStore.get(doc.getKey()));
         }
     }
 
