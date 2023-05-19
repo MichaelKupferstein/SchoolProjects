@@ -34,23 +34,8 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             throw new IllegalArgumentException("argument to get() is null");
         }
         Entry entry = this.get(this.root, k, this.height);
-        if(entry == null){
-            return null;
-        }
-        Document entryAsDoc = null;
-        Document temp = null;
-        if(entry.val != null) {
-            entryAsDoc = (Document) entry.val;
-            if(entryAsDoc instanceof BTreeImpl.JsonDocument){
-                try {
-                    temp = (DocumentImpl) this.pm.deserialize((Key)entryAsDoc.getKey());
-                    //this.pm.delete((Key) temp.getKey());// Dont use this bc its called in .put
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                this.put((Key) temp.getKey(),(Value) temp);
-            }
-            return (Value)entry.val;
+        if(entry != null){
+            return entry.val;
         }
         return null;
     }
@@ -91,13 +76,11 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         if (k == null) {
             throw new IllegalArgumentException("argument key to put() is null");
         }
-//        if(v == null){
-//            this.n--;
-//        }
+
         //if the key already exists in the b-tree, simply replace the value
         Entry alreadyThere = this.get(this.root, k, this.height);
         if(alreadyThere != null) {
-            Value old = checkIfItIsAJsonDoc(alreadyThere.val);
+            Value old = alreadyThere.val;
             alreadyThere.val = v;
             return old;
         }
@@ -126,21 +109,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         return null;
     }
 
-    private Value checkIfItIsAJsonDoc(Value val){
-        if(val instanceof BTreeImpl.JsonDocument){
-            Document temp = (Document) val;
-            Document res = null;
-            try {
-                res = (Document) this.pm.deserialize((Key) temp.getKey());
-                this.pm.delete((Key) temp.getKey());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return (Value) res;
-        }else{
-            return val;
-        }
-    }
+
 
     private Node put(Node currentNode, Key key, Value val, int height) {
         int j;
@@ -217,8 +186,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         }
         this.pm.serialize(k,val);
         //Path path = getPathFromURI((URI)k);
-        Document jSon = new JsonDocument((URI)k);
-        this.put(k,(Value)jSon);
+
     }
 
 
