@@ -257,7 +257,7 @@ public class DocumentStoreImpl implements DocumentStore{
             t.setLastUseTime(nanoTime());
             DocNode tempDocNode = new DocNode(uri,t.getLastUseTime());
             this.heap.reHeapify(tempDocNode);
-            overFlowLogicOnGet(uri);
+            overFlowLogicOnGet();
             return t;
         }
         return null;
@@ -283,7 +283,7 @@ public class DocumentStoreImpl implements DocumentStore{
         return null;
     }
 
-    private void overFlowLogicOnGet(URI uri){
+    private void overFlowLogicOnGet(){
         if(this.docLimit != -1){//meaning it was initizlied
             setMaxDocumentCount(this.docLimit);
         }
@@ -483,10 +483,15 @@ public class DocumentStoreImpl implements DocumentStore{
         List<URI> tempURIList = this.trie.getAllSorted(keyword,Comparator.naturalOrder());
         List<Document> tempList = new ArrayList<>();
         for(URI uri : tempURIList){
-            tempList.add(this.bTree.get(uri));
+            Document temp = this.bTree.get(uri);
+            if(temp instanceof JsonDocument){
+                temp = jsonDocLogic(uri);
+            }
+            tempList.add(temp);
         }
         tempList.sort(new docComp(keyword).reversed());
         setListOfDocsNanoTime(tempList);
+        overFlowLogicOnGet();
         return tempList;
     }
 
@@ -527,10 +532,15 @@ public class DocumentStoreImpl implements DocumentStore{
         List<URI> tempURIList = this.trie.getAllWithPrefixSorted(keywordPrefix,Comparator.naturalOrder());
         List<Document> tempList = new ArrayList<>();
         for(URI uri : tempURIList){
-            tempList.add(this.bTree.get(uri));
+            Document temp = this.bTree.get(uri);
+            if(temp instanceof JsonDocument){
+                temp = jsonDocLogic(uri);
+            }
+            tempList.add(temp);
         }
         tempList.sort(tempComp.reversed());
         setListOfDocsNanoTime(tempList);
+        overFlowLogicOnGet();
         return tempList;
     }
 
@@ -623,7 +633,7 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private void deleteFromEverywhere(Document garbage){
-        deleteFromTrie(garbage.getKey());
+        //deleteFromTrie(garbage.getKey());
 
         try {
             this.bTree.moveToDisk(garbage.getKey());

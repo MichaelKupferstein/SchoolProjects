@@ -851,7 +851,7 @@ public class DocumentStoreImplTest {
         assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));
         assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
         this.docStore.setMaxDocumentBytes(91);
-        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
+        //assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
         assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
 
     }
@@ -875,7 +875,7 @@ public class DocumentStoreImplTest {
         assertEquals(Arrays.asList(doc2),this.docStore.searchByPrefix("twice"));
         assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
         this.docStore.setMaxDocumentCount(1);
-        assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
+        //assertEquals(Collections.emptyList(),this.docStore.searchByPrefix("twice"));
         assertEquals(Arrays.asList(doc1),this.docStore.searchByPrefix("test"));
 
     }
@@ -896,6 +896,31 @@ public class DocumentStoreImplTest {
 
         assertNotEquals(0,this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT));
         String b = "B";
+    }
+
+    @Test
+    void testingToMakeSureTrieWorksAsIntended()throws Exception{
+        ArrayList<Document> listOfAllCreatedDocs = new ArrayList<>();
+        for(int i = 0; i < 10;i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = "Test " + generateRandomString(45);
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
+            listOfAllCreatedDocs.add(temp);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        List<Document> getDocs = this.docStore.search("Test");
+        for(Document doc : listOfAllCreatedDocs){
+            assertTrue(getDocs.contains(doc));
+        }
+        this.docStore.setMaxDocumentCount(0);
+        //Set<Document> setDoc = new HashSet<>(getDocs);
+        Set<Document> allDoc = new HashSet<>(listOfAllCreatedDocs);
+        for(Document doc : listOfAllCreatedDocs){
+            getDocs = this.docStore.search("Test");
+            Set<Document> setDoc = new HashSet<>(getDocs);
+            assertEquals(setDoc,allDoc);
+        }
+        String b = "b";
     }
 
     private InputStream readFileToInputStream(String filePath){
@@ -975,5 +1000,6 @@ public class DocumentStoreImplTest {
         }
         return temp;
     }
+
 
 }
