@@ -17,7 +17,6 @@ import java.util.function.Function;
 import static java.lang.System.nanoTime;
 
 public class DocumentStoreImpl implements DocumentStore{
-//    private HashTableImpl<URI,Document> hashTable;
     private BTreeImpl<URI,Document> bTree;
     private StackImpl<Undoable> commandStack;
     private TrieImpl<URI> trie;
@@ -27,7 +26,6 @@ public class DocumentStoreImpl implements DocumentStore{
 
 
     public DocumentStoreImpl() {
-//        this.hashTable = new HashTableImpl<>();
         this.bTree = new BTreeImpl<>();
         this.dp = new DocumentPersistenceManager(null);
         this.bTree.setPersistenceManager(this.dp); //can be anything, but if its null then defualt is user.dir
@@ -237,7 +235,6 @@ public class DocumentStoreImpl implements DocumentStore{
                 t = jsonDocLogic(uri);
             }
             t.setLastUseTime(nanoTime());
-            //addBackAfterGet(uri);
             DocNode tempDocNode = new DocNode(uri,t.getLastUseTime());
             this.heap.reHeapify(tempDocNode);
             overFlowLogicOnGet(uri);
@@ -272,20 +269,6 @@ public class DocumentStoreImpl implements DocumentStore{
         if(this.byteLimit != -1){//meaning it was inizlized
             setMaxDocumentBytes(this.byteLimit);
         }
-    }
-//    private void addBackAfterGet(URI uri){
-//        addToTrie(uri);
-//        if(!heapContains(uri)){
-//            this.heap.insert(new DocNode(uri,this.bTree.get(uri).getLastUseTime()));
-//        }
-//    }
-    private boolean heapContains(URI uri){
-        try{
-            this.heap.reHeapify(new DocNode(uri,this.bTree.get(uri).getLastUseTime()));
-        }catch(NoSuchElementException e){
-            return false;
-        }
-        return true;
     }
 
     /**

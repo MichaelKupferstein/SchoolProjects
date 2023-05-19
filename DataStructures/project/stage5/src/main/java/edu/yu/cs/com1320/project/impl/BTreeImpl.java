@@ -105,7 +105,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         //a split at the root always increases the tree height by 1
         this.height++;
 
-        //MIGHT BE WRONG
         return null;
     }
 
@@ -185,8 +184,6 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
             throw new NoSuchElementException("Element doesn't exist in this tree");
         }
         this.pm.serialize(k,val);
-        //Path path = getPathFromURI((URI)k);
-
     }
 
 
@@ -202,8 +199,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         return k1.compareTo(k2) < 0;
     }
 
-    private Node split(Node currentNode, int height)
-    {
+    private Node split(Node currentNode, int height) {
         Node newNode = new Node(MAX / 2);
         //by changing currentNode.entryCount, we will treat any value
         //at index higher than the new currentNode.entryCount as if
@@ -224,55 +220,7 @@ public class BTreeImpl<Key extends Comparable<Key>, Value> implements BTree<Key,
         return newNode;
     }
 
-    private class JsonDocument implements Document{
 
-        private URI uri;
-
-        public JsonDocument(URI uri){
-            this.uri = uri;
-        }
-
-        @Override
-        public URI getKey() {
-            return this.uri;
-        }
-        @Override
-        public String getDocumentTxt() {
-            return null;
-        }
-        @Override
-        public byte[] getDocumentBinaryData() {
-            return new byte[0];
-        }
-        @Override
-        public int wordCount(String word) {
-            return 0;
-        }
-        @Override
-        public Set<String> getWords() {
-            return null;
-        }
-        @Override
-        public long getLastUseTime() {
-            return 0;
-        }
-        @Override
-        public void setLastUseTime(long timeInNanoseconds) {
-
-        }
-        @Override
-        public Map<String, Integer> getWordMap() {
-            return null;
-        }
-        @Override
-        public void setWordMap(Map<String, Integer> wordMap) {
-
-        }
-        @Override
-        public int compareTo(Document o) {
-            return 0;
-        }
-    }
 
     private class Node {
         private int entryCount; // number of entries
