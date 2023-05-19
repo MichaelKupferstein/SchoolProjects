@@ -73,8 +73,6 @@ class BTreeImplTest {
        assertEquals(doc2,tree.put(uri2,null));
        assertNull(tree.get(uri2));
 
-
-
     }
     private URI generateRandomURI() throws URISyntaxException {
         UUID uuid = UUID.randomUUID();
