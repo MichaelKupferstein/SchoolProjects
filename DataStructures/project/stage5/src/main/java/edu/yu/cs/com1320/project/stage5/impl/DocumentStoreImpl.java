@@ -274,6 +274,7 @@ public class DocumentStoreImpl implements DocumentStore{
         if(jsConvert != null) {
             this.bTree.put(uri, jsConvert);
             this.heap.insert(new DocNode(uri,jsConvert.getLastUseTime()));
+            addToTrie(jsConvert.getKey());
             this.docCount++;
             this.byteCount += getDocumentLength(jsConvert);
             return jsConvert;
@@ -623,7 +624,6 @@ public class DocumentStoreImpl implements DocumentStore{
 
     private void deleteFromEverywhere(Document garbage){
         deleteFromTrie(garbage.getKey());
-        deleteFromCommandStack(garbage);
 
         try {
             this.bTree.moveToDisk(garbage.getKey());
@@ -635,42 +635,9 @@ public class DocumentStoreImpl implements DocumentStore{
         this.byteCount -= getDocumentLength(garbage);
     }
 
-    private void deleteFromCommandStack(Document doc){
-        StackImpl<Undoable> tempStack = new StackImpl<>();
-        boolean found = false;
-        while(this.commandStack.size() != 0){
-            Undoable tempCommand = this.commandStack.pop();
-            if(tempCommand instanceof CommandSet<?>){
-                CommandSet<URI> tempAsCmdSet = (CommandSet<URI>) tempCommand;
-                if(!tempAsCmdSet.containsTarget(doc.getKey())) {
-                    tempStack.push(tempAsCmdSet);
-                }else{
-                    deleteFromCommandSet(tempAsCmdSet, doc.getKey());
-                    if(tempAsCmdSet.size() > 0){
-                        tempStack.push(tempAsCmdSet);
-                    }
-                }
-            }else{
-                GenericCommand<URI> tempAsGC = (GenericCommand<URI>) tempCommand;
-                if(!tempAsGC.getTarget().equals(doc.getKey())){
-                    tempStack.push(tempAsGC);
-                }
-            }
-        }
-        while(tempStack.size() != 0){
-            this.commandStack.push(tempStack.pop());
-        }
-    }
 
-    private void deleteFromCommandSet(CommandSet<URI> cmdSet, URI uri){
-            Iterator<GenericCommand<URI>> iterator = cmdSet.iterator();
-            while(iterator.hasNext()){
-                GenericCommand<URI> temp = iterator.next();
-                if(temp.getTarget().equals(uri)){
-                    iterator.remove();
-                }
-            }
-    }
+
+
     /**
      * set maximum number of bytes of memory that may be used by all the documents in memory combined
      *
