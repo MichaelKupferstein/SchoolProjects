@@ -879,6 +879,24 @@ public class DocumentStoreImplTest {
 
     }
 
+    @Test
+    void testingReplaceOnJsonDoc() throws Exception{
+        URI uri1 = generateRandomURI();
+        String txt1 = generateRandomString();
+        Document doc1 = new DocumentImpl(uri1,txt1,null);
+        URI uri2 = generateRandomURI();
+        String txt2 = generateRandomString();
+        Document doc2 = new DocumentImpl(uri2,txt2,null);
+
+        this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT);
+        this.docStore.put(new ByteArrayInputStream(txt2.getBytes()),uri2,TXT);
+
+        this.docStore.setMaxDocumentCount(1);
+
+        assertNotEquals(0,this.docStore.put(new ByteArrayInputStream(txt1.getBytes()),uri1,TXT));
+        String b = "B";
+    }
+
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
 

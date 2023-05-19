@@ -81,12 +81,15 @@ public class DocumentStoreImpl implements DocumentStore{
     }
 
     private int logicBlock(URI uri, Document doc){
+        boolean isJson = false;
         Document oldOrNull = this.bTree.get(uri);
+        if(oldOrNull instanceof JsonDocument) isJson = true;
         checkLimitLogic(doc);//might not belong here
         GenericCommand<URI> tempCommand = createGenericCom(uri,this.bTree.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
         //so this.bTree.get will return null and do it accordingly, but if its a replace then this.bTree.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
         //was just created. CONT to method for logic
+
         heapLogic(oldOrNull,doc);
         Document v = this.bTree.put(uri,doc);
         this.commandStack.push(tempCommand);
@@ -97,14 +100,22 @@ public class DocumentStoreImpl implements DocumentStore{
         }else{ //meaning its old and a replace
             this.byteCount -= getDocumentLength(v);
             this.byteCount += getDocumentLength(doc);
+
         }
+        if(isJson){
+            try {this.dp.delete(uri);}
+            catch (IOException e) {throw new RuntimeException(e);}
+            docCount++;
+        }
+
         return returnValue(v);
     }
     private void checkLimitLogic(Document doc){
         Document oldOrNull = this.bTree.get(doc.getKey());
+        //if(doc instanceof JsonDocument) return;
         if(this.byteLimit == -1 && this.docLimit == -1) return; //meaning they were never initilized
         if(this.docLimit != -1) {//if docLimit was initilized
-            if(oldOrNull == null) {//meaing its new, bc if its a replace the docCount doesnt change
+            if(oldOrNull == null || oldOrNull instanceof JsonDocument) {//meaing its new, bc if its a replace the docCount doesnt change
                 if (this.docCount + 1 > this.docLimit) {//if adding this doc will cause an overflow on docLimt
                     Document garbage = this.bTree.get(this.heap.remove().getUri());//remove only one bc we only need one extra space
                     deleteFromEverywhere(garbage);//delete it from everywhere
@@ -126,6 +137,13 @@ public class DocumentStoreImpl implements DocumentStore{
                                                 //uri      //either null or old       //new doc with same uri
                                                         //null means this undo should delete the document with this uri, if its not null, then its the old value and
                                                             //so an undo shoudl return it back to that, doc is the new one that is replacing it
+        if(replaceOrNull != null && replaceOrNull instanceof JsonDocument){
+            Function<URI,Boolean> funcIfUndoReplacesJson = (tempUri) -> {
+                this.bTree.put(uri,replaceOrNull);
+                return true;
+            };
+            return new GenericCommand<>(uri,funcIfUndoReplacesJson);
+        }
         if(replaceOrNull == null){
             Function<URI, Boolean> funcIfUndoDeletes = (tempUri) ->{
                 deleteFromHeap(uri);
@@ -176,7 +194,9 @@ public class DocumentStoreImpl implements DocumentStore{
             this.heap.reHeapify(tempDocNode);
         }else{
             //its a replace
-            deleteFromHeap(oldOrNull.getKey());
+            if(!(oldOrNull instanceof JsonDocument)) {
+                deleteFromHeap(oldOrNull.getKey());
+            }
             this.heap.insert(tempDocNode);
             this.heap.reHeapify(tempDocNode);
         }
