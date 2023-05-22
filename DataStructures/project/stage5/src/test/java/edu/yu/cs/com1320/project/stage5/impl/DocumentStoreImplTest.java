@@ -490,6 +490,9 @@ public class DocumentStoreImplTest {
         //assertNull(this.docStore.get(uri4));
         b = "b";
         assertEquals(doc1,this.docStore.get(uri1));
+        assertEquals(doc2,this.docStore.get(uri2));
+        assertEquals(doc3,this.docStore.get(uri3));
+        assertEquals(doc4,this.docStore.get(uri4));
     }
 
     @Test
@@ -690,7 +693,36 @@ public class DocumentStoreImplTest {
         byte[] bytes = generateRandomByteArray(100);
         Document temp = new DocumentImpl(generateRandomURI(),bytes);
         this.docStore.setMaxDocumentBytes(50);
-        assertThrows(IllegalArgumentException.class, () -> this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+        String b = "";
+    }
+    @Test
+    void puttingLargeDocInAfterDocsAreAlradyIn() throws Exception{
+        for(int i = 0; i < 10; i++){
+            URI tempUri = generateRandomURI();
+            String tempTxt = generateRandomString();
+            Document temp = new DocumentImpl(tempUri,tempTxt, null);
+            this.docStore.put(new ByteArrayInputStream(tempTxt.getBytes()),tempUri,TXT);
+        }
+        this.docStore.setMaxDocumentBytes(120);
+        byte[] bytes = generateRandomByteArray(500);
+        Document temp = new DocumentImpl(generateRandomURI(),bytes);
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+        String b = "";
+    }
+    @Test
+    void replacingAnExistingDocWithALargeOne()throws Exception{
+        this.docStore.setMaxDocumentBytes(50);
+        byte[] bytes = generateRandomByteArray(40);
+        URI uri = generateRandomURI();
+        Document temp = new DocumentImpl(uri,bytes);
+        int tempHash = temp.hashCode();
+        assertEquals(0,this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+        String b = "";
+        bytes = generateRandomByteArray(100);
+        temp = new DocumentImpl(uri,bytes);
+        assertEquals(tempHash,this.docStore.put(new ByteArrayInputStream(bytes),temp.getKey(),BINARY));
+        b = "";
     }
     @Test
     void testingOverFlowLogicOnundo1() throws Exception{//there is a limit after an undo is done, using regular undo() on GC

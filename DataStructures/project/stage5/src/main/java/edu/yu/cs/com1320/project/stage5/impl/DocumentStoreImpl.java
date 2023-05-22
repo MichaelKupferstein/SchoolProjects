@@ -84,7 +84,7 @@ public class DocumentStoreImpl implements DocumentStore{
         boolean isJson = false;
         Document oldOrNull = this.bTree.get(uri);
         if(oldOrNull instanceof JsonDocument) isJson = true;
-        checkLimitLogic(doc);//might not belong here
+        int isLarge = checkLimitLogic(doc);//might not belong here
         GenericCommand<URI> tempCommand = createGenericCom(uri,this.bTree.get(uri),doc); //creates GC with the uri, if its a new document then the undo function is a delete
         //so this.bTree.get will return null and do it accordingly, but if its a replace then this.bTree.get will return the old document, the undo function
         //on a replace should result in the orginal document being put back and the new one getting deleted. The method also takes in doc which is the new document that
@@ -107,13 +107,13 @@ public class DocumentStoreImpl implements DocumentStore{
             catch (IOException e) {throw new RuntimeException(e);}
             docCount++;
         }
-
+        if(isLarge == -1) overFlowLogicOnGet();
         return returnValue(v);
     }
-    private void checkLimitLogic(Document doc){
+    private int checkLimitLogic(Document doc){
         Document oldOrNull = this.bTree.get(doc.getKey());
         //if(doc instanceof JsonDocument) return;
-        if(this.byteLimit == -1 && this.docLimit == -1) return; //meaning they were never initilized
+        if(this.byteLimit == -1 && this.docLimit == -1) return 1; //meaning they were never initilized
         if(this.docLimit != -1) {//if docLimit was initilized
             if(oldOrNull == null || oldOrNull instanceof JsonDocument) {//meaing its new, bc if its a replace the docCount doesnt change
                 if (this.docCount + 1 > this.docLimit) {//if adding this doc will cause an overflow on docLimt
@@ -124,14 +124,14 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         if(this.byteLimit != -1) { // if byteLimit was initilized
             if (getDocumentLength(doc) > this.byteLimit) { // if its larger then the limit
-                throw new IllegalArgumentException("Document larger then limit, Document length: " + getDocumentLength(doc) + " limit: " + this.byteLimit);
+                return -1;
             }
             while(getDocumentLength(doc) + this.byteCount > this.byteLimit){//if adding will cause an overflow
                 Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
         }
-
+        return 1;
     }
     private GenericCommand<URI> createGenericCom(URI uri, Document replaceOrNull, Document doc ){
                                                 //uri      //either null or old       //new doc with same uri
