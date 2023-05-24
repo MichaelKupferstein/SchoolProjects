@@ -6,10 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -954,6 +951,117 @@ public class DocumentStoreImplTest {
         }
         String b = "b";
     }
+
+    /*
+    * Test method name: stage5PushToDiskViaMaxDocCount
+    * Test point value: 30
+    * Test description: test that documents move to and from disk and memory as expected when the maxdoc count is 2
+    * TEST FAILED
+    * TEST FAILURE MESSAGES: doc2 should've been on disk, but was not: contents were null ==> expected: not <null>  --
+    * org.opentest4j.AssertionFailedError: doc2 should've been on disk, but was not: contents were null ==> expected: not <null>
+    */
+    @Test
+    void stage5PushToDiskViaMaxDocCount()throws Exception{
+        URI uri1 = generateRandomURI();
+        URI uri2 = generateRandomURI();
+        URI uri3 = generateRandomURI();
+        byte[] bytes1 = generateRandomByteArray();
+        byte[] bytes2 = generateRandomByteArray();
+        byte[] bytes3 = generateRandomByteArray();
+        Document doc1 = new DocumentImpl(uri1,bytes1);
+        Document doc2 = new DocumentImpl(uri2,bytes2);
+        Document doc3 = new DocumentImpl(uri3,bytes3);
+        this.docStore.put(new ByteArrayInputStream(bytes1),uri1,BINARY);
+        this.docStore.put(new ByteArrayInputStream(bytes2),uri2,BINARY);
+        this.docStore.put(new ByteArrayInputStream(bytes3),uri3,BINARY);
+        String b = "breakpoint";
+        this.docStore.setMaxDocumentCount(2);
+        b = "";
+        assertTrue(Files.exists(getPathFromURI(uri1)));
+        assertEquals(doc1,this.docStore.get(uri1));
+        assertTrue(Files.exists(getPathFromURI(uri2)));
+    }
+
+    /*
+     * Test method name: stage5PushToDiskViaMaxDocCountViaUndoDelete
+     * Test point value: 30
+     * Test description: test that documents move to and from disk and memory as expected when a doc is deleted then another is added to memory
+     * then the delete is undone causing another doc to be pushed out to disk
+     * TEST FAILED
+     * TEST FAILURE MESSAGES: doc1 should've been written out to disk, but was not: contents were null ==> expected: not <null>  --
+     * org.opentest4j.AssertionFailedError: doc1 should've been written out to disk, but was not: contents were null ==> expected: not <null>
+     * */
+
+    @Test
+    void stage5PushToDiskViaMaxDocCountViaUndoDelete()throws Exception{
+        URI uri1 = new URI("https://test.com/doc1");
+        URI uri2 = generateRandomURI();
+        URI uri3 = generateRandomURI();
+        byte[] bytes1 = generateRandomByteArray();
+        byte[] bytes2 = generateRandomByteArray();
+        byte[] bytes3 = generateRandomByteArray();
+        Document doc1 = new DocumentImpl(uri1,bytes1);
+        Document doc2 = new DocumentImpl(uri2,bytes2);
+        Document doc3 = new DocumentImpl(uri3,bytes3);
+
+        this.docStore.setMaxDocumentCount(2);
+        this.docStore.put(new ByteArrayInputStream(bytes1),uri1,BINARY);
+        this.docStore.put(new ByteArrayInputStream(bytes2),uri2,BINARY);
+        doc1 = this.docStore.get(uri1);
+        doc2 = this.docStore.get(uri2);
+
+        this.docStore.delete(uri2);
+        assertNull(this.docStore.get(uri2));
+        this.docStore.put(new ByteArrayInputStream(bytes3),uri3,BINARY);
+        assertNotNull(this.docStore.get(uri1));
+        assertNotNull(this.docStore.get(uri3));
+        assertNull(this.docStore.get(uri2));
+        this.docStore.undo(uri2);
+
+        String directoryPath = "C:/Users/mkupf/Desktop/Michael_Kupferstein_800737361/DataStructures/project/stage5/test.com";
+        String fileName = "doc1.json";
+
+        File file = new File(directoryPath,fileName);
+        assertTrue(file.exists());
+        assertNotNull(this.docStore.get(uri2));
+        assertNotNull(this.docStore.get(uri3));
+
+        String b = "breakpoint";
+    }
+//    @Test
+//    void stage5PushToDiskViaMaxDocCountViaUndoDelete()throws Exception{
+//        URI uri1 = generateRandomURI();
+//        URI uri2 = generateRandomURI();
+//        byte[] bytes1 = generateRandomByteArray();
+//        byte[] bytes2 = generateRandomByteArray();
+//        Document doc1 = new DocumentImpl(uri1,bytes1);
+//        Document doc2 = new DocumentImpl(uri2,bytes2);
+//
+//        this.docStore.setMaxDocumentCount(1);
+//        this.docStore.put(new ByteArrayInputStream(bytes1),uri1,BINARY);
+//        this.docStore.delete(uri1);
+//        assertNull(this.docStore.get(uri1));
+//        this.docStore.put(new ByteArrayInputStream(bytes2),uri2,BINARY);
+//        this.docStore.undo(uri1);
+//        assertTrue(Files.exists(getPathFromURI(uri2)));
+//        assertEquals(doc1, this.docStore.get(uri1));
+//        String b = "breakpoint";
+//    }
+
+    private Path getPathFromURI(URI uri){
+        File baseDir = new File(System.getProperty("user.dir"));
+        String authority = (uri.getAuthority() == null) ? "" : uri.getAuthority();//get the begining of the uri
+        String uriPath = uri.getPath();//get the uri as a path
+        String fileName = getFileNameFromUri(uri);
+        String absoluteFileName = fileName.replace(".json","");
+        return Path.of(baseDir + baseDir.separator + authority + uriPath.replace(absoluteFileName, ""));
+    }
+    private String getFileNameFromUri(URI uri){
+        String[] paths = uri.getPath().split("/");//get the name of the file
+        String fileName = paths[paths.length - 1] + ".json";
+        return fileName;
+    }
+
 
     private InputStream readFileToInputStream(String filePath){
         InputStream inputStream = null;
