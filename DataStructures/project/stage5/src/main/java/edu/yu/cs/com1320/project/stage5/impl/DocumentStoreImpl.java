@@ -227,7 +227,7 @@ public class DocumentStoreImpl implements DocumentStore{
         return 0;
     }
 
-    public boolean bTreeContainsKey(URI key){
+    private boolean bTreeContainsKey(URI key){
         if(this.bTree.get(key) != null){
             return true;
         }else{
@@ -273,7 +273,7 @@ public class DocumentStoreImpl implements DocumentStore{
         }
         if(jsConvert != null) {
             this.bTree.put(uri, jsConvert);
-            this.heap.insert(new DocNode(uri,jsConvert.getLastUseTime()));
+            this.heap.insert(new DocNode(uri,nanoTime()));
             addToTrie(jsConvert.getKey());
             this.docCount++;
             this.byteCount += getDocumentLength(jsConvert);
@@ -437,6 +437,7 @@ public class DocumentStoreImpl implements DocumentStore{
         overloadingCheckAfterUndo();
     }
     private void overloadingCheckAfterUndo(){
+        reheapifyAll();
         if(this.byteLimit == -1 && this.docLimit == -1) return;
         if(this.docLimit != -1){
             while(this.docCount > this.docLimit){
@@ -449,6 +450,21 @@ public class DocumentStoreImpl implements DocumentStore{
                 Document garbage = this.bTree.get(this.heap.remove().getUri());
                 deleteFromEverywhere(garbage);
             }
+        }
+    }
+
+    private void reheapifyAll(){
+        ArrayList<DocNode> temp = new ArrayList<>();
+        boolean empty = false;
+        while(!empty){
+            try{
+                temp.add(this.heap.remove());
+            }catch(NoSuchElementException e){
+                empty = true;
+            }
+        }
+        for(DocNode dc : temp){
+            this.heap.insert(dc);
         }
     }
 
