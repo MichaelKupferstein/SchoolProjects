@@ -962,9 +962,12 @@ public class DocumentStoreImplTest {
     */
     @Test
     void stage5PushToDiskViaMaxDocCount()throws Exception{
-        URI uri1 = generateRandomURI();
-        URI uri2 = generateRandomURI();
+        URI uri1 = new URI("https://test.com/doc1");
+        URI uri2 = new URI("https://test.com/doc2");
         URI uri3 = generateRandomURI();
+        String directoryPath = "C:/Users/mkupf/Desktop/Michael_Kupferstein_800737361/DataStructures/project/stage5/test.com";
+        String fileName = "doc1.json";
+
         byte[] bytes1 = generateRandomByteArray();
         byte[] bytes2 = generateRandomByteArray();
         byte[] bytes3 = generateRandomByteArray();
@@ -977,9 +980,14 @@ public class DocumentStoreImplTest {
         String b = "breakpoint";
         this.docStore.setMaxDocumentCount(2);
         b = "";
-        assertTrue(Files.exists(getPathFromURI(uri1)));
+
+        File file = new File(directoryPath,fileName);
+        assertTrue(file.exists());
         assertEquals(doc1,this.docStore.get(uri1));
-        assertTrue(Files.exists(getPathFromURI(uri2)));
+        assertFalse(file.exists());
+        file = new File(directoryPath,"doc2.json");
+        assertTrue(file.exists());
+
     }
 
     /*
