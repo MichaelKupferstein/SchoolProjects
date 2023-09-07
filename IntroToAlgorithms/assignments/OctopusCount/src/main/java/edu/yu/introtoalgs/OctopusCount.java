@@ -38,20 +38,20 @@ public class OctopusCount implements OctopusCountI{
         if(this.observationIds.contains(observationId)){
             throw new IllegalArgumentException("observationId is not unique");
         }
-        LinkedList<OctArm> octArms = new LinkedList<>();
+        OctArm[] octArms = new OctArm[N_ARMS];
         for(int i = 0; i < N_ARMS; i++){
             if(lengthInCM[i] < 0){
                 throw new IllegalArgumentException("lengthInCM value is not a positive integer");
             }
-            octArms.add(new OctArm(observationId,colors[i], lengthInCM[i], textures[i]));
+            octArms[i] = new OctArm(observationId,colors[i], lengthInCM[i], textures[i]);
         }
-        Collections.sort(octArms);
+        Arrays.sort(octArms);
         String hash = createOctopusHashID(octArms);
         this.octopusHashes.add(hash);
         this.observationIds.add(observationId);
     }
 
-    private String createOctopusHashID(List<OctArm> arms){
+    private String createOctopusHashID(OctArm[] arms){
         //create a hashcode for the octopus based on the hashcode of each arm
         String hash = "";
         for(OctArm arm : arms){

@@ -77,10 +77,10 @@ public class OctopusCountTest {
         for(int i = 0; i < N; i++){
             long startTime = System.currentTimeMillis();
             //addObservationTestWith2();
-            //oneObervationMultipleTimes();
+            oneObervationMultipleTimes();
             //n1000Observations();
             //NOTuniqueObservations();
-            uniqueObservations();
+            //uniqueObservations();
             long endTime = System.currentTimeMillis();
             totalTime += (endTime - startTime);
         }
