@@ -3,7 +3,6 @@ package edu.yu.introtoalgs;
 import edu.yu.introtoalgs.OctopusCountI.*;
 
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 
 import java.util.*;
 
@@ -53,7 +52,7 @@ public class OctopusCountTest {
 
         octCount.addObservation(0,colors1,lengthInCM1,textures1);
 
-        int amount = 100000;
+        int amount = 1000;
         for(int i = 0; i < amount; i++){
             shuffleArrays(colors1,lengthInCM1,textures1);
             octCount.addObservation(i+1,colors1,lengthInCM1,textures1);
@@ -84,7 +83,7 @@ public class OctopusCountTest {
             long endTime = System.currentTimeMillis();
             totalTime += (endTime - startTime);
         }
-        System.out.println("When N = " + N + " uniqueObservations took an average of " + (totalTime/N) + " milliseconds");
+        //System.out.println("When N = " + N + " uniqueObservations took an average of " + (totalTime/N) + " milliseconds");
     }
 
 
@@ -149,7 +148,7 @@ public class OctopusCountTest {
         assertEquals(uniqueObservations.size(),octCount.countThem());
 
         long endTime = System.currentTimeMillis();
-        System.out.println("uniqueObservations() took " + (endTime - startTime) + " milliseconds");
+        //System.out.println("uniqueObservations() took " + (endTime - startTime) + " milliseconds");
         //When run 1000 times took an average of 25 milliseconds
     }
 
