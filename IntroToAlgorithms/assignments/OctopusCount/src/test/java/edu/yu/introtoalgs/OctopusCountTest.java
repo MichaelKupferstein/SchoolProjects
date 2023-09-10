@@ -188,6 +188,46 @@ public class OctopusCountTest {
         //when ran 1000 times average time = 20 milliseconds
     }
 
+    @Test
+    public void throwsIAEtoLittleLegs(){
+        OctopusCount octCont = new OctopusCount();
+        ArmColor[] colors1= {GRAY,GRAY,RED,RED,RED,BLACK,BLACK};//7
+        int[] lengthInCM1 = {1,2,3,4,5,6,7,8};//8
+        ArmTexture[] textures1 = {SMOOTH,SMOOTH,SMOOTH,SLIMY,SLIMY,SLIMY,STICKY,STICKY};//8
+        //assert that it throws IAE because there aren't exactly N_ARMS values for each arm characteristic
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(0,colors1,lengthInCM1,textures1));
+        ArmColor[] colors2= {GRAY,RED,GRAY,RED,RED,RED,BLACK,BLACK};//8
+        int[] lengthInCM2 = {1,2,3,4,5,6,7};//7
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(1,colors2,lengthInCM2,textures1));
+        ArmTexture[] textures2 = {SMOOTH,SMOOTH,SMOOTH,SLIMY,SLIMY,SLIMY,STICKY};//7
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(2,colors2,lengthInCM1,textures2));
+
+    }
+
+    @Test
+    public void throwsIAEwhenNegative(){
+        OctopusCount octCont = new OctopusCount();
+        ArmColor[] colors1= {GRAY,GRAY,GRAY,RED,RED,RED,BLACK,BLACK};
+        int[] lengthInCM1 = {1,2,3,4,5,6,7,8};
+        ArmTexture[] textures1 = {SMOOTH,SMOOTH,SMOOTH,SLIMY,SLIMY,SLIMY,STICKY,STICKY};
+        //assert that it throws IAE because observationId is not a non-negative integer
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(-1,colors1,lengthInCM1,textures1));
+        int lengthInCM2[] = {2,3,4,5,-6,7,8,9};
+        //assert that it throws IAE because lengthInCM value is not a positive integer
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(2,colors1,lengthInCM2,textures1));
+    }
+
+    @Test
+    public void throwsIAEwhenTwoObservations(){
+        OctopusCount octCont = new OctopusCount();
+        ArmColor[] colors1= {GRAY,GRAY,GRAY,RED,RED,RED,BLACK,BLACK};
+        int[] lengthInCM1 = {1,2,3,4,5,6,7,8};
+        ArmTexture[] textures1 = {SMOOTH,SMOOTH,SMOOTH,SLIMY,SLIMY,SLIMY,STICKY,STICKY};
+        octCont.addObservation(0,colors1,lengthInCM1,textures1);
+        //assert that it throws IAE because observationId is not unique
+        assertThrows(IllegalArgumentException.class, () -> octCont.addObservation(0,colors1,lengthInCM1,textures1));
+    }
+
     private class OctArm implements Comparable<OctArm>{
         private ArmColor color;
         private int lengthInCM;

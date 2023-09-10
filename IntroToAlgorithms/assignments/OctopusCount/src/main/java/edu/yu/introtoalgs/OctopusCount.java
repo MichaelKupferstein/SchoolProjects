@@ -46,18 +46,18 @@ public class OctopusCount implements OctopusCountI{
             octArms[i] = new OctArm(observationId,colors[i], lengthInCM[i], textures[i]);
         }
         Arrays.sort(octArms);
-        String hash = createOctopusHashID(octArms);
+        String hash = createUniqueID(octArms);
         this.octopusHashes.add(hash);
         this.observationIds.add(observationId);
     }
 
-    private String createOctopusHashID(OctArm[] arms){
-        //create a hashcode for the octopus based on the hashcode of each arm
-        String hash = "";
+    private String createUniqueID(OctArm[] arms){
+        //create a 'hashcode' for the octopus based on the hashcode of each arm
+        String code = "";
         for(OctArm arm : arms){
-            hash += arm.toString();
+            code += arm.toString();
         }
-        return hash;
+        return code;
     }
 
 
