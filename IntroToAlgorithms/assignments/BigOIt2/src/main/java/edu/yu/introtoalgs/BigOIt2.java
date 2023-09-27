@@ -33,16 +33,20 @@ public class BigOIt2 extends BigOIt2Base{
     @Override
     public double doublingRatio(String bigOMeasurable, long timeOutInMs) {
 
+        BigOMeasurable alg;
+        Class<?> algClass;
+        Method setup;
+        Method execute;
         try {
-            Class<?> algClass = Class.forName(bigOMeasurable);
-            BigOMeasurable alg = (BigOMeasurable) algClass.newInstance();
-            Method setup = algClass.getMethod("setup", int.class);
-            Method execute = algClass.getMethod("execute");
-
+            algClass = Class.forName(bigOMeasurable);
+            alg = (BigOMeasurable) algClass.newInstance();
+            setup = algClass.getMethod("setup", int.class);
+            execute = algClass.getMethod("execute");
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-
+        //setup.invoke(alg, 1);
+        //execute.invoke(alg);
 
 
         return Double.NaN;
