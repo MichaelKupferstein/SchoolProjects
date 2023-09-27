@@ -1,5 +1,7 @@
 package edu.yu.introtoalgs;
 
+import java.lang.reflect.Method;
+
 public class BigOIt2 extends BigOIt2Base{
     /**
      * Given the name of a class that implements the BigOMeasurable API, creates
@@ -30,6 +32,19 @@ public class BigOIt2 extends BigOIt2Base{
      */
     @Override
     public double doublingRatio(String bigOMeasurable, long timeOutInMs) {
-        return 0;
+
+        try {
+            Class<?> algClass = Class.forName(bigOMeasurable);
+            BigOMeasurable alg = (BigOMeasurable) algClass.newInstance();
+            Method setup = algClass.getMethod("setup", int.class);
+            Method execute = algClass.getMethod("execute");
+
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+
+
+
+        return Double.NaN;
     }
 }
