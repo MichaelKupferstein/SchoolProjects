@@ -41,35 +41,101 @@ public class BigOIt2 extends BigOIt2Base{
         BigOMeasurable alg;
         Method setup;
         Method execute;
-
-        //Timer Stuff
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-
-            }
-        };
-
-
         try {
             algClass = Class.forName(bigOMeasurable);
             alg = (BigOMeasurable) algClass.newInstance();
             setup = algClass.getMethod("setup", int.class);
             execute = algClass.getMethod("execute");
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            setup.invoke(alg, 10);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-        //execute.invoke(alg);
+        } catch (Exception e) {throw new RuntimeException(e);}
 
-        return Double.NaN;
+        //Timer Stuff
+        TimerThread timer = new TimerThread(timeOutInMs);
+
+        //Thread Stuff
+        int n = 1000;
+        AlgThread algThread = new AlgThread(alg, setup, execute, n);
+
+        //Doubling Ratio Stuff
+        int count = 0;
+        int totalAlgTime = 0;
+
+
+        try {
+            timer.start();
+            while(!timer.isFinished()){
+                algThread.start();
+                algThread.join();
+                algThread = new AlgThread(alg, setup, execute, n);
+                totalAlgTime += algThread.executeTime();
+                n *= 2;
+                count++;
+            }
+            double avgAlgTime = (double) totalAlgTime / count;
+
+            if(count <= 25){
+                return Double.NaN; //not enough data
+            }else{
+                return avgAlgTime;
+            }
+
+        } catch (Exception e) {throw new RuntimeException(e);}
+
     }
 
+    private class AlgThread extends Thread{
+        private BigOMeasurable alg;
+        private Method setup;
+        private Method execute;
+        private int n;
+        private long time;
+        public AlgThread(BigOMeasurable alg, Method setup, Method execute, int n){
+            this.alg = alg;
+            this.setup = setup;
+            this.execute = execute;
+            this.n = n;
+        }
+
+        @Override
+        public void run(){
+            try {
+                setup.invoke(alg, n);
+                long startTime = System.currentTimeMillis();
+                execute.invoke(alg);
+                long endTime = System.currentTimeMillis();
+                this.time = endTime - startTime;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private long executeTime(){
+            return this.time;
+        }
+
+
+    }
+
+
+    private class TimerThread extends Thread {
+        long timeOutInMs;
+        boolean isDone = false;
+        public TimerThread(long timeOutInMs){
+            this.timeOutInMs = timeOutInMs;
+        }
+
+        public boolean isFinished(){
+            return this.isDone;
+        }
+        @Override
+        public void run(){
+            try {
+                Thread.sleep(timeOutInMs);
+                this.isDone = true;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
 
 }
