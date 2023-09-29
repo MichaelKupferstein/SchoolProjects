@@ -1,6 +1,9 @@
 package edu.yu.introtoalgs;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class BigOIt2 extends BigOIt2Base{
     /**
@@ -31,12 +34,24 @@ public class BigOIt2 extends BigOIt2Base{
      *                                  algorithm is at odds with the doubling ratio assumptions.
      */
     @Override
-    public double doublingRatio(String bigOMeasurable, long timeOutInMs) {
+    public double doublingRatio(String bigOMeasurable, long timeOutInMs){
 
-        BigOMeasurable alg;
+        //Reflection Stuff
         Class<?> algClass;
+        BigOMeasurable alg;
         Method setup;
         Method execute;
+
+        //Timer Stuff
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+
+            }
+        };
+
+
         try {
             algClass = Class.forName(bigOMeasurable);
             alg = (BigOMeasurable) algClass.newInstance();
@@ -45,10 +60,16 @@ public class BigOIt2 extends BigOIt2Base{
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        //setup.invoke(alg, 1);
+        try {
+            setup.invoke(alg, 10);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
         //execute.invoke(alg);
-
 
         return Double.NaN;
     }
+
+
+
 }
