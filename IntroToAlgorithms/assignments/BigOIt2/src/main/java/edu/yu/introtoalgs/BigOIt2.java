@@ -2,6 +2,8 @@ package edu.yu.introtoalgs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
@@ -15,6 +17,7 @@ public class BigOIt2 extends BigOIt2Base{
     private BigOMeasurable alg;
     private Method setupMethod;
     private Method executeMethod;
+    private List<Double> ratios = new ArrayList<>();
 
     /**
      * Given the name of a class that implements the BigOMeasurable API, creates
@@ -45,6 +48,7 @@ public class BigOIt2 extends BigOIt2Base{
      */
     @Override
     public double doublingRatio(String bigOMeasurable, long timeOutInMs) {
+        long methodStartTime = System.currentTimeMillis();
         //Reflection Stuff
         try {
             this.algClass = Class.forName(bigOMeasurable);
@@ -64,35 +68,52 @@ public class BigOIt2 extends BigOIt2Base{
 
 
         executor.execute(() -> {
-            try {
-                double prev = timeTrial(125);
+            double prev = timeTrial(125);
 
-                for(int N = 250; true; N+=N){
-                    double time = timeTrial(N);
-                    //double ratio = time/prev;
-                    System.out.printf("%6d %7.1f", N, time);
-                    System.out.printf("%5.1f\n", time/prev);
-                    prev = time;
-                }
-            } catch (IllegalAccessException | InvocationTargetException e) {throw new RuntimeException(e);}
+            for(int N = 250; true; N+=N){
+
+                double time = timeTrial(N);
+                //double ratio = time/prev;
+                System.out.printf("%6d %7.1f", N, time);
+                System.out.printf("%5.1f\n", time/prev);
+                ratios.add(time/prev);
+                prev = time;
+            }
         });
 
 
-        while(!executor.isTerminated()){}
+        while(!executor.isTerminated()){
+            if (System.currentTimeMillis() - methodStartTime > timeOutInMs) {
+                System.out.println("Task timed out.");
+                executor.shutdownNow();
+                break;
+            }
+        }
 
         System.out.println("Finished all threads");
+        if(ratios.size() < 2){//to be changed
+
+            return Double.NaN;
+        }else{
+            //do soemthing else
+        }
 
 
-
+        //System.out.println("Total time: " + (System.currentTimeMillis() - methodStartTime));
         return 0;
     }
 
-    private double timeTrial(int N) throws InvocationTargetException, IllegalAccessException {
-        setupMethod.invoke(alg, N);
-        long startTime = System.currentTimeMillis();
-        executeMethod.invoke(alg);
-        long endTime = System.currentTimeMillis();
-        return (endTime - startTime) / 1000.0;
+    private double timeTrial(int N) {
+        try {
+            setupMethod.invoke(alg, N);
+            long startTime = System.currentTimeMillis();
+            executeMethod.invoke(alg);
+            long endTime = System.currentTimeMillis();
+            return (endTime - startTime) / 1000.0;
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
 }
