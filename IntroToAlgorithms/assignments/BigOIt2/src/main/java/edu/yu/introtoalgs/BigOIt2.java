@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BigOIt2 extends BigOIt2Base{
 
@@ -52,33 +53,34 @@ public class BigOIt2 extends BigOIt2Base{
             this.executeMethod = algClass.getMethod("execute");
         } catch (Exception e) {throw new RuntimeException(e);}
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+
         executor.schedule(() -> {
+            System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
             // Shut down the executor after the countdown task is completed
-            executor.shutdown();
+            executor.shutdownNow();
         }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
 
         executor.execute(() -> {
             try {
-                double prev = timeTrial(1000);
+                double prev = timeTrial(125);
 
-                for(int N = 2000; true; N+=N){
+                for(int N = 250; true; N+=N){
                     double time = timeTrial(N);
                     //double ratio = time/prev;
-                    System.out.printf("%6d %7.1f\n", N, time);
+                    System.out.printf("%6d %7.1f", N, time);
                     System.out.printf("%5.1f\n", time/prev);
                     prev = time;
                 }
-
-
             } catch (IllegalAccessException | InvocationTargetException e) {throw new RuntimeException(e);}
         });
 
 
         while(!executor.isTerminated()){}
 
+        System.out.println("Finished all threads");
 
 
 
@@ -90,7 +92,7 @@ public class BigOIt2 extends BigOIt2Base{
         long startTime = System.currentTimeMillis();
         executeMethod.invoke(alg);
         long endTime = System.currentTimeMillis();
-        return endTime - startTime;
+        return (endTime - startTime) / 1000.0;
     }
 
 }
