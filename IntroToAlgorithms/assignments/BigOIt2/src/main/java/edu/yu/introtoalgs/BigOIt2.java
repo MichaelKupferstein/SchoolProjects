@@ -4,8 +4,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class BigOIt2 extends BigOIt2Base{
+
+    private Class<?> algClass;
+    private BigOMeasurable alg;
+    private Method setupMethod;
+    private Method executeMethod;
+
     /**
      * Given the name of a class that implements the BigOMeasurable API, creates
      * and executes instances of the class, such that by measuring the resulting
@@ -34,108 +43,54 @@ public class BigOIt2 extends BigOIt2Base{
      *                                  algorithm is at odds with the doubling ratio assumptions.
      */
     @Override
-    public double doublingRatio(String bigOMeasurable, long timeOutInMs){
-
+    public double doublingRatio(String bigOMeasurable, long timeOutInMs) {
         //Reflection Stuff
-        Class<?> algClass;
-        BigOMeasurable alg;
-        Method setup;
-        Method execute;
         try {
-            algClass = Class.forName(bigOMeasurable);
-            alg = (BigOMeasurable) algClass.newInstance();
-            setup = algClass.getMethod("setup", int.class);
-            execute = algClass.getMethod("execute");
+            this.algClass = Class.forName(bigOMeasurable);
+            this.alg = (BigOMeasurable) algClass.newInstance();
+            this.setupMethod = algClass.getMethod("setup", int.class);
+            this.executeMethod = algClass.getMethod("execute");
         } catch (Exception e) {throw new RuntimeException(e);}
 
-        //Timer Stuff
-        TimerThread timer = new TimerThread(timeOutInMs);
-
-        //Thread Stuff
-        int n = 1000;
-        AlgThread algThread = new AlgThread(alg, setup, execute, n);
-
-        //Doubling Ratio Stuff
-        int count = 0;
-        int totalAlgTime = 0;
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(() -> {
+            // Shut down the executor after the countdown task is completed
+            executor.shutdown();
+        }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
-        try {
-            timer.start();
-            while(!timer.isFinished()){
-                algThread.start();
-                algThread.join();
-                algThread = new AlgThread(alg, setup, execute, n);
-                totalAlgTime += algThread.executeTime();
-                n *= 2;
-                count++;
-            }
-            double avgAlgTime = (double) totalAlgTime / count;
 
-            if(count <= 25){
-                return Double.NaN; //not enough data
-            }else{
-                return avgAlgTime;
-            }
-
-        } catch (Exception e) {throw new RuntimeException(e);}
-
-    }
-
-    private class AlgThread extends Thread{
-        private BigOMeasurable alg;
-        private Method setup;
-        private Method execute;
-        private int n;
-        private long time;
-        public AlgThread(BigOMeasurable alg, Method setup, Method execute, int n){
-            this.alg = alg;
-            this.setup = setup;
-            this.execute = execute;
-            this.n = n;
-        }
-
-        @Override
-        public void run(){
+        executor.execute(() -> {
             try {
-                setup.invoke(alg, n);
-                long startTime = System.currentTimeMillis();
-                execute.invoke(alg);
-                long endTime = System.currentTimeMillis();
-                this.time = endTime - startTime;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+                double prev = timeTrial(1000);
 
-        private long executeTime(){
-            return this.time;
-        }
+                for(int N = 2000; true; N+=N){
+                    double time = timeTrial(N);
+                    //double ratio = time/prev;
+                    System.out.printf("%6d %7.1f\n", N, time);
+                    System.out.printf("%5.1f\n", time/prev);
+                    prev = time;
+                }
 
 
+            } catch (IllegalAccessException | InvocationTargetException e) {throw new RuntimeException(e);}
+        });
+
+
+        while(!executor.isTerminated()){}
+
+
+
+
+        return 0;
     }
 
-
-    private class TimerThread extends Thread {
-        long timeOutInMs;
-        boolean isDone = false;
-        public TimerThread(long timeOutInMs){
-            this.timeOutInMs = timeOutInMs;
-        }
-
-        public boolean isFinished(){
-            return this.isDone;
-        }
-        @Override
-        public void run(){
-            try {
-                Thread.sleep(timeOutInMs);
-                this.isDone = true;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    private double timeTrial(int N) throws InvocationTargetException, IllegalAccessException {
+        setupMethod.invoke(alg, N);
+        long startTime = System.currentTimeMillis();
+        executeMethod.invoke(alg);
+        long endTime = System.currentTimeMillis();
+        return endTime - startTime;
     }
-
 
 }
