@@ -2,10 +2,7 @@ package edu.yu.introtoalgs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,8 +15,9 @@ public class BigOIt2 extends BigOIt2Base{
     private BigOMeasurable alg;
     private Method setupMethod;
     private Method executeMethod;
-    private List<Double> ratios = new ArrayList<>();
     private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
+    private int count = 0;
+    private boolean moreThanOne = false;
 
 
     /**
@@ -63,15 +61,14 @@ public class BigOIt2 extends BigOIt2Base{
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
         executor.schedule(() -> {
-            System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
-            // Shut down the executor after the countdown task is completed
+            //System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
             executor.shutdownNow();
         }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
         for(int i = 0; i < 10; i++) {
             executor.execute(() -> {
-                System.out.println("Working on thread" + Thread.currentThread().getName());
+                //System.out.println("Working on thread" + Thread.currentThread().getName());
                 double prev = timeTrial(125);
                 for (int N = 250; true; N += N) {
                     double time = timeTrial(N);
@@ -87,29 +84,27 @@ public class BigOIt2 extends BigOIt2Base{
 
         while(!executor.isTerminated()){
             if (System.currentTimeMillis() - methodStartTime > timeOutInMs) {
-                System.out.println("Task timed out.");
+                //System.out.println("Task timed out.");
                 executor.shutdownNow();
                 break;
             }
         }
 
-        System.out.println("Finished all threads");
-        System.out.println("250: " + times.get(250)/10);
-        System.out.println("500: " + times.get(500)/10);
-        System.out.println("1000: " + times.get(1000)/10);
-        System.out.println("2000: " + times.get(2000)/10);
-        System.out.println("4000: " + times.get(4000)/10);
+        //System.out.println("Finished all threads");
 
-        if(ratios.size() < 2){//to be changed
+        times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
+        times.forEach((k,v) -> System.out.println(k + " " + v));
+        double mode = mode(new ArrayList<>(times.values()));
+        System.out.println("Count: " + count);
+        System.out.println("More than one: " + moreThanOne);
+        System.out.println("Mode: " + mode);
 
+        if(!moreThanOne || count < 5){
             return Double.NaN;
         }else{
-            //do soemthing else
+           return mode;
         }
 
-
-        //System.out.println("Total time: " + (System.currentTimeMillis() - methodStartTime));
-        return 0;
     }
 
     private double timeTrial(int N) {
@@ -122,6 +117,28 @@ public class BigOIt2 extends BigOIt2Base{
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private double mode(List<Double> nums){
+        Map<Double, Integer> map = new HashMap<>();
+        for(Double num : nums){
+            map.put(num, map.getOrDefault(num, 0) + 1);
+            if(num != 0.0){
+                count++;
+            }
+        }
+        int max = 0;
+        double mode = 0;
+        for(Map.Entry<Double, Integer> entry : map.entrySet()){
+            if(entry.getValue() > max && entry.getKey() != 0.0){
+                max = entry.getValue();
+                mode = entry.getKey();
+            }
+        }
+        if(map.get(mode) > 1){
+            moreThanOne = true;
+        }
+        return mode;
     }
 
 
