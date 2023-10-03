@@ -1,6 +1,8 @@
-package edu.yu.introtoalgs;
+package edu.yu.introtoalgs.testAlgs;
 
-public class Factorial extends BigOMeasurable{
+import edu.yu.introtoalgs.BigOMeasurable;
+
+public class Factorial extends BigOMeasurable {
     public int factorial(int n) {
         int result = 1;
         for (int i = 1; i <= n; i++) {

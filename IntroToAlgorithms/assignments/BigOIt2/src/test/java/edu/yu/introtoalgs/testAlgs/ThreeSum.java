@@ -1,8 +1,10 @@
-package edu.yu.introtoalgs;
+package edu.yu.introtoalgs.testAlgs;
+
+import edu.yu.introtoalgs.BigOMeasurable;
 
 import java.util.Random;
 
-public class ThreeSum extends BigOMeasurable{
+public class ThreeSum extends BigOMeasurable {
 
     public static int count(int[] a){
         int N= a.length;

@@ -92,22 +92,31 @@ public class BigOIt2 extends BigOIt2Base{
 
         //System.out.println("Finished all threads");
 
+        //times.forEach((k,v) -> times.put(k, (v/10.0)));
         times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
         times.forEach((k,v) -> System.out.println(k + " " + v));
         double mode = mode(new ArrayList<>(times.values()));
+        double avg = average(new ArrayList<>(times.values()));
         System.out.println("Count: " + count);
         System.out.println("More than one: " + moreThanOne);
         System.out.println("Mode: " + mode);
+        System.out.println("Average: " + avg);
 
-        if(!moreThanOne || count < 5){
+        if(!moreThanOne && count < 5){
+//            if(mode < avg){
+//                return mode;
+//            }
             return Double.NaN;
         }else{
+//            if(mode < avg){
+//                mode += 1.0;
+//            }
            return mode;
         }
 
     }
 
-    private double timeTrial(int N) {
+    private double timeTrial(int N) {//got from sedgewick textbook
         try {
             setupMethod.invoke(alg, N);
             long startTime = System.currentTimeMillis();
@@ -139,6 +148,16 @@ public class BigOIt2 extends BigOIt2Base{
             moreThanOne = true;
         }
         return mode;
+    }
+
+    private double average(List<Double> nums){
+        double sum = 0;
+        for(Double num : nums){
+            if(num != 9.223372036854776E18){
+                sum += num;
+            }
+        }
+        return sum/nums.size();
     }
 
 
