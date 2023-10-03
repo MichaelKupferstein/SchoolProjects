@@ -84,13 +84,11 @@ public class BigOIt2 extends BigOIt2Base{
 
         while(!executor.isTerminated()){
             if (System.currentTimeMillis() - methodStartTime > timeOutInMs) {
-                //System.out.println("Task timed out.");
                 executor.shutdownNow();
                 break;
             }
         }
 
-        //System.out.println("Finished all threads");
 
         //times.forEach((k,v) -> times.put(k, (v/10.0)));
         times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
@@ -102,15 +100,9 @@ public class BigOIt2 extends BigOIt2Base{
         System.out.println("Mode: " + mode);
         System.out.println("Average: " + avg);
 
-        if(!moreThanOne && count < 5){
-//            if(mode < avg){
-//                return mode;
-//            }
+        if(!moreThanOne && count < 5){//not enough data
             return Double.NaN;
         }else{
-//            if(mode < avg){
-//                mode += 1.0;
-//            }
            return mode;
         }
 

@@ -6,6 +6,8 @@ import java.util.Random;
 
 public class ThreeSum extends BigOMeasurable {
 
+    private int[] a;
+
     public static int count(int[] a){
         int N= a.length;
         int cnt = 0;
@@ -31,11 +33,16 @@ public class ThreeSum extends BigOMeasurable {
      */
     @Override
     public void execute() {
+        count(a);
+    }
+
+    @Override
+    public void setup(int n){
+        this.n = n;
         int MAX = 1000000;
-        int[] a = new int[n];
+        a = new int[n];
         for(int i = 0; i < n; i++){
             a[i] = (int) (Math.random() * MAX);
         }
-        count(a);
     }
 }
