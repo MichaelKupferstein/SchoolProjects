@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,8 @@ public class BigOIt2 extends BigOIt2Base{
     private Method setupMethod;
     private Method executeMethod;
     private List<Double> ratios = new ArrayList<>();
+    private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
+
 
     /**
      * Given the name of a class that implements the BigOMeasurable API, creates
@@ -57,7 +60,7 @@ public class BigOIt2 extends BigOIt2Base{
             this.executeMethod = algClass.getMethod("execute");
         } catch (Exception e) {throw new RuntimeException(e);}
 
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
         executor.schedule(() -> {
             System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
@@ -66,20 +69,20 @@ public class BigOIt2 extends BigOIt2Base{
         }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
-
-        executor.execute(() -> {
-            double prev = timeTrial(125);
-
-            for(int N = 250; true; N+=N){
-
-                double time = timeTrial(N);
-                //double ratio = time/prev;
-                System.out.printf("%6d %7.1f", N, time);
-                System.out.printf("%5.1f\n", time/prev);
-                ratios.add(time/prev);
-                prev = time;
-            }
-        });
+        for(int i = 0; i < 10; i++) {
+            executor.execute(() -> {
+                System.out.println("Working on thread" + Thread.currentThread().getName());
+                double prev = timeTrial(125);
+                for (int N = 250; true; N += N) {
+                    double time = timeTrial(N);
+                    double ratio = time/prev;
+                    //System.out.printf("%6d %7.1f", N, time);
+                    //System.out.printf("%5.1f\n", time / prev);
+                    times.put(N,times.getOrDefault(N,0.0)+ratio);
+                    prev = time;
+                }
+            });
+        }
 
 
         while(!executor.isTerminated()){
@@ -91,6 +94,12 @@ public class BigOIt2 extends BigOIt2Base{
         }
 
         System.out.println("Finished all threads");
+        System.out.println("250: " + times.get(250)/10);
+        System.out.println("500: " + times.get(500)/10);
+        System.out.println("1000: " + times.get(1000)/10);
+        System.out.println("2000: " + times.get(2000)/10);
+        System.out.println("4000: " + times.get(4000)/10);
+
         if(ratios.size() < 2){//to be changed
 
             return Double.NaN;

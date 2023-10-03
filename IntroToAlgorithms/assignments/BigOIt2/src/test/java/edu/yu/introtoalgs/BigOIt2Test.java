@@ -12,7 +12,7 @@ public class BigOIt2Test {
     @Test
     public void doublingRatioTest() {
         this.bigOIt2 = new BigOIt2();
-        this.bigOIt2.doublingRatio("edu.yu.introtoalgs.ThreeSum", 1000);
+        this.bigOIt2.doublingRatio("edu.yu.introtoalgs.ThreeSum", 10000);
 
     }
 
