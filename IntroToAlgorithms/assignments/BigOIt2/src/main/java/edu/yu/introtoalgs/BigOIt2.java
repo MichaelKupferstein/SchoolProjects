@@ -15,9 +15,10 @@ public class BigOIt2 extends BigOIt2Base{
     private BigOMeasurable alg;
     private Method setupMethod;
     private Method executeMethod;
-    private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
+    //private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
     private int count = 0;
     private boolean moreThanOne = false;
+    private List<Double> ratios = Collections.synchronizedList(new ArrayList<>());
 
 
     /**
@@ -75,7 +76,12 @@ public class BigOIt2 extends BigOIt2Base{
                     double ratio = time/prev;
                     //System.out.printf("%6d %7.1f", N, time);
                     //System.out.printf("%5.1f\n", time / prev);
-                    times.put(N,times.getOrDefault(N,0.0)+ratio);
+                        //times.put(N,times.getOrDefault(N,0.0)+ratio);
+                    double roundedRatio = Math.round(ratio);
+                    if(roundedRatio != 0.0 && roundedRatio != 9.223372036854776E18){
+                        ratios.add(roundedRatio);
+                    }
+
                     prev = time;
                 }
             });
@@ -91,18 +97,22 @@ public class BigOIt2 extends BigOIt2Base{
 
 
         //times.forEach((k,v) -> times.put(k, (v/10.0)));
-        times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
-        times.forEach((k,v) -> System.out.println(k + " " + v));
-        double mode = mode(new ArrayList<>(times.values()));
-        double avg = average(new ArrayList<>(times.values()));
-        System.out.println("Count: " + count);
-        System.out.println("More than one: " + moreThanOne);
-        System.out.println("Mode: " + mode);
-        System.out.println("Average: " + avg);
+        //times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
+        //times.forEach((k,v) -> System.out.println(k + " " + v));
+        //double mode = mode(new ArrayList<>(times.values()));
+        //System.out.println("Ratios: " + ratios);
+        double mode = mode(ratios);
+        double avg = average(ratios);
+        //double avg = average(new ArrayList<>(times.values()));
+//        System.out.println("Count: " + count);
+//        System.out.println("More than one: " + moreThanOne);
+//        System.out.println("Mode: " + mode);
+//        System.out.println("Average: " + avg);
 
-        if(!moreThanOne && count < 5){//not enough data
+        if(count < 25){//not enough data
             return Double.NaN;
         }else{
+            //System.out.println("Run time: " + (System.currentTimeMillis() - methodStartTime));
            return mode;
         }
 
