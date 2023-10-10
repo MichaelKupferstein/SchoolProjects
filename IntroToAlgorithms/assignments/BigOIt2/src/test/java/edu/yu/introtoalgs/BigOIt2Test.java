@@ -1,7 +1,8 @@
 package edu.yu.introtoalgs;
 
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
+
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +28,7 @@ public class BigOIt2Test {
     public void doublingRatioTestOnFactorial(){
         this.bigOIt2 = new BigOIt2();
         double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.Factorial", 1000);
-        assertEquals(1.4, mode, 0.2);
+        assertEquals(2.0, mode, 0.2);
 
     }
     @Test
