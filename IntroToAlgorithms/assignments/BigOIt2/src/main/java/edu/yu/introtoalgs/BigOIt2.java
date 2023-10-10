@@ -15,10 +15,11 @@ public class BigOIt2 extends BigOIt2Base{
     private BigOMeasurable alg;
     private Method setupMethod;
     private Method executeMethod;
-    //private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
     private int count = 0;
     private boolean moreThanOne = false;
     private List<Double> ratios = Collections.synchronizedList(new ArrayList<>());
+    private final int numOfThreads = 10;
 
 
     /**
@@ -59,7 +60,7 @@ public class BigOIt2 extends BigOIt2Base{
             this.executeMethod = algClass.getMethod("execute");
         } catch (Exception e) {throw new RuntimeException(e);}
 
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(numOfThreads);
 
         executor.schedule(() -> {
             //System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
@@ -67,7 +68,7 @@ public class BigOIt2 extends BigOIt2Base{
         }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < numOfThreads; i++) {
             executor.execute(() -> {
                 //System.out.println("Working on thread" + Thread.currentThread().getName());
                 double prev = timeTrial(125);
@@ -76,10 +77,10 @@ public class BigOIt2 extends BigOIt2Base{
                     double ratio = time/prev;
                     //System.out.printf("%6d %7.1f", N, time);
                     //System.out.printf("%5.1f\n", time / prev);
-                        //times.put(N,times.getOrDefault(N,0.0)+ratio);
-                    double roundedRatio = Math.round(ratio);
-                    if(roundedRatio != 0.0 && roundedRatio != 9.223372036854776E18){
-                        ratios.add(roundedRatio);
+                    //double roundedRatio = Math.round(ratio);
+                    if(ratio >= 0.5 && ratio != Double.POSITIVE_INFINITY){
+                        //ratios.add(ratio);
+                        times.put(N,times.getOrDefault(N,0.0)+ratio);
                     }
 
                     prev = time;
@@ -96,24 +97,24 @@ public class BigOIt2 extends BigOIt2Base{
         }
 
 
-        //times.forEach((k,v) -> times.put(k, (v/10.0)));
+        times.forEach((k,v) -> times.put(k, (v/10.0)));
         //times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
-        //times.forEach((k,v) -> System.out.println(k + " " + v));
-        //double mode = mode(new ArrayList<>(times.values()));
+        times.forEach((k,v) -> System.out.println(k + " " + v));
+        double mode = mode(new ArrayList<>(times.values()));
         //System.out.println("Ratios: " + ratios);
-        double mode = mode(ratios);
-        double avg = average(ratios);
-        //double avg = average(new ArrayList<>(times.values()));
-//        System.out.println("Count: " + count);
+        //double mode = mode(ratios);
+        //double avg = average(ratios);
+        double avg = average(new ArrayList<>(times.values()));
+        System.out.println("Count: " + count);
 //        System.out.println("More than one: " + moreThanOne);
-//        System.out.println("Mode: " + mode);
-//        System.out.println("Average: " + avg);
+        System.out.println("Mode: " + mode);
+        System.out.println("Average: " + avg);
 
-        if(count < 25){//not enough data
+        if(count < 4){//not enough data
             return Double.NaN;
         }else{
             //System.out.println("Run time: " + (System.currentTimeMillis() - methodStartTime));
-           return mode;
+           return avg;
         }
 
     }
@@ -134,7 +135,7 @@ public class BigOIt2 extends BigOIt2Base{
         Map<Double, Integer> map = new HashMap<>();
         for(Double num : nums){
             map.put(num, map.getOrDefault(num, 0) + 1);
-            if(num != 0.0){
+            if(num > 0.5){
                 count++;
             }
         }
@@ -155,7 +156,8 @@ public class BigOIt2 extends BigOIt2Base{
     private double average(List<Double> nums){
         double sum = 0;
         for(Double num : nums){
-            if(num != 9.223372036854776E18){
+            //what are the possibliites for a doubling ratio, bc if there is a limit then i should just exlude from a certain point up.
+            if(num > 1.0){
                 sum += num;
             }
         }

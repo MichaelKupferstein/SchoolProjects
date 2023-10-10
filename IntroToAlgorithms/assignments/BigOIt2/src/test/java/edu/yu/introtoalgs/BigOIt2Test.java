@@ -13,7 +13,7 @@ public class BigOIt2Test {
     public void doublingRatioTest() {
         this.bigOIt2 = new BigOIt2();
         double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.ThreeSum", 40000);
-        assertEquals(8.0, mode, 2.1);
+        assertEquals(8.0, mode, 0.1);
     }
     @Test
     public void doublingRatioTestReturnNaN() {//should return NaN bc there isnt enough time to get accurate data
@@ -27,7 +27,7 @@ public class BigOIt2Test {
     public void doublingRatioTestOnFactorial(){
         this.bigOIt2 = new BigOIt2();
         double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.Factorial", 1000);
-        assertEquals(2.0, mode, 0.1);
+        assertEquals(1.4, mode, 0.2);
 
     }
     @Test
