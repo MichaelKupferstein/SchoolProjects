@@ -20,6 +20,7 @@ public class BigOIt2 extends BigOIt2Base{
     private int count = 0;
     private boolean moreThanOne = false;
     private List<Double> ratios = Collections.synchronizedList(new ArrayList<>());
+    private List<Double> roundedRatios = Collections.synchronizedList(new ArrayList<>());
     private final int numOfThreads = 10;
     private int modeCount;
 
@@ -80,8 +81,9 @@ public class BigOIt2 extends BigOIt2Base{
                     //System.out.printf("%6d %7.1f", N, time);
                     //System.out.printf("%5.1f\n", time / prev);
                     //double roundedRatio = Math.round(ratio);
-                    if(ratio >= 0.5 && ratio != Double.POSITIVE_INFINITY){
+                    if(ratio >= 0.6 && ratio != Double.POSITIVE_INFINITY && ratio <= 15.0){
                         ratios.add(ratio);
+                        roundedRatios.add((double) Math.round(ratio));
                         //times.put(N,times.getOrDefault(N,0.0)+ratio);
                     }
 
@@ -103,29 +105,49 @@ public class BigOIt2 extends BigOIt2Base{
         //times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
         //times.forEach((k,v) -> System.out.println(k + " " + v));
         //double mode = mode(new ArrayList<>(times.values()));
-        //System.out.println("Ratios: " + ratios);
-        double mode = mode(ratios);
+        System.out.println("Ratios: " + ratios);
+        System.out.println("Rounded ratios: " + roundedRatios);
+        double mode = mode(ratios,true);
         double avg = average(ratios);
+        double roundedMode = mode(roundedRatios,false);
         //double avg = average(new ArrayList<>(times.values()));
-        //System.out.println("Count: " + count);
+        System.out.println("Count: " + count);
 //        System.out.println("More than one: " + moreThanOne);
-        //System.out.println("Mode: " + mode);
-        //System.out.println("Average: " + avg);
+        System.out.println("Mode: " + mode);
+        System.out.println("Rounded mode: " + roundedMode);
+        System.out.println("Average: " + avg);
+        System.out.println("Mode count: " + modeCount);
 
         if(count <= 25){//not enough data
             return Double.NaN;
         }else{
-            //System.out.println("Run time: " + (System.currentTimeMillis() - methodStartTime));
-            if(modeCount > 4){
-                //System.out.println("Mode count: " + modeCount);
-                if((count < 100 && modeCount > 20) || modeCount > 25 || (count > 100 && modeCount > 13)){
-                    return avg;
-                }
+//            //System.out.println("Run time: " + (System.currentTimeMillis() - methodStartTime));
+//            if(modeCount > 4){
+//                //System.out.println("Mode count: " + modeCount);
+//                if((count < 100 && modeCount > 20) || modeCount > 25 || (count > 100 && modeCount > 13)){
+//                    System.out.println("Returning average");
+//                    return avg;
+//                }
+//                System.out.println("Returning mode");
+//                return mode;
+//            }else if( avg < mode){
+//                System.out.println("Returning avg+mode/2");
+//                return (avg+mode)/2.0;
+//            }
+//            System.out.println("Returning mode");
+//           return mode;
+            if(count > 100){//for linear and such
+                System.out.println("Returning mode");
                 return mode;
-            }else if( avg < mode){
-                return (avg+mode)/2.0;
+            }else{
+                double limit = 0.2;
+                double diff = Math.abs(mode - avg);
+                if(diff >= limit){
+                    return roundedMode;
+                }
+                System.out.println("Returning average");
+                return avg;
             }
-           return mode;
         }
 
     }
@@ -142,15 +164,17 @@ public class BigOIt2 extends BigOIt2Base{
         }
     }
 
-    private double mode(List<Double> nums){
+    private double mode(List<Double> nums, boolean countMode){
         if(nums.size() == 0 || nums == null){
             return 0;
         }
         Map<Double, Integer> map = new HashMap<>();
-        for(Double num : nums){
+        for(Double num : nums) {
             map.put(num, map.getOrDefault(num, 0) + 1);
-            if(num > 0.5){
-                count++;
+            if (countMode){
+                if (num > 0.5) {
+                    count++;
+                }
             }
         }
         int max = 0;
@@ -161,7 +185,9 @@ public class BigOIt2 extends BigOIt2Base{
                 mode = entry.getKey();
             }
         }
-        this.modeCount = map.get(mode);
+        if(countMode) {
+            this.modeCount = map.get(mode);
+        }
         return mode;
     }
 

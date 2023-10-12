@@ -11,9 +11,9 @@ public class BigOIt2Test {
     private BigOIt2 bigOIt2;
 
     @Test
-    public void doublingRatioTest() {
+    public void doublingRatioTestOnThreeSum() {
         this.bigOIt2 = new BigOIt2();
-        double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.ThreeSum", 40000);
+        double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.ThreeSum", 30000);
         assertEquals(8.0, mode, 0.1);
     }
     @Test
@@ -38,7 +38,6 @@ public class BigOIt2Test {
         assertEquals(Double.NaN, mode);
 
     }
-
 
 
 
