@@ -18,9 +18,7 @@ public class BigOIt2 extends BigOIt2Base{
     private Method executeMethod;
     private ConcurrentHashMap<Integer, Double> times = new ConcurrentHashMap<>();
     private int count = 0;
-    private boolean moreThanOne = false;
     private List<Double> ratios = Collections.synchronizedList(new ArrayList<>());
-    private List<Double> roundedRatios = Collections.synchronizedList(new ArrayList<>());
     private final int numOfThreads = 10;
     private int modeCount;
 
@@ -66,27 +64,19 @@ public class BigOIt2 extends BigOIt2Base{
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(numOfThreads);
 
         executor.schedule(() -> {
-            //System.out.println("Task executed after " + timeOutInMs + " milliseconds.");
             executor.shutdownNow();
         }, timeOutInMs, TimeUnit.MILLISECONDS);
 
 
         for(int i = 0; i < numOfThreads; i++) {
             executor.execute(() -> {
-                //System.out.println("Working on thread" + Thread.currentThread().getName());
                 double prev = timeTrial(125);
                 for (int N = 250; true; N += N) {
                     double time = timeTrial(N);
                     double ratio = time/prev;
-                    //System.out.printf("%6d %7.1f", N, time);
-                    //System.out.printf("%5.1f\n", time / prev);
-                    //double roundedRatio = Math.round(ratio);
                     if(ratio >= 0.6 && ratio != Double.POSITIVE_INFINITY && ratio <= 15.0){
                         ratios.add(ratio);
-                        roundedRatios.add((double) Math.round(ratio));
-                        //times.put(N,times.getOrDefault(N,0.0)+ratio);
                     }
-
                     prev = time;
                 }
             });
@@ -100,52 +90,29 @@ public class BigOIt2 extends BigOIt2Base{
             }
         }
 
-
-        //times.forEach((k,v) -> times.put(k, (v/10.0)));
-        //times.forEach((k,v) -> times.put(k, (double) Math.round(v/10.0)));
-        //times.forEach((k,v) -> System.out.println(k + " " + v));
-        //double mode = mode(new ArrayList<>(times.values()));
-        System.out.println("Ratios: " + ratios);
-        System.out.println("Rounded ratios: " + roundedRatios);
-        double mode = mode(ratios,true);
+        double mode = mode(ratios,false);
+        if(Double.isNaN(mode)){
+            return Double.NaN;
+        }
         double avg = average(ratios);
-        double roundedMode = mode(roundedRatios,false);
-        //double avg = average(new ArrayList<>(times.values()));
-        System.out.println("Count: " + count);
-//        System.out.println("More than one: " + moreThanOne);
-        System.out.println("Mode: " + mode);
-        System.out.println("Rounded mode: " + roundedMode);
-        System.out.println("Average: " + avg);
-        System.out.println("Mode count: " + modeCount);
+
 
         if(count <= 25){//not enough data
+            if(count > 5 && modeCount <= 3){
+                return mode;
+            }
             return Double.NaN;
         }else{
-//            //System.out.println("Run time: " + (System.currentTimeMillis() - methodStartTime));
-//            if(modeCount > 4){
-//                //System.out.println("Mode count: " + modeCount);
-//                if((count < 100 && modeCount > 20) || modeCount > 25 || (count > 100 && modeCount > 13)){
-//                    System.out.println("Returning average");
-//                    return avg;
-//                }
-//                System.out.println("Returning mode");
-//                return mode;
-//            }else if( avg < mode){
-//                System.out.println("Returning avg+mode/2");
-//                return (avg+mode)/2.0;
-//            }
-//            System.out.println("Returning mode");
-//           return mode;
+
             if(count > 100){//for linear and such
-                System.out.println("Returning mode");
                 return mode;
             }else{
                 double limit = 0.2;
                 double diff = Math.abs(mode - avg);
                 if(diff >= limit){
-                    return roundedMode;
+                    double roundedMode = mode(ratios,true);
+                    return mode(ratios,true);
                 }
-                System.out.println("Returning average");
                 return avg;
             }
         }
@@ -164,31 +131,38 @@ public class BigOIt2 extends BigOIt2Base{
         }
     }
 
-    private double mode(List<Double> nums, boolean countMode){
-        if(nums.size() == 0 || nums == null){
-            return 0;
-        }
-        Map<Double, Integer> map = new HashMap<>();
-        for(Double num : nums) {
-            map.put(num, map.getOrDefault(num, 0) + 1);
-            if (countMode){
-                if (num > 0.5) {
-                    count++;
+    private double mode(List<Double> nums, boolean round){
+        try {
+            if (nums.size() == 0 || nums == null) {
+                return 0;
+            }
+            Map<Double, Integer> map = new HashMap<>();
+            for (Double num : nums) {
+                if (round) {
+                    num = (double) Math.round(num);
+                }
+                map.put(num, map.getOrDefault(num, 0) + 1);
+                if (!round) {
+                    if (num > 0.5) {
+                        count++;
+                    }
                 }
             }
-        }
-        int max = 0;
-        double mode = 0;
-        for(Map.Entry<Double, Integer> entry : map.entrySet()){
-            if(entry.getValue() > max && entry.getKey() != 0.0){
-                max = entry.getValue();
-                mode = entry.getKey();
+            int max = 0;
+            double mode = 0;
+            for (Map.Entry<Double, Integer> entry : map.entrySet()) {
+                if (entry.getValue() > max && entry.getKey() != 0.0) {
+                    max = entry.getValue();
+                    mode = entry.getKey();
+                }
             }
+            if (!round) {
+                this.modeCount = map.get(mode);
+            }
+            return mode;
+        }catch(ConcurrentModificationException e ){
+            return Double.NaN;
         }
-        if(countMode) {
-            this.modeCount = map.get(mode);
-        }
-        return mode;
     }
 
     private double average(List<Double> nums){
@@ -199,7 +173,6 @@ public class BigOIt2 extends BigOIt2Base{
                 sum += num;
                 count++;
             }
-
         }
         return sum/count;
     }

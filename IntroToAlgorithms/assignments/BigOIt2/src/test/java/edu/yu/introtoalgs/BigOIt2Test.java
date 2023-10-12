@@ -34,10 +34,18 @@ public class BigOIt2Test {
     @Test
     public void doublingRatioTestOnFactorialReturnNaN(){
         this.bigOIt2 = new BigOIt2();
-        double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.Factorial", 20);
+        double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.Factorial",10);
         assertEquals(Double.NaN, mode);
 
     }
+    @Test
+    public void doublingRatioTestOnConstantTime(){
+        this.bigOIt2 = new BigOIt2();
+        double mode = this.bigOIt2.doublingRatio("edu.yu.introtoalgs.testAlgs.ConstantTime", 5000);
+        assertEquals(1.0, mode, 0.1);
+
+    }
+
 
 
 
