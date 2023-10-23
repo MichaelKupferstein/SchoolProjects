@@ -1,8 +1,16 @@
 package edu.yu.introtoalgs;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WordLayout extends WordLayoutBase{
+
+    private Grid grid;
+    private List<String> words;
+    private Map<String,List<LocationBase>> wordLocations;
+    private int[][] template;
 
     /**
      * Creates a grid with the specified number of rows and columns such that
@@ -23,8 +31,41 @@ public class WordLayout extends WordLayoutBase{
      */
     public WordLayout(int nRows, int nColumns, List<String> words) {
         super(nRows, nColumns, words);
+        if(nRows < 0 || nColumns < 0 || words == null || words.isEmpty() || words.contains(null)){
+            throw new IllegalArgumentException("Invalid parameters");
+        }
+
+        this.grid = new Grid(nRows, nColumns);
+        this.words = words;
+        this.wordLocations = new HashMap<>();
+        this.template = new int[nRows][nColumns];
 
 
+
+        for(String word : words){
+            if(word.length() > nColumns || word.length() > nRows){
+                throw new IllegalArgumentException("Contains word that is too long");
+            }
+            wordLocations.put(word, addWord(word));
+        }
+
+//        if(basicRows){
+//            createBasicRows();
+//        } else if (basiColumns){
+//            createBasicColumns();
+//        } else {
+//            //harder stuff
+//        }
+
+    }
+
+
+
+    private List<LocationBase> addWord(String word){
+        WordCords wordCords = new WordCords(word);
+        int row = 0, column = 0;
+
+        return wordCords.getCords();
     }
 
     /**
@@ -40,6 +81,9 @@ public class WordLayout extends WordLayoutBase{
      */
     @Override
     public List<LocationBase> locations(String word) {
+        if(!words.contains(word)){
+            throw new IllegalArgumentException("Word not in list");
+        }
         return null;
     }
 
@@ -50,6 +94,30 @@ public class WordLayout extends WordLayoutBase{
      */
     @Override
     public Grid getGrid() {
-        return null;
+        return this.grid;
+    }
+
+    private class WordCords{
+        private String word;
+        private int[] wordRows, wordColumns;
+        private int count = 0;
+
+        public WordCords(String word){
+            this.word = word;
+            this.wordRows = new int[word.length()];
+            this.wordColumns = new int[word.length()];
+        }
+        private void addCord(int row, int column){
+            wordRows[count] = row;
+            wordColumns[count] = column;
+            count++;
+        }
+        private List<LocationBase> getCords(){
+            List<LocationBase> cords = new ArrayList<>();
+            for(int i = 0; i < word.length(); i++){
+                cords.add(new LocationBase(wordRows[i], wordColumns[i]));
+            }
+            return cords;
+        }
     }
 }
