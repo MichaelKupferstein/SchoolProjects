@@ -48,12 +48,12 @@ public class WordLayout extends WordLayoutBase{
         int letterCount = 0;
 
         for(String word : this.words){
-            if(word.length() > nColumns || word.length() > nRows){
+            if(word.length() > nColumns && word.length() > nRows){
                 throw new IllegalArgumentException("Contains word that is too long");
             }
             letterCount += word.length();
             if(letterCount > nRows*nColumns){
-                throw new IllegalArgumentException("Too many letters");
+                throw new IllegalArgumentException("Too many letters, total letter count must be less than or equal to: " + nRows*nColumns);
             }
             this.wordLocations.put(word, addWord(word));
         }
@@ -90,19 +90,34 @@ public class WordLayout extends WordLayoutBase{
                     startingColum++;
                 }
                 template[i][0] -= word.length();
+                return wordCords.getCords();
+            }
+        }
+
+        //check the columns
+        for(int i = 1; i < column+1;i++){
+            //if the counter is greater than or equal to the word then it can be added
+            if(template[0][i] >= word.length()){
+                int startingRow = addToColumn(i,word);
+                for(int j = 0; j < word.length(); j++){
+                    wordCords.addCord(startingRow-1,i-1);
+                    template[startingRow][0]--;
+                    startingRow++;
+                }
+                template[0][i] -= word.length();
                 break;
             }
         }
 
-
         //check the columns
-
         return wordCords.getCords();
     }
+
+
     private int addToRow(int row, String word){
         //check the row and find the columns that it can be added to in this row, 0 means its open and 1 means its taken
         for(int i = 1; i < column; i++){
-            if(checkColumn(row,i,word)){
+            if(checkColumns(row,i,word)){
                 //add the word to the row
                 for(int j = 0; j < word.length(); j++){
                     template[row][i++] = 1;
@@ -116,9 +131,36 @@ public class WordLayout extends WordLayoutBase{
         //return the starting column
         return 0; //for now
     }
-    private boolean checkColumn(int row, int column, String word){
+
+    private int addToColumn(int column, String word){
+        //check the column and find the rows that it can be added to in this column, 0 means its open and 1 means its taken
+        for(int i = 1; i < row; i++){
+            if(checkRows(i,column,word)){
+                //add the word to the column
+                for(int j = 0; j < word.length(); j++){
+                    template[i++][column] = 1;
+                    //add the word to the grid at the same indieces -1 bc the grid starts at 0
+                    grid.grid[i-2][column-1] = word.charAt(j);
+                }
+                return i-word.length();
+            }
+        }
+        //return the starting row
+        return 0; //for now
+    }
+
+    private boolean checkColumns(int row, int column, String word){
         for(int i = 0; i < word.length(); i++){
             if(template[row][column++] != 0){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkRows(int row, int column, String word){
+        for(int i = 0; i < word.length(); i++){
+            if(template[row++][column] != 0){
                 return false;
             }
         }
@@ -199,11 +241,12 @@ public class WordLayout extends WordLayoutBase{
 //            }
 //            System.out.println(); // Move to the next line after each row
 //        }
-        WordLayout wordLayout = new WordLayout(3,8, List.of("cat","hat","fat"));
+        WordLayout wordLayout = new WordLayout(4,3, List.of("at","hat","cats","rat"));
         System.out.println(wordLayout.getGrid().toString());
-        System.out.println(wordLayout.locations("cat"));
+        System.out.println(wordLayout.locations("cats"));
         System.out.println(wordLayout.locations("hat"));
-        System.out.println(wordLayout.locations("fat"));
+        System.out.println(wordLayout.locations("at"));
+        System.out.println(wordLayout.locations("rat"));
 
 
     }
