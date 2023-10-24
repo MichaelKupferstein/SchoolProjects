@@ -82,7 +82,7 @@ public class WordLayout extends WordLayoutBase{
         //check the rows first
         for(int i = 1; i < row+1; i++){
             //if the counter is greater than or equal to the word then it can be added
-            if(template[i][0] >= word.length()){
+            if(template[i][0] >= word.length() && checkFullRow(i,word.length())){
                 int startingColum = addToRow(i,word);
                 for(int j = 0; j < word.length(); j++){
                     wordCords.addCord(i-1,startingColum-1);
@@ -97,20 +97,19 @@ public class WordLayout extends WordLayoutBase{
         //check the columns
         for(int i = 1; i < column+1;i++){
             //if the counter is greater than or equal to the word then it can be added
-            if(template[0][i] >= word.length()){
+            if(template[0][i] >= word.length() && checkFullCol(i,word.length())){
                 int startingRow = addToColumn(i,word);
-                for(int j = 0; j < word.length(); j++){
-                    wordCords.addCord(startingRow-1,i-1);
+                for (int j = 0; j < word.length(); j++) {
+                    wordCords.addCord(startingRow - 1, i - 1);
                     template[startingRow][0]--;
                     startingRow++;
                 }
                 template[0][i] -= word.length();
-                break;
+                return wordCords.getCords();
             }
         }
 
-        //check the columns
-        return wordCords.getCords();
+        throw new IllegalArgumentException("Word " + word + " cannot be added to the grid");
     }
 
 
@@ -129,7 +128,7 @@ public class WordLayout extends WordLayoutBase{
             }
         }
         //return the starting column
-        return 0; //for now
+        return -1; //for now
     }
 
     private int addToColumn(int column, String word){
@@ -165,6 +164,36 @@ public class WordLayout extends WordLayoutBase{
             }
         }
         return true;
+    }
+
+    private boolean checkFullCol(int column, int wordSize){
+        int count = 0;
+        for(int i = 1; i < row+1; i++){
+            if(template[i][column] == 0){
+                count++;
+            }else{
+                count = 0;
+            }
+            if(count == wordSize){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkFullRow(int row, int wordSize){
+        int count = 0;
+        for(int i = 1; i < column+1; i++){
+            if(template[row][i] == 0){
+                count++;
+            }else{
+                count = 0;
+            }
+            if(count == wordSize){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -241,12 +270,16 @@ public class WordLayout extends WordLayoutBase{
 //            }
 //            System.out.println(); // Move to the next line after each row
 //        }
-        WordLayout wordLayout = new WordLayout(4,3, List.of("at","hat","cats","rat"));
+        List<String> words = List.of("at","hat","cats","rat","Jazziness", "abandoning", "fabrics");
+        WordLayout wordLayout = new WordLayout(4,10,words );
         System.out.println(wordLayout.getGrid().toString());
         System.out.println(wordLayout.locations("cats"));
         System.out.println(wordLayout.locations("hat"));
         System.out.println(wordLayout.locations("at"));
         System.out.println(wordLayout.locations("rat"));
+
+
+
 
 
     }
