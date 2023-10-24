@@ -80,13 +80,14 @@ public class WordLayout extends WordLayoutBase{
         WordCords wordCords = new WordCords(word);
 
         //check the rows first
-        for(int i = 1; i < row; i++){
+        for(int i = 1; i < row+1; i++){
             //if the counter is greater than or equal to the word then it can be added
             if(template[i][0] >= word.length()){
                 int startingColum = addToRow(i,word);
                 for(int j = 0; j < word.length(); j++){
-                    wordCords.addCord(i-1,startingColum++);
-                    template[i][j]--;
+                    wordCords.addCord(i-1,startingColum-1);
+                    template[0][startingColum]--;
+                    startingColum++;
                 }
                 template[i][0] -= word.length();
                 break;
@@ -150,6 +151,13 @@ public class WordLayout extends WordLayoutBase{
      */
     @Override
     public Grid getGrid() {
+        for (int i = 0; i < row+1; i++) {
+            for (int j = 0; j < column+1; j++) {
+                System.out.print(template[i][j] + " ");
+            }
+            System.out.println(); // Move to the next line after each row
+        }
+
         return this.grid;
     }
 
@@ -191,10 +199,11 @@ public class WordLayout extends WordLayoutBase{
 //            }
 //            System.out.println(); // Move to the next line after each row
 //        }
-        WordLayout wordLayout = new WordLayout(3,3, List.of("cat","hat","fat"));
+        WordLayout wordLayout = new WordLayout(3,8, List.of("cat","hat","fat"));
         System.out.println(wordLayout.getGrid().toString());
         System.out.println(wordLayout.locations("cat"));
         System.out.println(wordLayout.locations("hat"));
+        System.out.println(wordLayout.locations("fat"));
 
 
     }
