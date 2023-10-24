@@ -1,9 +1,6 @@
 package edu.yu.introtoalgs;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WordLayout extends WordLayoutBase{
 
@@ -11,6 +8,7 @@ public class WordLayout extends WordLayoutBase{
     private List<String> words;
     private Map<String,List<LocationBase>> wordLocations;
     private int[][] template;
+    private int row, column;
 
     /**
      * Creates a grid with the specified number of rows and columns such that
@@ -31,41 +29,99 @@ public class WordLayout extends WordLayoutBase{
      */
     public WordLayout(int nRows, int nColumns, List<String> words) {
         super(nRows, nColumns, words);
-        if(nRows < 0 || nColumns < 0 || words == null || words.isEmpty() || words.contains(null)){
+        if(nRows < 0 || nColumns < 0 || words == null || words.isEmpty()){
             throw new IllegalArgumentException("Invalid parameters");
         }
-
+        //row and col stuff
+        this.row = nRows;
+        this.column = nColumns;
+        //grid stuff
         this.grid = new Grid(nRows, nColumns);
-        this.words = words;
+        //word stuff
+        this.words = new ArrayList<>(words);
+        Collections.sort(this.words, Comparator.comparingInt(String::length).reversed());
         this.wordLocations = new HashMap<>();
-        this.template = new int[nRows][nColumns];
 
+        //plus one bc first row and col will be counter of hw many zeros there are
+        this.template = createTemplate(nRows+1, nColumns+1);
 
+        int letterCount = 0;
 
-        for(String word : words){
+        for(String word : this.words){
             if(word.length() > nColumns || word.length() > nRows){
                 throw new IllegalArgumentException("Contains word that is too long");
             }
-            wordLocations.put(word, addWord(word));
+            letterCount += word.length();
+            if(letterCount > nRows*nColumns){
+                throw new IllegalArgumentException("Too many letters");
+            }
+            this.wordLocations.put(word, addWord(word));
         }
 
-//        if(basicRows){
-//            createBasicRows();
-//        } else if (basiColumns){
-//            createBasicColumns();
-//        } else {
-//            //harder stuff
-//        }
+
 
     }
+
+    private int[][] createTemplate(int nRows, int nColumns){
+        int[][] template = new int[nRows][nColumns];
+        for(int i = 1; i < nColumns; i++){
+            template[0][i] = nRows-1;
+        }
+        for(int i = 1; i < nRows; i++){
+            template[i][0] = nColumns-1;
+        }
+        return template;
+    }
+
 
 
 
     private List<LocationBase> addWord(String word){
         WordCords wordCords = new WordCords(word);
-        int row = 0, column = 0;
+
+        //check the rows first
+        for(int i = 1; i < row; i++){
+            //if the counter is greater than or equal to the word then it can be added
+            if(template[i][0] >= word.length()){
+                int startingColum = addToRow(i,word);
+                for(int j = 0; j < word.length(); j++){
+                    wordCords.addCord(i-1,startingColum++);
+                    template[i][j]--;
+                }
+                template[i][0] -= word.length();
+                break;
+            }
+        }
+
+
+        //check the columns
 
         return wordCords.getCords();
+    }
+    private int addToRow(int row, String word){
+        //check the row and find the columns that it can be added to in this row, 0 means its open and 1 means its taken
+        for(int i = 1; i < column; i++){
+            if(checkColumn(row,i,word)){
+                //add the word to the row
+                for(int j = 0; j < word.length(); j++){
+                    template[row][i++] = 1;
+                    //add the word to the grid at the same indieces -1 bc the grid starts at 0
+                    grid.grid[row-1][i-2] = word.charAt(j);
+                }
+
+                return i-word.length();
+            }
+        }
+        //return the starting column
+        return 0; //for now
+    }
+    private boolean checkColumn(int row, int column, String word){
+        for(int i = 0; i < word.length(); i++){
+            if(template[row][column++] != 0){
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -84,7 +140,7 @@ public class WordLayout extends WordLayoutBase{
         if(!words.contains(word)){
             throw new IllegalArgumentException("Word not in list");
         }
-        return null;
+        return this.wordLocations.get(word);
     }
 
     /**
@@ -120,4 +176,27 @@ public class WordLayout extends WordLayoutBase{
             return cords;
         }
     }
+
+    public static void main(String[] args){
+        //hypothetical grid
+        //Grid is 5x5
+        //in the code it would add one to each
+//        int rows = 6;
+//        int columns = 6;
+//        int[][] twoDArray = createTemplate(rows,columns);
+//
+//        for (int i = 0; i < rows; i++) {
+//            for (int j = 0; j < columns; j++) {
+//                System.out.print(twoDArray[i][j] + " ");
+//            }
+//            System.out.println(); // Move to the next line after each row
+//        }
+        WordLayout wordLayout = new WordLayout(3,3, List.of("cat","hat","fat"));
+        System.out.println(wordLayout.getGrid().toString());
+        System.out.println(wordLayout.locations("cat"));
+        System.out.println(wordLayout.locations("hat"));
+
+
+    }
+
 }
