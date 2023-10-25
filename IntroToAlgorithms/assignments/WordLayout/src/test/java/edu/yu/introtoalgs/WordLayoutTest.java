@@ -117,6 +117,19 @@ class WordLayoutTest {
         final WordLayoutBase layout = new WordLayout(nRows, nColumns, words);
         int count = 0;
         Collections.sort(words, Comparator.comparingInt(String::length).reversed());
+        //check that each word is in the right location. it should start from (0,1) and increase to length of the word for each word, until it reaches the end, so for example if the first word was "the" it would be (0,1),(0,2),(0,3)
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            //logger.info("Locations for word {}: {}", word, locations);
+            WordCords cord = new WordCords(word);
+            for(int i = 0; i < word.length();i++) {
+                cord.addCord(0,count++);
+            }
+            assertEquals(locations.toString(),cord.getCords().toString());
+            //count += word.length();
+        }
+
+
 //        for(String word : words){
 //            final List<LocationBase> locations = layout.locations(word);
 //            logger.info("Locations for word {}: {}", word, locations);
@@ -189,6 +202,32 @@ class WordLayoutTest {
 
     }
 
+
+
+
+    private class WordCords{
+        private String word;
+        private int[] wordRows, wordColumns;
+        private int count = 0;
+
+        public WordCords(String word){
+            this.word = word;
+            this.wordRows = new int[word.length()];
+            this.wordColumns = new int[word.length()];
+        }
+        private void addCord(int row, int column){
+            wordRows[count] = row;
+            wordColumns[count] = column;
+            count++;
+        }
+        private List<LocationBase> getCords(){
+            List<LocationBase> cords = new ArrayList<>();
+            for(int i = 0; i < word.length(); i++){
+                cords.add(new LocationBase(wordRows[i], wordColumns[i]));
+            }
+            return cords;
+        }
+    }
 
 
 
