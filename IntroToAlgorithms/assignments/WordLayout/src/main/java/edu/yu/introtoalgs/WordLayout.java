@@ -48,13 +48,13 @@ public class WordLayout extends WordLayoutBase{
         int letterCount = 0;
 
         for(String word : this.words){
-            if(word.length() > nColumns && word.length() > nRows){
-                throw new IllegalArgumentException("Contains word that is too long");
-            }
+            if(word.length() > nColumns && word.length() > nRows) throw new IllegalArgumentException("Contains word that is too long");
+            if(word.contains(" ")) throw new IllegalArgumentException("Words cannot contain spaces");
+
             letterCount += word.length();
-            if(letterCount > nRows*nColumns){
-                throw new IllegalArgumentException("Too many letters, total letter count must be less than or equal to: " + nRows*nColumns);
-            }
+
+            if(letterCount > nRows*nColumns) throw new IllegalArgumentException("Too many letters, total letter count must be less than or equal to: " + nRows*nColumns);
+
             this.wordLocations.put(word, addWord(word));
         }
 
