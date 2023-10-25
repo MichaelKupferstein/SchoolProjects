@@ -84,6 +84,7 @@ public class WordLayout extends WordLayoutBase{
             //if the counter is greater than or equal to the word then it can be added
             if(template[i][0] >= word.length() && checkFullRow(i,word.length())){
                 int startingColum = addToRow(i,word);
+                if(startingColum == -1) break;
                 for(int j = 0; j < word.length(); j++){
                     wordCords.addCord(i-1,startingColum-1);
                     template[0][startingColum]--;
@@ -99,6 +100,7 @@ public class WordLayout extends WordLayoutBase{
             //if the counter is greater than or equal to the word then it can be added
             if(template[0][i] >= word.length() && checkFullCol(i,word.length())){
                 int startingRow = addToColumn(i,word);
+                if(startingRow ==-1) break;
                 for (int j = 0; j < word.length(); j++) {
                     wordCords.addCord(startingRow - 1, i - 1);
                     template[startingRow][0]--;
@@ -108,7 +110,7 @@ public class WordLayout extends WordLayoutBase{
                 return wordCords.getCords();
             }
         }
-
+        //not really gonna ever happen bc we count letters and make sure words arent too long, just needed as a precuation
         throw new IllegalArgumentException("Word " + word + " cannot be added to the grid");
     }
 
@@ -127,7 +129,7 @@ public class WordLayout extends WordLayoutBase{
                 return i-word.length();
             }
         }
-        //return the starting column
+        //usally not gonna get here bc of the way we check the rows
         return -1; //for now
     }
 
@@ -144,8 +146,8 @@ public class WordLayout extends WordLayoutBase{
                 return i-word.length();
             }
         }
-        //return the starting row
-        return 0; //for now
+        //usally not gonna get here bc of the way we check the columns
+        return -1; //for now
     }
 
     private boolean checkColumns(int row, int column, String word){

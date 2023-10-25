@@ -139,7 +139,53 @@ class WordLayoutTest {
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the")));//A word in words is too long
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the dog")));//A word in words contains a space
         //assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the", "the")));//A word in words is repeated
-        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the", "cat", "ate")));//Too many characters in words
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(3,3 , List.of("the", "cat", "ate","to")));//Too many characters in words
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(3,3,List.of("the","cat")).locations("not"));//try to get a word that isn't in the list
+
+    }
+
+    @Test
+    void testColums(){
+        final int nRows = 5;
+        final int nColumns = 3;
+        final List<String> words = List.of("fives","fours","three");
+        WordLayoutBase layout = new WordLayout(nRows, nColumns, words);
+
+        logger.info("Using this list of words: {}", words);
+
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
+
+    }
+
+    @Test
+    void normalWordSearch(){//sometimes throws an error, depends on the random lengths of the words
+        final int nRows = 10;
+        final int nColumns = 10;
+        List<String> words = new ArrayList<>();
+        Random random = new Random();
+        for(int i = 0; i < 10; i++){
+            StringBuilder sb = new StringBuilder();
+            int length = random.nextInt(10)+1;
+            for(int j = 0; j < length; j++){
+                sb.append((char)(random.nextInt(26)+97));
+            }
+            words.add(sb.toString());
+        }
+        logger.info("Using this list of words: {}", words);
+
+        WordLayoutBase layout = new WordLayout(nRows, nColumns, words);
+
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
 
     }
 
