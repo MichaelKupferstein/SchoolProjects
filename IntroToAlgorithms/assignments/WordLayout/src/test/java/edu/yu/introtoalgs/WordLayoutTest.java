@@ -59,8 +59,6 @@ class WordLayoutTest {
     void largeGrid(TestInfo testInfo){
         final int nRows = 2;
         final int nColumns = 7000;
-        //final List<String> words = List.of("CAT","DOG","BOB");
-        //create a list of words with 416 words with various lengths
         final Set<String> wordSet = new HashSet<>(List.of(
                 "apple", "orange", "banana", "grape", "kiwi", "pineapple", "peach", "pear", "plum", "lemon",
                 "carrot", "potato", "broccoli", "cucumber", "tomato", "spinach", "lettuce", "onion", "garlic", "ginger",
@@ -111,25 +109,28 @@ class WordLayoutTest {
                 "astronaut", "cosmonaut", "pilot", "scientist", "engineer", "doctor", "nurse", "teacher", "artist", "musician",
                 "my","name","is","mordechai","but","koop"
         ));
-
         List<String> words = new ArrayList<>(wordSet);
 
 
-        logger.info("Using this list of words: {}", words);
+        logger.info("Using this list of words: (Too large to print)");
 
         final WordLayoutBase layout = new WordLayout(nRows, nColumns, words);
         int count = 0;
         Collections.sort(words, Comparator.comparingInt(String::length).reversed());
-        for(String word : words){
-            final List<LocationBase> locations = layout.locations(word);
-            logger.info("Locations for word {}: {}", word, locations);
-            count+=word.length();
-        }
-        final Grid grid = layout.getGrid();
-        logger.info("The filled in grid: {}", grid);
+//        for(String word : words){
+//            final List<LocationBase> locations = layout.locations(word);
+//            logger.info("Locations for word {}: {}", word, locations);
+//            count+=word.length();
+//        }
+        logger.info("Location for first word {}: {}",words.get(0),layout.locations(words.get(0)));
+        logger.info("Location of last word {}: {}",words.get(words.size()-1),layout.locations(words.get(words.size()-1)));
 
-        logger.info("The count of all characters is: {}",count);
+        final Grid grid = layout.getGrid();
+
+        logger.info("The filled in grid is very large");
     }
+
+
 
 
 }
