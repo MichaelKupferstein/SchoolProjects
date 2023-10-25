@@ -256,29 +256,4 @@ public class WordLayout extends WordLayoutBase{
         }
     }
 
-//    public static void main(String[] args){
-//        //hypothetical grid
-//        //Grid is 5x5
-//        //in the code it would add one to each
-////        int rows = 6;
-////        int columns = 6;
-////        int[][] twoDArray = createTemplate(rows,columns);
-////
-////        for (int i = 0; i < rows; i++) {
-////            for (int j = 0; j < columns; j++) {
-////                System.out.print(twoDArray[i][j] + " ");
-////            }
-////            System.out.println(); // Move to the next line after each row
-////        }
-//        List<String> words = List.of("at","hat","cats","rat","Jazziness", "abandoning", "fabrics");
-//        WordLayout wordLayout = new WordLayout(4,10,words );
-//        System.out.println(wordLayout.getGrid().toString());
-//        System.out.println(wordLayout.locations("cats"));
-//        System.out.println(wordLayout.locations("hat"));
-//        System.out.println(wordLayout.locations("at"));
-//        System.out.println(wordLayout.locations("rat"));
-//
-//    }
-
-
 }

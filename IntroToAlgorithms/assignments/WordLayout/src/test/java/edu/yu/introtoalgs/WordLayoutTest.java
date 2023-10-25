@@ -130,6 +130,19 @@ class WordLayoutTest {
         logger.info("The filled in grid is very large");
     }
 
+    @Test
+    void throwCorrectly(){
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(0, 2, List.of("the")));//row is too small
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 0, List.of("the")));//column is too small
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of()));//words is empty
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, null));//words is null
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the")));//A word in words is too long
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the dog")));//A word in words contains a space
+        //assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the", "the")));//A word in words is repeated
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the", "cat", "ate")));//Too many characters in words
+
+    }
+
 
 
 
