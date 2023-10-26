@@ -201,6 +201,23 @@ class WordLayoutTest {
 
     }
 
+    @Test
+    void testWithEmptyWord(){
+        final int row = 5;
+        final int col = 5;
+        List<String> words = List.of("");
+        WordLayoutBase layout = new WordLayout(row, col, words);
+        logger.info("Using this list of words: {}", words);
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+            assertEquals(locations.toString(),"[]");
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
+    }
+
+
 
 
 

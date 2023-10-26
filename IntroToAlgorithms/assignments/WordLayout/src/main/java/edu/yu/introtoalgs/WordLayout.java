@@ -176,7 +176,7 @@ public class WordLayout extends WordLayoutBase{
             }else{
                 count = 0;
             }
-            if(count == wordSize){
+            if(count >= wordSize){
                 return true;
             }
         }
@@ -191,7 +191,7 @@ public class WordLayout extends WordLayoutBase{
             }else{
                 count = 0;
             }
-            if(count == wordSize){
+            if(count >= wordSize){
                 return true;
             }
         }
