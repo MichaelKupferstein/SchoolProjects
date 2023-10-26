@@ -116,7 +116,7 @@ class WordLayoutTest {
 
         final WordLayoutBase layout = new WordLayout(nRows, nColumns, words);
         int count = 0;
-        Collections.sort(words, Comparator.comparingInt(String::length).reversed());
+        words.sort(Comparator.comparingInt(String::length).reversed());
         //check that each word is in the right location. it should start from (0,1) and increase to length of the word for each word, until it reaches the end, so for example if the first word was "the" it would be (0,1),(0,2),(0,3)
         for(String word : words){
             final List<LocationBase> locations = layout.locations(word);
@@ -126,7 +126,6 @@ class WordLayoutTest {
                 cord.addCord(0,count++);
             }
             assertEquals(locations.toString(),cord.getCords().toString());
-            //count += word.length();
         }
 
 
@@ -151,7 +150,7 @@ class WordLayoutTest {
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, null));//words is null
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the")));//A word in words is too long
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the dog")));//A word in words contains a space
-        //assertThrows(IllegalArgumentException.class, () -> new WordLayout(2, 2, List.of("the", "the")));//A word in words is repeated
+        assertThrows(IllegalArgumentException.class, () -> new WordLayout(3, 3, List.of("the", "the")));//A word in words is repeated
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(3,3 , List.of("the", "cat", "ate","to")));//Too many characters in words
         assertThrows(IllegalArgumentException.class, () -> new WordLayout(3,3,List.of("the","cat")).locations("not"));//try to get a word that isn't in the list
 

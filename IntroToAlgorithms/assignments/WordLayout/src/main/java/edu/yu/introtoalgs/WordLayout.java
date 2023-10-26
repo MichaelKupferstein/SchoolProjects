@@ -39,7 +39,7 @@ public class WordLayout extends WordLayoutBase{
         this.grid = new Grid(nRows, nColumns);
         //word stuff
         this.words = new ArrayList<>(words);
-        Collections.sort(this.words, Comparator.comparingInt(String::length).reversed());
+        this.words.sort(Comparator.comparingInt(String::length).reversed());
         this.wordLocations = new HashMap<>();
 
         //plus one bc first row and col will be counter of hw many zeros there are
@@ -55,7 +55,7 @@ public class WordLayout extends WordLayoutBase{
 
             if(letterCount > nRows*nColumns) throw new IllegalArgumentException("Too many letters, total letter count must be less than or equal to: " + nRows*nColumns);
 
-            this.wordLocations.put(word, addWord(word));
+            if(this.wordLocations.put(word, addWord(word))!=null) throw new IllegalArgumentException("Duplicate word: " + word);
         }
 
 
@@ -122,14 +122,14 @@ public class WordLayout extends WordLayoutBase{
                 //add the word to the row
                 for(int j = 0; j < word.length(); j++){
                     template[row][i++] = 1;
-                    //add the word to the grid at the same indieces -1 bc the grid starts at 0
+                    //add the word to the grid at the same indices -1 bc the grid starts at 0
                     grid.grid[row-1][i-2] = word.charAt(j);
                 }
 
                 return i-word.length();
             }
         }
-        //usally not gonna get here bc of the way we check the rows
+        //usually not gonna get here bc of the way we check the rows
         return -1; //for now
     }
 
@@ -140,13 +140,13 @@ public class WordLayout extends WordLayoutBase{
                 //add the word to the column
                 for(int j = 0; j < word.length(); j++){
                     template[i++][column] = 1;
-                    //add the word to the grid at the same indieces -1 bc the grid starts at 0
+                    //add the word to the grid at the same indices -1 bc the grid starts at 0
                     grid.grid[i-2][column-1] = word.charAt(j);
                 }
                 return i-word.length();
             }
         }
-        //usally not gonna get here bc of the way we check the columns
+        //usually not gonna get here bc of the way we check the columns
         return -1; //for now
     }
 
