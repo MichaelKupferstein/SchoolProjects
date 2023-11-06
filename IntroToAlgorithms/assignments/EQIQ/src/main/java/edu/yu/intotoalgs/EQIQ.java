@@ -1,7 +1,6 @@
-package edu.yu.introtoalgs;
+package edu.yu.intotoalgs;
 
-public class EQIQ extends EQIQBase{
-
+public class EQIQ extends EQIQBase {
     /**
      * Constructor: supplies the information needed to solve the EQIQ problem.
      * When the constructor invocation completes successfully, clients invocation
