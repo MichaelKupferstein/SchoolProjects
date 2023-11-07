@@ -217,6 +217,51 @@ class WordLayoutTest {
         logger.info("The filled in grid: {}", grid);
     }
 
+    @Test
+    void toughTest(){
+        final int row = 5;
+        final int col = 5;
+        List<String> words = List.of("fives","four","4our","f0ur","fork","ruof");
+        WordLayoutBase layout = new WordLayout(row, col, words);
+        logger.info("Using this list of words: {}", words);
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
+    }
+
+    @Test
+    void edgeCaseTest5x5(){
+        final int row = 5;
+        final int col = 5;
+        List<String> words = List.of("FIVE","DICE","CATS","DAWG","DOG","TWO","ONE");
+        WordLayoutBase layout = new WordLayout(row, col, words);
+        logger.info("Using this list of words: {}", words);
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
+    }
+
+    @Test
+    void edgeCaseTest6x6(){
+        final int row = 6;
+        final int col = 6;
+        List<String> words = List.of("FIVES","NACHO","EARLY","LABOR","CAKE","EARS","GAGA","HACK");
+        WordLayoutBase layout = new WordLayout(row, col, words);
+        logger.info("Using this list of words: {}", words);
+        for(String word : words){
+            final List<LocationBase> locations = layout.locations(word);
+            logger.info("Locations for word {}: {}", word, locations);
+        }
+        final Grid grid = layout.getGrid();
+        logger.info("The filled in grid: {}", grid);
+    }
+
 
 
 

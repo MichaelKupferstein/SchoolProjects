@@ -46,6 +46,12 @@ public class WordLayout extends WordLayoutBase{
         this.template = createTemplate(nRows+1, nColumns+1);
 
         int letterCount = 0;
+        if(nRows == nColumns && words.size() == nRows+2){//first step to it possibliy being an edge case
+            if(checkIfEdgeCase()){
+                edgeCaseLogic();
+                return;
+            }
+        }
 
         for(String word : this.words){
             if(word.length() > nColumns && word.length() > nRows) throw new IllegalArgumentException("Contains word that is too long");
@@ -60,6 +66,79 @@ public class WordLayout extends WordLayoutBase{
 
 
 
+    }
+
+    private boolean checkIfEdgeCase(){
+        //count the words in this.words, if there are 4 words of length row-1 and row-2 words of length row-2 then its an edge case
+        for(int i = 0; i < 4; i++){
+            if(this.words.get(i).length() != row-1){
+                return false;
+            }
+        }
+        for(int i = 4; i < this.words.size(); i++){
+            if(this.words.get(i).length() != row-2){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void edgeCaseLogic(){
+        //set up word cords for each word
+        WordCords wordCords = new WordCords(this.words.get(0));
+        WordCords wordCords2 = new WordCords(this.words.get(1));
+        WordCords wordCords3 = new WordCords(this.words.get(2));
+        WordCords wordCords4 = new WordCords(this.words.get(3));
+
+        //Add the first 4 words around the edges of the grid, and then the rest of the words in the center
+
+        //add first word to the top row
+        for(int i = 0; i < row-1;i++){
+            grid.grid[0][i] = this.words.get(0).charAt(i);
+            template[0][i] = 1;
+            wordCords.addCord(0,i);
+        }
+        this.wordLocations.put(this.words.get(0),wordCords.getCords());
+
+        //add second word to the right column
+        for(int i = 0; i < row-1;i++){
+            grid.grid[i][column-1] = this.words.get(1).charAt(i);
+            template[i][column] = 1;
+            wordCords2.addCord(i,column-1);
+        }
+        this.wordLocations.put(this.words.get(1),wordCords2.getCords());
+
+        //add third word to the bottom row
+        for(int i = 1; i < row;i++){
+            grid.grid[row-1][i] = this.words.get(2).charAt(i-1);
+            template[row][i] = 1;
+            wordCords3.addCord(row-1,i);
+        }
+        this.wordLocations.put(this.words.get(2),wordCords3.getCords());
+
+        //add fourth word to the left column
+        for(int i = 1; i < row;i++){
+            grid.grid[i][0] = this.words.get(3).charAt(i-1);
+            template[i][0] = 1;
+            wordCords4.addCord(i,0);
+        }
+        this.wordLocations.put(this.words.get(3),wordCords4.getCords());
+
+        //add the rest of the words to the center
+        int startingRow = 1;
+        int startingCol = 1;
+        for(int i = 4; i < this.words.size(); i++){
+            WordCords wordCordTemp = new WordCords(this.words.get(i));
+            for(int j = 0; j < this.words.get(i).length(); j++){
+                grid.grid[startingRow][startingCol] = this.words.get(i).charAt(j);
+                template[startingRow][startingCol] = 1;
+                wordCordTemp.addCord(startingRow,startingCol);
+                startingCol++;
+            }
+            this.wordLocations.put(this.words.get(i),wordCordTemp.getCords());
+            startingRow++;
+            startingCol = 1;
+        }
     }
 
     private int[][] createTemplate(int nRows, int nColumns){
