@@ -2,6 +2,11 @@ package edu.yu.introtoalgs;
 
 public class EQIQ extends EQIQBase{
 
+    private int totalQuestions; private double[] eqRate; private double[] iqRate; private int nepotismIndex;
+
+    private boolean canNepotismSucceed = false;
+
+
     /**
      * Constructor: supplies the information needed to solve the EQIQ problem.
      * When the constructor invocation completes successfully, clients invocation
@@ -20,6 +25,11 @@ public class EQIQ extends EQIQBase{
      */
     public EQIQ(int totalQuestions, double[] eqSuccessRate, double[] iqSuccessRate, int nepotismIndex) {
         super(totalQuestions, eqSuccessRate, iqSuccessRate, nepotismIndex);
+        this.totalQuestions = totalQuestions;
+        this.eqRate = eqSuccessRate;
+        this.iqRate = iqSuccessRate;
+        this.nepotismIndex = nepotismIndex;
+
     }
 
     /**
@@ -28,7 +38,7 @@ public class EQIQ extends EQIQBase{
      */
     @Override
     public boolean canNepotismSucceed() {
-        return false;
+        return this.canNepotismSucceed;
     }
 
     /**
@@ -38,6 +48,9 @@ public class EQIQ extends EQIQBase{
      */
     @Override
     public double getNumberEQQuestions() {
+        if(!this.canNepotismSucceed){
+            return -1.0;
+        }
         return 0;
     }
 
@@ -48,6 +61,9 @@ public class EQIQ extends EQIQBase{
      */
     @Override
     public double getNumberIQQuestions() {
+        if(!this.canNepotismSucceed){
+            return -1.0;
+        }
         return 0;
     }
 
@@ -58,6 +74,9 @@ public class EQIQ extends EQIQBase{
      */
     @Override
     public double getNumberOfSecondsSuccess() {
+        if(!this.canNepotismSucceed){
+            return -1.0;
+        }
         return 0;
     }
 }
