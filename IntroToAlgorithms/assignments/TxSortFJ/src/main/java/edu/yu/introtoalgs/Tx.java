@@ -1,8 +1,15 @@
 package edu.yu.introtoalgs;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Tx extends TxBase{
+
+    private Account sender, receiver;
+    private int amount;
+    private static AtomicLong id = new AtomicLong(1);
+    private LocalDateTime time = LocalDateTime.now();
+
     /**
      * Constructor.
      *
@@ -13,21 +20,30 @@ public class Tx extends TxBase{
      */
     Tx(Account sender, Account receiver, int amount) {
         super(sender, receiver, amount);
+        if(sender == null || receiver == null){
+            throw new IllegalArgumentException("Sender and receiver cannot be null");
+        }
+        if(amount < 0){
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+        this.sender = sender;
+        this.receiver = receiver;
+        this.amount = amount;
     }
 
     @Override
     public Account receiver() {
-        return null;
+        return this.receiver;
     }
 
     @Override
     public Account sender() {
-        return null;
+        return this.sender;
     }
 
     @Override
     public int amount() {
-        return 0;
+        return this.amount;
     }
 
     /**
@@ -35,7 +51,7 @@ public class Tx extends TxBase{
      */
     @Override
     public long id() {
-        return 0;
+        return id.getAndIncrement();
     }
 
     /**
@@ -43,7 +59,7 @@ public class Tx extends TxBase{
      */
     @Override
     public LocalDateTime time() {
-        return null;
+        return this.time;
     }
 
     /**
@@ -51,6 +67,20 @@ public class Tx extends TxBase{
      */
     @Override
     public void setTimeToNull() {
+        this.time = null;
+    }
 
+    @Override
+    public int compareTo(TxBase other) {
+        if(this.time == null && other.time() == null){
+            return 0;
+        }
+        if(this.time == null){
+            return -1;
+        }
+        if(other.time() == null){
+            return 1;
+        }
+        return this.time.compareTo(other.time());
     }
 }
