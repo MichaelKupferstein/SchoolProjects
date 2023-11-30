@@ -1,8 +1,16 @@
 package edu.yu.introtoalgs;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.RecursiveTask;
 
 public class TxSortFJ extends TxSortFJBase{
+
+    private List<TxBase> transactions;
+
     /**
      * Constructor.
      *
@@ -10,6 +18,8 @@ public class TxSortFJ extends TxSortFJBase{
      */
     public TxSortFJ(List<TxBase> transactions) {
         super(transactions);
+
+        this.transactions = transactions;
     }
 
     /**
@@ -23,6 +33,57 @@ public class TxSortFJ extends TxSortFJBase{
      */
     @Override
     public TxBase[] sort() {
-        return new TxBase[0];
+        if (transactions.size() <= 1) return transactions.toArray(new TxBase[0]);
+        TxBase[] txs = transactions.toArray(new TxBase[0]);
+        SortTasks sortTasks = new SortTasks(txs);
+        sortTasks.compute();
+        return txs;
+    }
+
+    private class SortTasks extends RecursiveAction {
+
+        private TxBase[] txs;
+
+        public SortTasks(TxBase[] txs) {
+            this.txs = txs;
+        }
+
+        /**
+         * The main computation performed by this task.
+         */
+        @Override
+        protected void compute() {
+            if(txs.length <= 1) return;
+
+            int mid = txs.length / 2;
+
+            TxBase[] left = Arrays.copyOfRange(txs, 0, mid);
+            TxBase[] right = Arrays.copyOfRange(txs, mid, txs.length);
+
+
+            invokeAll(new SortTasks(left), new SortTasks(right));
+
+            merge(left, right);
+        }
+
+        private void merge(TxBase[] left, TxBase[] right){
+            int leftIndex = 0; int rightIndex = 0; int currentIndex = 0;
+
+            while(leftIndex < left.length && rightIndex < right.length){
+                if(left[leftIndex].compareTo(right[rightIndex]) <= 0){
+                    txs[currentIndex++] = left[leftIndex++];
+                } else {
+                    txs[currentIndex++] = right[rightIndex++];
+                }
+            }
+
+            while(leftIndex < left.length){
+                txs[currentIndex++] = left[leftIndex++];
+            }
+            while(rightIndex < right.length){
+                txs[currentIndex++] = right[rightIndex++];
+            }
+
+        }
     }
 }
