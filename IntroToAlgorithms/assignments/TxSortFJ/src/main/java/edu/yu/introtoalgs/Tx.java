@@ -1,6 +1,7 @@
 package edu.yu.introtoalgs;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Tx extends TxBase{
@@ -8,7 +9,7 @@ public class Tx extends TxBase{
     private Account sender, receiver;
     private int amount;
     private static AtomicLong id = new AtomicLong(1);
-    private LocalDateTime time = LocalDateTime.now();
+    private LocalDateTime time;
 
     /**
      * Constructor.
@@ -20,15 +21,14 @@ public class Tx extends TxBase{
      */
     Tx(Account sender, Account receiver, int amount) {
         super(sender, receiver, amount);
-        if(sender == null || receiver == null){
-            throw new IllegalArgumentException("Sender and receiver cannot be null");
-        }
-        if(amount < 0){
-            throw new IllegalArgumentException("Amount cannot be negative");
-        }
+
+        if(sender == null || receiver == null) throw new IllegalArgumentException("Sender and receiver cannot be null");
+        if(amount < 0) throw new IllegalArgumentException("Amount cannot be negative");
+
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
+        this.time = LocalDateTime.now();
     }
 
     @Override
@@ -63,7 +63,7 @@ public class Tx extends TxBase{
     }
 
     /**
-     * Returns the time that the Tx was created or null.
+     * Sets the time to null
      */
     @Override
     public void setTimeToNull() {
@@ -72,15 +72,22 @@ public class Tx extends TxBase{
 
     @Override
     public int compareTo(TxBase other) {
-        if(this.time == null && other.time() == null){
-            return 0;
-        }
-        if(this.time == null){
-            return -1;
-        }
-        if(other.time() == null){
-            return 1;
-        }
+        if(this.time == null && other.time() == null) return 0;
+        if(this.time == null) return -1;
+        if(other.time() == null) return 1;
         return this.time.compareTo(other.time());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tx tx = (Tx) o;
+        return amount == tx.amount && Objects.equals(sender, tx.sender) && Objects.equals(receiver, tx.receiver) && Objects.equals(time, tx.time);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sender, receiver, amount, time);
     }
 }
