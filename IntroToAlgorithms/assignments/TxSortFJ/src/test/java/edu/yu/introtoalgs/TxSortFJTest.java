@@ -66,11 +66,18 @@ class TxSortFJTest {
         Collections.shuffle(txs);
         logger.info("Created {} Txs", txs.size());
 
-        List<TxBase> copyOfTxs = new ArrayList<>(txs);
+        TxBase[] copyOfTxs = txs.toArray(new TxBase[0]);
+
         final long beforeNaive = System.currentTimeMillis();
-        Collections.sort(copyOfTxs);
+        Arrays.sort(copyOfTxs);
         final long afterNaive = System.currentTimeMillis();
         logger.info("Basic sorting took {} ms", afterNaive - beforeNaive);
+
+        TxBase[] copyOfTxs2 = txs.toArray(new TxBase[0]);
+        final long beforePar  = System.currentTimeMillis();
+        Arrays.parallelSort(copyOfTxs2);
+        final long afterPar = System.currentTimeMillis();
+        logger.info("Parallel sorting took {} ms", afterPar - beforePar);
 
         try {
             final TxSortFJBase txSortFJ = new TxSortFJ(txs);
