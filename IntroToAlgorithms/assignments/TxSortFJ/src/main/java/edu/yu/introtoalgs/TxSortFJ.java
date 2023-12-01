@@ -10,6 +10,8 @@ import java.util.concurrent.RecursiveTask;
 public class TxSortFJ extends TxSortFJBase{
 
     private List<TxBase> transactions;
+    private TxBase[] txs;
+    private SortTasks sortTasks;
 
     /**
      * Constructor.
@@ -18,8 +20,9 @@ public class TxSortFJ extends TxSortFJBase{
      */
     public TxSortFJ(List<TxBase> transactions) {
         super(transactions);
-
         this.transactions = transactions;
+        this.txs = transactions.toArray(new TxBase[0]);
+        this.sortTasks = new SortTasks(txs);
     }
 
     /**
@@ -33,9 +36,7 @@ public class TxSortFJ extends TxSortFJBase{
      */
     @Override
     public TxBase[] sort() {
-        if (transactions.size() <= 1) return transactions.toArray(new TxBase[0]);
-        TxBase[] txs = transactions.toArray(new TxBase[0]);
-        SortTasks sortTasks = new SortTasks(txs);
+        if (this.txs.length <= 1) return this.txs;
         sortTasks.compute();
         return txs;
     }
@@ -43,7 +44,7 @@ public class TxSortFJ extends TxSortFJBase{
     private class SortTasks extends RecursiveAction {
 
         private TxBase[] txs;
-        public final int CUTOFF = 10_000;
+        public static final int CUTOFF = 10_000;
 
         public SortTasks(TxBase[] txs) {
             this.txs = txs;
