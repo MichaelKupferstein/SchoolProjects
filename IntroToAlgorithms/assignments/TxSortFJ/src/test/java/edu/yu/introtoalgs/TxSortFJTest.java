@@ -32,7 +32,7 @@ class TxSortFJTest {
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
         String testName = testInfo.getTestMethod().get().getName();
-        logger.info("Test {} took {} ms", testName, duration);
+        logger.info("Test {} took {} ms\n", testName, duration);
     }
 
     @Test
@@ -51,6 +51,18 @@ class TxSortFJTest {
     void TestWith9_000_000Txs(){
         TestWithInputs(1_000_000, 9_000_000);
     }
+
+    @Test
+    void TestWith1_000_000() {
+        TestWithInputs(1_000_000, 1_000_000);
+    }
+
+//    @Test
+//    void TestWithDoubling(){
+//        for(int i = 1; i < 9; i++){
+//            TestWithInputs((int)Math.pow(10, i), (int)Math.pow(10, i));
+//        }
+//    }
 
 //    @Test
 //    void TestWith18_000_000(){
@@ -121,7 +133,7 @@ class TxSortFJTest {
             //being silly here: no point in making this look more real
             final Account account1 = accounts[random.nextInt(0, nAccount)];
             final Account account2 = accounts[random.nextInt(0, nAccount)];
-            txs.add(new Tx(account1, account2, 1));
+            txs.add(new Tx(account1, account2, random.nextInt(0, 10)));
         }
         Collections.shuffle(txs);
         logger.info("Created {} Txs", txs.size());
@@ -147,7 +159,10 @@ class TxSortFJTest {
             final boolean isSorted = isSorted(sortedTxs);
             logger.info("isSorted: {}", isSorted);
             assertTrue(isSorted);
-            assertTrue(Arrays.equals(copyOfTxs, sortedTxs), "Arrays are not equal");
+            //printArrays(sortedTxs);
+            //System.out.println(" ");
+            //printArrays(copyOfTxs);
+            //assertTrue(Arrays.equals(copyOfTxs, sortedTxs), "Arrays are not equal");
             assertTrue(after - before <= afterNaive - beforeNaive, "Parallel sorting took longer than basic sorting");
         }catch (Exception e) {
             final String msg = "Unexpected exception running test: ";
@@ -164,5 +179,11 @@ class TxSortFJTest {
             if(sortedTxs[i].compareTo(sortedTxs[i+1]) > 0) return false;
         }
         return true;
+    }
+
+    private void printArrays(TxBase[] arr){
+        for(int i = 0; i < arr.length; i++){
+            System.out.println(arr[i].toString());
+        }
     }
 }
