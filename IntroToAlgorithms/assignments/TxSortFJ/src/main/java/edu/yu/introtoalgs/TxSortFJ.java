@@ -21,6 +21,7 @@ public class TxSortFJ extends TxSortFJBase{
     public TxSortFJ(List<TxBase> transactions) {
         super(transactions);
         this.transactions = transactions;
+        //Collections.shuffle(transactions);
         this.txs = transactions.toArray(new TxBase[0]);
         this.sortTasks = new SortTasks(txs);
     }
