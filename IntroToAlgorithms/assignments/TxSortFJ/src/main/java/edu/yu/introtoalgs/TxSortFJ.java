@@ -43,6 +43,7 @@ public class TxSortFJ extends TxSortFJBase{
     private class SortTasks extends RecursiveAction {
 
         private TxBase[] txs;
+        public final int CUTOFF = 10_000;
 
         public SortTasks(TxBase[] txs) {
             this.txs = txs;
@@ -53,7 +54,10 @@ public class TxSortFJ extends TxSortFJBase{
          */
         @Override
         protected void compute() {
-            if(txs.length <= 1) return;
+            if(txs.length <= CUTOFF){
+                Arrays.sort(txs);
+                return;
+            }
 
             int mid = txs.length / 2;
 
