@@ -78,16 +78,4 @@ public class Tx extends TxBase{
         return this.time.compareTo(other.time());
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Tx tx = (Tx) o;
-        return amount == tx.amount && Objects.equals(sender, tx.sender) && Objects.equals(receiver, tx.receiver) && Objects.equals(time, tx.time);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(sender, receiver, amount, time);
-    }
 }

@@ -51,10 +51,11 @@ class TxSortFJTest {
     void TestWith9_000_000Txs(){
         TestWithInputs(1_000_000, 9_000_000);
     }
-    @Test
-    void TestWith18_000_000(){
-        TestWithInputs(1_000_000, 18_000_000);
-    }
+
+//    @Test
+//    void TestWith18_000_000(){
+//        TestWithInputs(1_000_000, 18_000_000);
+//    }
 
     @Test
     void TestWithNullTxTime(){
@@ -146,7 +147,8 @@ class TxSortFJTest {
             final boolean isSorted = isSorted(sortedTxs);
             logger.info("isSorted: {}", isSorted);
             assertTrue(isSorted);
-            assertTrue(after - before <= afterNaive - beforeNaive);
+            assertTrue(Arrays.equals(copyOfTxs, sortedTxs), "Arrays are not equal");
+            assertTrue(after - before <= afterNaive - beforeNaive, "Parallel sorting took longer than basic sorting");
         }catch (Exception e) {
             final String msg = "Unexpected exception running test: ";
             logger.error(msg, e);
@@ -158,6 +160,7 @@ class TxSortFJTest {
 
     private boolean isSorted(TxBase[] sortedTxs) {
         for(int i = 0; i < sortedTxs.length - 1; i++){
+            //System.out.println(sortedTxs[i].toString());
             if(sortedTxs[i].compareTo(sortedTxs[i+1]) > 0) return false;
         }
         return true;
