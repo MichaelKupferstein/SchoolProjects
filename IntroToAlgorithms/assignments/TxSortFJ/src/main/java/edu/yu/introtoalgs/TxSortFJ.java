@@ -21,7 +21,7 @@ public class TxSortFJ extends TxSortFJBase{
     public TxSortFJ(List<TxBase> transactions) {
         super(transactions);
         this.transactions = transactions;
-        //Collections.shuffle(transactions);
+        Collections.shuffle(transactions);
         this.txs = transactions.toArray(new TxBase[0]);
         this.sortTasks = new SortTasks(txs);
     }
@@ -60,15 +60,12 @@ public class TxSortFJ extends TxSortFJBase{
                 Arrays.sort(txs);
                 return;
             }
-
             int mid = txs.length / 2;
 
             TxBase[] left = Arrays.copyOfRange(txs, 0, mid);
             TxBase[] right = Arrays.copyOfRange(txs, mid, txs.length);
 
-
             invokeAll(new SortTasks(left), new SortTasks(right));
-
             merge(left, right);
         }
 
