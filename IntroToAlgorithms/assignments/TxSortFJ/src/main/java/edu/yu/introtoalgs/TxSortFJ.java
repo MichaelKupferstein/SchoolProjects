@@ -20,6 +20,7 @@ public class TxSortFJ extends TxSortFJBase{
      */
     public TxSortFJ(List<TxBase> transactions) {
         super(transactions);
+        if(transactions == null) throw new IllegalArgumentException("Transactions cannot be null");
         this.transactions = transactions;
         Collections.shuffle(transactions);
         this.txs = transactions.toArray(new TxBase[0]);
