@@ -19,7 +19,7 @@ public class Tx extends TxBase{
      * @param amount   positive-integer-valued amount transfered in the
      *                 transaction.
      */
-    Tx(Account sender, Account receiver, int amount) {
+    public Tx(Account sender, Account receiver, int amount) {
         super(sender, receiver, amount);
 
         if(sender == null || receiver == null) throw new IllegalArgumentException("Sender and receiver cannot be null");
