@@ -56,27 +56,6 @@ public class QuestForOil extends QuestForOilBase {
         return bfs(row, column, visited);
     }
 
-    private int dfs(int row, int column, boolean[][] visited) {
-        if(row < 0 || row >= N || column < 0 || column >= M) return 0;
-        if(map[row][column] == 'U') return 0;
-        if(visited[row][column]) return 0;
-        visited[row][column] = true;
-
-        int count = 1; // counts current
-
-        count += dfs(row + 1, column, visited);//counts down
-        count += dfs(row - 1, column, visited);//counts up
-        count += dfs(row, column + 1, visited);//counts right
-        count += dfs(row, column - 1, visited);//counts left
-        count += dfs(row + 1, column + 1, visited);//counts bottom right corner
-        count += dfs(row + 1, column - 1, visited);//counts bottom left corner
-        count += dfs(row - 1, column + 1, visited);//counts top right corner
-        count += dfs(row - 1, column - 1, visited);//counts top left corner
-
-        return count;
-
-    }
-
     private int bfs(int row, int column, boolean[][] visited) {
         Queue<int[]> queue = new LinkedList<>();
         int[] start = {row, column};
