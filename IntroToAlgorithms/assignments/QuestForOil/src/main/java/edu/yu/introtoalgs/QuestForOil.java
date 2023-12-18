@@ -1,10 +1,22 @@
 package edu.yu.introtoalgs;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class QuestForOil extends QuestForOilBase {
 
     private char[][] map;
     private int M;
     private int N;
+
+    private final int[] up = {-1, 0};
+    private final int[] down = {1, 0};
+    private final int[] right = {0, 1};
+    private final int[] left = {0, -1};
+    private final int[] upRight = {-1, 1};
+    private final int[] upLeft = {-1, -1};
+    private final int[] downRight = {1, 1};
+    private final int[] downLeft = {1, -1};
 
     /**
      * Constructor supplies the map.
@@ -41,7 +53,7 @@ public class QuestForOil extends QuestForOilBase {
         if(row < 0 || row >= N || column < 0 || column >= M) throw new IllegalArgumentException("Row and column must be within the bounds of the map");
         if(map[row][column] == 'U') return 0;
         boolean[][] visited = new boolean[N][M];
-        return dfs(row, column, visited);
+        return bfs(row, column, visited);
     }
 
     private int dfs(int row, int column, boolean[][] visited) {
@@ -63,5 +75,33 @@ public class QuestForOil extends QuestForOilBase {
 
         return count;
 
+    }
+
+    private int bfs(int row, int column, boolean[][] visited) {
+        Queue<int[]> queue = new LinkedList<>();
+        int[] start = {row, column};
+        queue.offer(start);
+        visited[row][column] = true;
+        int count = 0;
+
+        while (!queue.isEmpty()) {
+            int[] square = queue.poll();
+            row = square[0];
+            column = square[1];
+            count++;
+
+            int[][] directions = {up, down, right, left, upRight, upLeft, downRight, downLeft};
+            for (int[] direction : directions) {
+                int newRow = row + direction[0];
+                int newColumn = column + direction[1];
+
+                if(newRow >= 0 && newRow < N && newColumn >= 0 && newColumn < M && !visited[newRow][newColumn] && map[newRow][newColumn] == 'S') {
+                    queue.offer(new int[]{newRow, newColumn});
+                    visited[newRow][newColumn] = true;
+                }
+            }
+        }
+
+        return count;
     }
 }
