@@ -247,6 +247,34 @@ public class QuestForOilTest {
             softAssert.assertAll("testLargeMap");
         }
     }
+    @Test
+    public void testLargeMapAllSafe() {
+        final TestUtilities.SoftAssert softAssert = new TestUtilities.SoftAssert();
+        try {
+            final char[][] map = new char[5000][5000];
+            int i = 0;
+            for (int row = 0; row < map.length; ++row) {
+                StringBuilder sb = new StringBuilder();
+                for (int col = 0; col < map[0].length; ++col) {
+                    sb.append('S');
+                }
+                utils.setRowAtATime(row, sb.toString(), map);
+            }
+            //utils.logMap(map);
+            final QuestForOilBase qfo = new QuestForOil(map);
+            for (int j = 0; j < 4; j++) {
+                int row = (int) (Math.random() * 5000);
+                int col = (int) (Math.random() * 5000);
+                final int retval = qfo.nContiguous(row, col);
+                softAssert.assertEquals(retval, 25_000_000, "Mismatch on nContiguous");
+            }
+        }catch (Exception e) {
+            logger.error("Problem", e);
+            softAssert.fail("Unexpected exception: " + e.toString());
+        } finally {
+            softAssert.assertAll("testLargeMapAllSafe");
+        }
+    }
     @Test //will work on later
     public void createMap(){
         final TestUtilities.SoftAssert softAssert = new TestUtilities.SoftAssert();
