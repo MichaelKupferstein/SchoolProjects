@@ -11,21 +11,31 @@ import java.util.HashMap;
  */
 
 public class EdgeWeightedGraph {
-    private final int V;
+    private String startVertex;
     private int E;
+    private int V;
     private HashMap<String, ArrayList<Edge>> adj;
 
     /**
-     * Constructs an EdgeWeightedGraph with a specified number of vertices.
+     * Constructs an EdgeWeightedGraph with a starting vertex.
      *
-     * @param V the number of vertices in the graph
-     * @throws IllegalArgumentException if the number of vertices is negative
+     * @param startVertex the starting vertex in the graph
+     * @throws IllegalArgumentException if the startingVertex is null or empty
      */
-    public EdgeWeightedGraph(int V){
-        if(V < 0) throw new IllegalArgumentException("Number of vertices must be non-negative");
-        this.V = V;
+    public EdgeWeightedGraph(String startVertex){
+        if(startVertex == null || startVertex.length() == 0) throw new IllegalArgumentException("Start vertex must be non-null and not empty");
+        this.startVertex = startVertex;
         this.E = 0;
         adj = new HashMap<>();
+    }
+
+    /**
+     * Returns the start vertex of the graph.
+     *
+     * @return the start vertex of the graph
+     */
+    public String startVertex(){
+        return startVertex;
     }
 
     /**
@@ -34,7 +44,7 @@ public class EdgeWeightedGraph {
      * @return the number of vertices in the graph
      */
     public int V(){
-        return V;
+        return adj.size();
     }
 
     /**
@@ -44,6 +54,24 @@ public class EdgeWeightedGraph {
      */
     public int E(){
         return E;
+    }
+
+    /**
+     * Checks if an edge exists between two vertices in the graph.
+     *
+     * @param v the first vertex
+     * @param w the second vertex
+     * @return true if an edge exists between the two vertices, false otherwise
+     */
+    public boolean edgeExists(String v, String w) {
+        if (adj.containsKey(v) && adj.containsKey(w)) {
+            for (Edge e : adj.get(v)) {
+                if (e.other(v).equals(w)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
