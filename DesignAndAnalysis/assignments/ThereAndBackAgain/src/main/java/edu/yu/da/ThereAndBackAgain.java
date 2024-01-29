@@ -2,6 +2,28 @@ package edu.yu.da;
 
 import java.util.List;
 
+/**
+ * The path that you compute must have all of the following properties:
+ *
+ * • The path must be balanced, defined as “the length of the path from
+ *   s to v must be identical to the length of the path from v to s on the
+ *   return trip”.
+ *
+ * • The path must be efficient, defined as “the path from s to v and from
+ *   v to s must both be shortest paths” compared to alternative paths
+ *   with the same source and destination vertices.
+ *
+ * • The path from s to v must differ from the path from v to s in at least
+ *   one vertex. (The sequence of vertices in the two paths will certainly
+ *   differ. This property states that that the two paths also differ in at
+ *   least one vertex.)
+ *
+ * The above properties define a valid path. The problem requires you
+ * to compute the longest valid path, defined as “the valid path with maximum
+ * total distance compared to alternative valid paths”.
+ * */
+
+
 public class ThereAndBackAgain extends ThereAndBackAgainBase{
 
     private EdgeWeightedGraph graph;
@@ -57,6 +79,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public void doIt() {
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
+        //compute path from startVertex to all othher vertices, maybe dijkstra??
         didIt = true;
     }
 
@@ -69,7 +92,8 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public String goalVertex() {
-        return null;
+        if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
+        return goal;
     }
 
     /**
@@ -81,6 +105,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public double goalCost() {
+        if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
         return 0;
     }
 
@@ -98,6 +123,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public List<String> getOneLongestPath() {
+        if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
         return null;
     }
 
@@ -115,6 +141,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public List<String> getOtherLongestPath() {
+        if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
         return null;
     }
 }
