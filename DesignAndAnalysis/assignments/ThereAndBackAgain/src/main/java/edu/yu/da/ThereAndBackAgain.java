@@ -3,14 +3,23 @@ package edu.yu.da;
 import java.util.List;
 
 public class ThereAndBackAgain extends ThereAndBackAgainBase{
-    /**
-     * Constructor which supplies the start vertex
+
+    private EdgeWeightedGraph graph;
+    private boolean didIt = false;
+    private String startVertex, goal;
+
+
+    /** Constructor which supplies the start vertex
      *
-     * @param startVertex@throws IllegalArgumentException if the pre-condiitions are
-     *                           violated
+     * @param startVertex, length must be > 0.
+     * @throws IllegalArgumentException if the pre-condiitions are
+     * violated
      */
     public ThereAndBackAgain(String startVertex) {
         super(startVertex);
+        if (startVertex.length() < 0) throw new IllegalArgumentException("Length must be > 0");
+        this.startVertex = startVertex;
+        graph = new EdgeWeightedGraph(startVertex);
     }
 
     /**
@@ -26,7 +35,12 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public void addEdge(String v, String w, double weight) {
-
+        if (didIt) throw new IllegalStateException("doIt has previously been invoked");
+        if(v.equals(w)) throw new IllegalArgumentException("The two vertices must differ from one another");
+        if(graph.edgeExists(v,w)) throw new IllegalArgumentException("Edge between " + v + " and " + " already exists");
+        if(v.length() <= 0 || w.length() <=0) throw new IllegalArgumentException("Vertex length must be greater that 0");
+        Edge edge = new Edge(v,w,weight);
+        graph.addEdge(edge);
     }
 
     /**
@@ -42,7 +56,8 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      */
     @Override
     public void doIt() {
-
+        if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
+        didIt = true;
     }
 
     /**
