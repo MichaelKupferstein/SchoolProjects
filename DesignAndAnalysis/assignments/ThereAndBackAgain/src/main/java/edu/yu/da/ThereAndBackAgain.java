@@ -1,5 +1,7 @@
 package edu.yu.da;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,6 +31,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     private EdgeWeightedGraph graph;
     private boolean didIt = false;
     private String startVertex, goal;
+    private Dijkstra dijkstra;
 
 
     /** Constructor which supplies the start vertex
@@ -80,6 +83,22 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     public void doIt() {
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
         //compute path from startVertex to all othher vertices, maybe dijkstra??
+        this.dijkstra = new Dijkstra(graph,startVertex);
+        double longest = 0.0;
+        String farthestVert = null;
+        for(String v : graph.vertices()){
+            double dist = dijkstra.distTo(v);
+            Dijkstra otherDij = new Dijkstra(graph,v);
+            double otherDist = otherDij.distTo(startVertex);
+            List<String> pathToV = dijkstra.pathTo(v);
+            List<String> pathFromV = otherDij.pathTo(startVertex);
+            Collections.reverse(pathFromV);
+            if(dist == otherDist && dist > longest && !pathToV.equals(pathFromV)){
+                longest = dist;
+                farthestVert = v;
+            }
+        }
+        goal = farthestVert;
         didIt = true;
     }
 
