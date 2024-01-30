@@ -2,6 +2,7 @@ package edu.yu.da;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * EdgeWeightedGraph class taken from
@@ -26,7 +27,7 @@ public class EdgeWeightedGraph {
         if(startVertex == null || startVertex.length() == 0) throw new IllegalArgumentException("Start vertex must be non-null and not empty");
         this.startVertex = startVertex;
         this.E = 0;
-        adj = new HashMap<>();
+        this.adj = new HashMap<>();
     }
 
     /**
@@ -119,5 +120,9 @@ public class EdgeWeightedGraph {
             }
         }
         return list;
+    }
+
+    public Iterable<String> vertices(){
+        return this.adj.keySet();
     }
 }
