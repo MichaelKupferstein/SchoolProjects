@@ -14,8 +14,15 @@ import java.util.List;
 public class EdgeWeightedGraph {
     private String startVertex;
     private int E;
-    private int V;
     private HashMap<String, ArrayList<Edge>> adj;
+
+    /**
+     * Default constructor that initializes an empty graph.
+     */
+    public EdgeWeightedGraph(){
+        this.E = 0;
+        this.adj = new HashMap<>();
+    }
 
     /**
      * Constructs an EdgeWeightedGraph with a starting vertex.
@@ -29,6 +36,7 @@ public class EdgeWeightedGraph {
         this.E = 0;
         this.adj = new HashMap<>();
     }
+
 
     /**
      * Returns the start vertex of the graph.
@@ -88,6 +96,18 @@ public class EdgeWeightedGraph {
         adj.get(v).add(e);
         adj.get(w).add(e);
         E++;
+    }
+
+    /**
+     * Adds an edge to the graph.
+     *
+     * @param v the first vertex of the edge
+     * @param w the second vertex of the edge
+     * @param weight the weight of the edge
+     */
+    public void addEdge(String v, String w, double weight){
+        Edge e = new Edge(v, w, weight);
+        addEdge(e);
     }
 
     /**
