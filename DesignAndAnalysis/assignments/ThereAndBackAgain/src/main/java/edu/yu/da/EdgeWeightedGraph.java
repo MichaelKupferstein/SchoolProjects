@@ -122,20 +122,17 @@ public class EdgeWeightedGraph {
 
     /**
      * Returns an iterable of all edges in the graph.
+     * Each edge is only included once, even though it's stored twice in the adjacency list.
      *
      * @return an iterable of all edges in the graph
      */
     public Iterable<Edge> edges(){
         ArrayList<Edge> list = new ArrayList<>();
         for(String v : adj.keySet()){
-            int selfLoops = 0;
             for(Edge e : adj.get(v)){
-                if(!e.other(v).equals(v)){
+                String w = e.other(v);
+                if (v.compareTo(w) < 0) {
                     list.add(e);
-                }
-                else{
-                    if(selfLoops % 2 == 0) list.add(e);
-                    selfLoops++;
                 }
             }
         }
@@ -144,5 +141,20 @@ public class EdgeWeightedGraph {
 
     public Iterable<String> vertices(){
         return this.adj.keySet();
+    }
+
+    /**
+     * Returns a string representation of the EdgeWeightedGraph.
+     * The string representation includes a list of all edges in the graph.
+     *
+     * @return a string representation of the EdgeWeightedGraph
+     */
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (Edge e : this.edges()) {
+            s.append(e + "\n");
+        }
+        return s.toString();
     }
 }
