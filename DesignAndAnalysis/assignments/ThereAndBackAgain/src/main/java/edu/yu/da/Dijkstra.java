@@ -4,26 +4,35 @@ import java.util.*;
 
 public class Dijkstra {
     private EdgeWeightedGraph graph;
-    private Map<String, Double> distance; //distance from start
-    private Map<String, List<String>> paths;
-    private PriorityQueue<String> pq;
+    private Map<String, Map<String, Double>> allDistances;
+    private Map<String, Map<String, List<String>>> allPaths;
 
-    public Dijkstra(EdgeWeightedGraph graph, String startVertex){
+    public Dijkstra(EdgeWeightedGraph graph){
         this.graph = graph;
-        this.distance = new HashMap<>();
-        this.paths = new HashMap<>();
-        this.pq = new PriorityQueue<>((String v1, String v2) -> Double.compare(distance.get(v1), distance.get(v2)));
+        this.allDistances = new HashMap<>();
+        this.allPaths = new HashMap<>();
+    }
 
-        for(String vertex : graph.vertices()){
-            distance.put(vertex, Double.POSITIVE_INFINITY); //Start off by setting all distances to infinity
+    public void calculateShortestPaths(String vertex){
+        if (allDistances.containsKey(vertex)) {
+            // Shortest paths from vertex has already been calculated
+            return;
         }
-        distance.put(startVertex, 0.0); //Set distance for startVertex to 0
+
+        Map<String, Double> distance = new HashMap<>();
+        Map<String, List<String>> paths = new HashMap<>();
+        PriorityQueue<String> pq = new PriorityQueue<>((String v1, String v2) -> Double.compare(distance.get(v1), distance.get(v2)));
+
+        for(String v : graph.vertices()){
+            distance.put(v, Double.POSITIVE_INFINITY);
+        }
+        distance.put(vertex, 0.0);
 
         List<String> startPath = new ArrayList<>();
-        startPath.add(startVertex);
-        paths.put(startVertex,startPath);
+        startPath.add(vertex);
+        paths.put(vertex,startPath);
 
-        pq.add(startVertex);
+        pq.add(vertex);
 
         while(!pq.isEmpty()){
             String temp = pq.poll();
@@ -33,7 +42,7 @@ public class Dijkstra {
                 if(total < distance.get(other)){
                     distance.put(other,total);
                     pq.remove(other);
-                    pq.add(other); //need these two lines to update it, there were bugs :(
+                    pq.add(other);
 
                     List<String> oldPath = paths.get(temp);
                     List<String> newPath = new ArrayList<>(oldPath);
@@ -42,13 +51,18 @@ public class Dijkstra {
                 }
             }
         }
+
+        allDistances.put(vertex, distance);
+        allPaths.put(vertex, paths);
     }
 
-    public double distTo(String s){
-        return distance.get(s);
+    public double distTo(String startVertex, String endVertex){
+        calculateShortestPaths(startVertex);
+        return allDistances.get(startVertex).get(endVertex);
     }
 
-    public List<String> pathTo(String s){
-        return paths.get(s);
+    public List<String> pathTo(String startVertex, String endVertex){
+        calculateShortestPaths(startVertex);
+        return allPaths.get(startVertex).get(endVertex);
     }
 }

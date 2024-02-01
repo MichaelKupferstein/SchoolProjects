@@ -23,10 +23,10 @@ class RandomGraphGeneratorTest {
 
         //GraphVisualizer graphVisualizer = new GraphVisualizer(graph);
         String startVertex = graph.vertices().iterator().next();
-        Dijkstra dijkstra = new Dijkstra(graph, startVertex);
+        Dijkstra dijkstra = new Dijkstra(graph);
         System.out.printf("Start Vertex: %s\n", startVertex);
         for(String vertex : graph.vertices()){
-            System.out.printf("Vertex: %s, Distance: %f, Path: %s\n", vertex, dijkstra.distTo(vertex), dijkstra.pathTo(vertex));
+            System.out.printf("Vertex: %s, Distance: %f, Path: %s\n", vertex, dijkstra.distTo(startVertex,vertex), dijkstra.pathTo(startVertex,vertex));
         }
 
         try{

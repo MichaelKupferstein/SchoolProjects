@@ -3,6 +3,7 @@ package edu.yu.da;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  * The path that you compute must have all of the following properties:
@@ -32,6 +33,8 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     private boolean didIt = false;
     private String startVertex, goal;
     private Dijkstra dijkstra;
+    private List<String> oneLongestPath, otherLongestPath;
+    private double goalCost;
 
 
     /** Constructor which supplies the start vertex
@@ -44,7 +47,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
         super(startVertex);
         if (startVertex.length() < 0) throw new IllegalArgumentException("Length must be > 0");
         this.startVertex = startVertex;
-        graph = new EdgeWeightedGraph(startVertex);
+        graph = new EdgeWeightedGraph();
     }
 
     /**
@@ -64,8 +67,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
         if(v.equals(w)) throw new IllegalArgumentException("The two vertices must differ from one another");
         if(graph.edgeExists(v,w)) throw new IllegalArgumentException("Edge between " + v + " and " + " already exists");
         if(v.length() <= 0 || w.length() <=0) throw new IllegalArgumentException("Vertex length must be greater that 0");
-        Edge edge = new Edge(v,w,weight);
-        graph.addEdge(edge);
+        graph.addEdge(v,w,weight);
     }
 
     /**
@@ -79,27 +81,49 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      *
      * @throws IllegalStateException if doIt() has previously been invoked.
      */
+//    @Override
+//    public void doIt() {
+//        if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
+//        //compute path from startVertex to all othher vertices, maybe dijkstra??
+//        this.dijkstra = new Dijkstra(graph,startVertex);
+//        double longest = 0.0;
+//        String farthestVert = null;
+//        for(String v : graph.vertices()){
+//            double dist = dijkstra.distTo(v);
+//            Dijkstra otherDij = new Dijkstra(graph,v);
+//            double otherDist = otherDij.distTo(startVertex);
+//            List<String> pathToV = dijkstra.pathTo(v);
+//            List<String> pathFromV = otherDij.pathTo(startVertex);
+//            if(pathToV == null) continue;
+//            if(dist == otherDist && dist > longest && !isReverse(pathToV,pathFromV)){
+//                longest = dist;
+//                farthestVert = v;
+//                oneLongestPath = pathToV;
+//                otherLongestPath = pathFromV;
+//            }
+//        }
+//        goal = farthestVert;
+//        goalCost = longest;
+//        didIt = true;
+//    }
     @Override
-    public void doIt() {
+    public void doIt(){
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
-        //compute path from startVertex to all othher vertices, maybe dijkstra??
-        this.dijkstra = new Dijkstra(graph,startVertex);
-        double longest = 0.0;
-        String farthestVert = null;
-        for(String v : graph.vertices()){
-            double dist = dijkstra.distTo(v);
-            Dijkstra otherDij = new Dijkstra(graph,v);
-            double otherDist = otherDij.distTo(startVertex);
-            List<String> pathToV = dijkstra.pathTo(v);
-            List<String> pathFromV = otherDij.pathTo(startVertex);
-            Collections.reverse(pathFromV);
-            if(dist == otherDist && dist > longest && !pathToV.equals(pathFromV)){
-                longest = dist;
-                farthestVert = v;
-            }
+        this.dijkstra = new Dijkstra(graph);
+        dijkstra.calculateShortestPaths(startVertex);
+        for(String s : graph.vertices()){
+            dijkstra.distTo(startVertex,s);
         }
-        goal = farthestVert;
-        didIt = true;
+    }
+
+
+
+    private boolean isReverse(List<String> list1, List<String> list2){
+        if(list1.size() != list2.size()) return false;
+        for(int i = 0, j = list2.size()-1; i < j; i++,j--){
+            if(!list1.get(i).equals(list2.get(j))) return false;
+        }
+        return true;
     }
 
     /**
@@ -125,7 +149,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public double goalCost() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
-        return 0;
+        return goalCost;
     }
 
     /**
@@ -143,7 +167,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public List<String> getOneLongestPath() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
-        return null;
+        return oneLongestPath;
     }
 
     /**
@@ -161,6 +185,6 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public List<String> getOtherLongestPath() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
-        return null;
+        return otherLongestPath;
     }
 }

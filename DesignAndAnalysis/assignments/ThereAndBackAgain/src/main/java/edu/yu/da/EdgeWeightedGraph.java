@@ -44,6 +44,7 @@ public class EdgeWeightedGraph {
      * @return the start vertex of the graph
      */
     public String startVertex(){
+        if(startVertex == null) return vertices().iterator().next();
         return startVertex;
     }
 
