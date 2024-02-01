@@ -70,6 +70,24 @@ class ThereAndBackAgainTest {
     }
 
     @Test
+    void TestWithRandomLargeGraph(){
+        EdgeWeightedGraph graph = new RandomGraphGenerator(100_000).generate();
+        ThereAndBackAgainBase taba = new ThereAndBackAgain(graph.startVertex());
+        for(Edge e: graph.edges()){
+            taba.addEdge(e.either(),e.other(e.either()),e.weight());
+        }
+        taba.doIt();
+        List<String> oneLongestPath = taba.getOneLongestPath();
+        List<String> otherLongestPath = taba.getOtherLongestPath();
+        System.out.println(taba.goalVertex());
+        System.out.println(taba.goalCost());
+        System.out.println(oneLongestPath);
+        System.out.println(otherLongestPath);
+
+        printPath(graph,oneLongestPath,otherLongestPath);
+    }
+
+    @Test
     void TestWith200_000(){
         EdgeWeightedGraph graph = new RandomGraphGenerator(200_000).generate();
         ThereAndBackAgainBase taba = new ThereAndBackAgain(graph.startVertex());

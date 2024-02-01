@@ -109,11 +109,38 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public void doIt(){
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
+
         this.dijkstra = new Dijkstra(graph);
         dijkstra.calculateShortestPaths(startVertex);
+
+        double longestDist = 0.0;
+        double smallestDist = Double.POSITIVE_INFINITY;
+        PriorityQueue<Vertex> pq = new PriorityQueue<>();
+
         for(String s : graph.vertices()){
-            dijkstra.distTo(startVertex,s);
+            double dist = dijkstra.distTo(startVertex,s);
+            if(dist > longestDist){ //check if its the longest
+                longestDist = dist;
+            }
+            if(dist <= smallestDist){ // check if the shortest
+                smallestDist = dist;
+            }
+            pq.add(new Vertex(s,dist));
         }
+        while(!pq.isEmpty()){
+            Vertex temp = pq.poll();
+            String v = temp.getVertex();
+            if(dijkstra.distTo(startVertex,v) == dijkstra.distTo(v,startVertex)
+                    && dijkstra.pathTo(startVertex,v) != null && dijkstra.pathTo(v,startVertex) != null
+                    && !isReverse(dijkstra.pathTo(startVertex,v),dijkstra.pathTo(v,startVertex)) ){
+                goal = v;
+                goalCost = dijkstra.distTo(startVertex,v);
+                oneLongestPath = dijkstra.pathTo(startVertex,v);
+                otherLongestPath = dijkstra.pathTo(v,startVertex);
+                break;
+            }
+        }
+        didIt = true;
     }
 
 
@@ -186,5 +213,27 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     public List<String> getOtherLongestPath() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
         return otherLongestPath;
+    }
+
+    private class Vertex implements Comparable<Vertex>{
+        private String vertex;
+        private double dist;
+
+        public Vertex(String vertex, double dist){
+            this.vertex = vertex;
+            this.dist = dist;
+        }
+
+        public int compareTo(Vertex that){ //want it so that its stored largest to smallest in pq ^^
+            if(this.dist > that.getDist()) return -1;
+            else if(this.dist < that.getDist()) return 1;
+            else return 0;
+        }
+        public String getVertex(){
+            return vertex;
+        }
+        public double getDist(){
+            return dist;
+        }
     }
 }
