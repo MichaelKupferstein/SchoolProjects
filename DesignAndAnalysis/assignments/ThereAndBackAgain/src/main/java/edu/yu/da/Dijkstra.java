@@ -52,12 +52,16 @@ public class Dijkstra {
             }
         }
 
+        //was getting OutOfMemoryError so need to remove vlaues that are infiity
+        distance.entrySet().removeIf(entry -> entry.getValue() == Double.POSITIVE_INFINITY);
+
         allDistances.put(vertex, distance);
         allPaths.put(vertex, paths);
     }
 
     public double distTo(String startVertex, String endVertex){
         calculateShortestPaths(startVertex);
+        if(!allDistances.get(startVertex).containsKey(endVertex)) return -1;
         return allDistances.get(startVertex).get(endVertex);
     }
 

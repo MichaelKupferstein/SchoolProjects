@@ -119,6 +119,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
 
         for(String s : graph.vertices()){
             double dist = dijkstra.distTo(startVertex,s);
+            if(dist == -1) continue;
             if(dist > longestDist){ //check if its the longest
                 longestDist = dist;
             }
@@ -127,6 +128,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
             }
             pq.add(new Vertex(s,dist));
         }
+        System.out.println("done first dijkstra");
         while(!pq.isEmpty()){
             Vertex temp = pq.poll();
             String v = temp.getVertex();
