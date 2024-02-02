@@ -1,7 +1,5 @@
 package edu.yu.da;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -29,10 +27,10 @@ import java.util.PriorityQueue;
 
 public class ThereAndBackAgain extends ThereAndBackAgainBase{
 
-    private EdgeWeightedGraph graph;
+    private final EdgeWeightedGraph graph;
     private boolean didIt = false;
-    private String startVertex, goal;
-    private Dijkstra dijkstra;
+    private final String startVertex;
+    private String goal;
     private List<String> oneLongestPath, otherLongestPath;
     private double goalCost;
 
@@ -40,12 +38,12 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     /** Constructor which supplies the start vertex
      *
      * @param startVertex, length must be > 0.
-     * @throws IllegalArgumentException if the pre-condiitions are
+     * @throws IllegalArgumentException if the pre-conditions are
      * violated
      */
     public ThereAndBackAgain(String startVertex) {
         super(startVertex);
-        if (startVertex.length() < 0) throw new IllegalArgumentException("Length must be > 0");
+        if(startVertex == null || startVertex.isEmpty()) throw new IllegalArgumentException("Start vertex cannot be null");
         this.startVertex = startVertex;
         graph = new EdgeWeightedGraph();
     }
@@ -66,7 +64,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
         if (didIt) throw new IllegalStateException("doIt has previously been invoked");
         if(v.equals(w)) throw new IllegalArgumentException("The two vertices must differ from one another");
         if(graph.edgeExists(v,w)) throw new IllegalArgumentException("Edge between " + v + " and " + " already exists");
-        if(v.length() <= 0 || w.length() <=0) throw new IllegalArgumentException("Vertex length must be greater that 0");
+        if(v.isEmpty() || w.isEmpty()) throw new IllegalArgumentException("Vertex length must be greater that 0");
         graph.addEdge(v,w,weight);
     }
 
@@ -85,7 +83,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     public void doIt(){
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
 
-        dijkstra = new Dijkstra(graph, startVertex);
+        Dijkstra dijkstra = new Dijkstra(graph, startVertex);
         PriorityQueue<Vertex> pq = new PriorityQueue<>();
         for(String s : graph.vertices()){
             pq.add(new Vertex(s, dijkstra.distTo(s)));
@@ -101,16 +99,6 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
             break;
         }
         didIt = true;
-    }
-
-
-
-    private boolean isReverse(List<String> list1, List<String> list2){
-        if(list1.size() != list2.size()) return false;
-        for(int i = 0, j = list2.size()-1; i < j; i++,j--){
-            if(!list1.get(i).equals(list2.get(j))) return false;
-        }
-        return true;
     }
 
     /**
@@ -176,8 +164,8 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     }
 
     private class Vertex implements Comparable<Vertex>{
-        private String vertex;
-        private double dist;
+        private final String vertex;
+        private final double dist;
 
         public Vertex(String vertex, double dist){
             this.vertex = vertex;

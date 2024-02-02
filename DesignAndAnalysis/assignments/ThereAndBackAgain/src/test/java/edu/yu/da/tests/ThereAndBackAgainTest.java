@@ -67,6 +67,10 @@ class ThereAndBackAgainTest {
         System.out.println(otherLongestPath);
 
         printPath(graph,oneLongestPath,otherLongestPath);
+
+        assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+
+
     }
 
     @Test
@@ -85,6 +89,9 @@ class ThereAndBackAgainTest {
         System.out.println(otherLongestPath);
 
         printPath(graph,oneLongestPath,otherLongestPath);
+
+        assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+
     }
 
     @Test
@@ -103,6 +110,8 @@ class ThereAndBackAgainTest {
         System.out.println(otherLongestPath);
 
         printPath(graph,oneLongestPath,otherLongestPath);
+        assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+
     }
 
 
@@ -136,5 +145,10 @@ class ThereAndBackAgainTest {
         }
     }
 
+    private boolean sameStartAndEnd(List<String> path1, List<String> path2){
+        if(path1 == null || path2 == null) return true;
+        if(path1.size() == 0 || path2.size() == 0) return true;
+        return path1.get(0).equals(path2.get(0)) && path1.get(path1.size() - 1).equals(path2.get(path2.size() - 1));
+    }
 
 }
