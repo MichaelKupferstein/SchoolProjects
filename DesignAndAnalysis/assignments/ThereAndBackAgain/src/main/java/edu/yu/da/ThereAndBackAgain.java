@@ -81,66 +81,24 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
      *
      * @throws IllegalStateException if doIt() has previously been invoked.
      */
-//    @Override
-//    public void doIt() {
-//        if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
-//        //compute path from startVertex to all othher vertices, maybe dijkstra??
-//        this.dijkstra = new Dijkstra(graph,startVertex);
-//        double longest = 0.0;
-//        String farthestVert = null;
-//        for(String v : graph.vertices()){
-//            double dist = dijkstra.distTo(v);
-//            Dijkstra otherDij = new Dijkstra(graph,v);
-//            double otherDist = otherDij.distTo(startVertex);
-//            List<String> pathToV = dijkstra.pathTo(v);
-//            List<String> pathFromV = otherDij.pathTo(startVertex);
-//            if(pathToV == null) continue;
-//            if(dist == otherDist && dist > longest && !isReverse(pathToV,pathFromV)){
-//                longest = dist;
-//                farthestVert = v;
-//                oneLongestPath = pathToV;
-//                otherLongestPath = pathFromV;
-//            }
-//        }
-//        goal = farthestVert;
-//        goalCost = longest;
-//        didIt = true;
-//    }
     @Override
     public void doIt(){
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
 
-        this.dijkstra = new Dijkstra(graph);
-        dijkstra.calculateShortestPaths(startVertex);
-
-        double longestDist = 0.0;
-        double smallestDist = Double.POSITIVE_INFINITY;
+        dijkstra = new Dijkstra(graph, startVertex);
         PriorityQueue<Vertex> pq = new PriorityQueue<>();
-
         for(String s : graph.vertices()){
-            double dist = dijkstra.distTo(startVertex,s);
-            if(dist == -1) continue;
-            if(dist > longestDist){ //check if its the longest
-                longestDist = dist;
-            }
-            if(dist <= smallestDist){ // check if the shortest
-                smallestDist = dist;
-            }
-            pq.add(new Vertex(s,dist));
+            pq.add(new Vertex(s, dijkstra.distTo(s)));
         }
-        System.out.println("done first dijkstra");
         while(!pq.isEmpty()){
-            Vertex temp = pq.poll();
-            String v = temp.getVertex();
-            if(dijkstra.distTo(startVertex,v) == dijkstra.distTo(v,startVertex)
-                    && dijkstra.pathTo(startVertex,v) != null && dijkstra.pathTo(v,startVertex) != null
-                    && !isReverse(dijkstra.pathTo(startVertex,v),dijkstra.pathTo(v,startVertex)) ){
-                goal = v;
-                goalCost = dijkstra.distTo(startVertex,v);
-                oneLongestPath = dijkstra.pathTo(startVertex,v);
-                otherLongestPath = dijkstra.pathTo(v,startVertex);
-                break;
-            }
+            Vertex current = pq.poll();
+            if(!dijkstra.hasMultiplePath(current.getVertex())) continue;
+
+            goal = current.getVertex();
+            goalCost = current.getDist();
+            oneLongestPath = dijkstra.pathTo(goal).get(0);
+            otherLongestPath = dijkstra.pathTo(goal).get(1);
+            break;
         }
         didIt = true;
     }

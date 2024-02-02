@@ -4,35 +4,28 @@ import java.util.*;
 
 public class Dijkstra {
     private EdgeWeightedGraph graph;
-    private Map<String, Map<String, Double>> allDistances;
-    private Map<String, Map<String, List<String>>> allPaths;
+    private Map<String, Double> distance; //distance from start
+    private Map<String, List<List<String>>> paths;
+    private PriorityQueue<String> pq;
 
-    public Dijkstra(EdgeWeightedGraph graph){
+    public Dijkstra(EdgeWeightedGraph graph, String startVertex){
         this.graph = graph;
-        this.allDistances = new HashMap<>();
-        this.allPaths = new HashMap<>();
-    }
+        this.distance = new HashMap<>();
+        this.paths = new HashMap<>();
+        this.pq = new PriorityQueue<>((String v1, String v2) -> Double.compare(distance.get(v1), distance.get(v2)));
 
-    public void calculateShortestPaths(String vertex){
-        if (allDistances.containsKey(vertex)) {
-            // Shortest paths from vertex has already been calculated
-            return;
+        for(String vertex : graph.vertices()){
+            distance.put(vertex, Double.POSITIVE_INFINITY); //Start off by setting all distances to infinity
         }
+        distance.put(startVertex, 0.0); //Set distance for startVertex to 0
 
-        Map<String, Double> distance = new HashMap<>();
-        Map<String, List<String>> paths = new HashMap<>();
-        PriorityQueue<String> pq = new PriorityQueue<>((String v1, String v2) -> Double.compare(distance.get(v1), distance.get(v2)));
-
-        for(String v : graph.vertices()){
-            distance.put(v, Double.POSITIVE_INFINITY);
-        }
-        distance.put(vertex, 0.0);
-
+        List<List<String>> startPaths = new ArrayList<>();
         List<String> startPath = new ArrayList<>();
-        startPath.add(vertex);
-        paths.put(vertex,startPath);
+        startPath.add(startVertex);
+        startPaths.add(startPath);
+        paths.put(startVertex,startPaths);
 
-        pq.add(vertex);
+        pq.add(startVertex);
 
         while(!pq.isEmpty()){
             String temp = pq.poll();
@@ -42,31 +35,34 @@ public class Dijkstra {
                 if(total < distance.get(other)){
                     distance.put(other,total);
                     pq.remove(other);
-                    pq.add(other);
+                    pq.add(other); //need these two lines to update it, there were bugs :(
 
-                    List<String> oldPath = paths.get(temp);
-                    List<String> newPath = new ArrayList<>(oldPath);
+                    List<String> newPath = new ArrayList<>(paths.get(temp).get(0));
                     newPath.add(other);
-                    paths.put(other,newPath);
+                    List<List<String>> newPaths = new ArrayList<>();
+                    newPaths.add(newPath);
+                    paths.put(other,newPaths);
+                }else if(total == distance.get(other)){
+                    for(List<String> oldPath : paths.get(temp)){
+                        List<String> newPath = new ArrayList<>(oldPath);
+                        newPath.add(other);
+                        paths.get(other).add(newPath);
+                    }
                 }
             }
         }
-
-        //was getting OutOfMemoryError so need to remove vlaues that are infiity
-        distance.entrySet().removeIf(entry -> entry.getValue() == Double.POSITIVE_INFINITY);
-
-        allDistances.put(vertex, distance);
-        allPaths.put(vertex, paths);
     }
 
-    public double distTo(String startVertex, String endVertex){
-        calculateShortestPaths(startVertex);
-        if(!allDistances.get(startVertex).containsKey(endVertex)) return -1;
-        return allDistances.get(startVertex).get(endVertex);
+    public double distTo(String s){
+        return distance.get(s);
     }
 
-    public List<String> pathTo(String startVertex, String endVertex){
-        calculateShortestPaths(startVertex);
-        return allPaths.get(startVertex).get(endVertex);
+    public List<List<String>> pathTo(String s){
+        return paths.get(s);
+    }
+    public boolean hasMultiplePath(String s){
+        if(paths.get(s) == null ) return false;
+        if(paths.get(s).size() > 1 ) return true;
+        return false;
     }
 }

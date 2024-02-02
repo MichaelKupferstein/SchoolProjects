@@ -3,6 +3,10 @@ import edu.yu.da.Dijkstra;
 import edu.yu.da.EdgeWeightedGraph;
 
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestDijsktra {
@@ -19,25 +23,25 @@ public class TestDijsktra {
         graph.addEdge("3","7",6.0);
         graph.addEdge("7","4",4.0);
 
-        Dijkstra dijkstra = new Dijkstra(graph);
         String startVertex = "0";
-        assertEquals(dijkstra.distTo(startVertex,"0"), 0.0);
-        assertEquals(dijkstra.distTo(startVertex,"1"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"2"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"3"), 19.0);
-        assertEquals(dijkstra.distTo(startVertex,"4"), 22.0);
-        assertEquals(dijkstra.distTo(startVertex,"5"), 16.0);
-        assertEquals(dijkstra.distTo(startVertex,"6"), 16.0);
-        assertEquals(dijkstra.distTo(startVertex,"7"), 18.0);
+        Dijkstra dijkstra = new Dijkstra(graph, startVertex);
+        assertEquals(0.0, dijkstra.distTo("0"));
+        assertEquals(7.0, dijkstra.distTo("1"));
+        assertEquals(7.0, dijkstra.distTo("2"));
+        assertEquals(19.0, dijkstra.distTo("3"));
+        assertEquals(22.0, dijkstra.distTo("4"));
+        assertEquals(16.0, dijkstra.distTo("5"));
+        assertEquals(16.0, dijkstra.distTo("6"));
+        assertEquals(18.0, dijkstra.distTo("7"));
 
-        assertEquals(dijkstra.pathTo(startVertex,"0").toString(), "[0]");
-        assertEquals(dijkstra.pathTo(startVertex,"1").toString(), "[0, 1]");
-        assertEquals(dijkstra.pathTo(startVertex,"2").toString(), "[0, 2]");
-        assertEquals(dijkstra.pathTo(startVertex,"3").toString(), "[0, 2, 5, 3]");
-        assertEquals(dijkstra.pathTo(startVertex,"4").toString(), "[0, 2, 5, 7, 4]");
-        assertEquals(dijkstra.pathTo(startVertex,"5").toString(), "[0, 2, 5]");
-        assertEquals(dijkstra.pathTo(startVertex,"6").toString(), "[0, 1, 6]");
-        assertEquals(dijkstra.pathTo(startVertex,"7").toString(), "[0, 2, 5, 7]");
+        assertEquals("[0]", dijkstra.pathTo("0").toString());
+        assertEquals("[0, 1]", dijkstra.pathTo("1").toString());
+        assertEquals("[0, 2]", dijkstra.pathTo("2").toString());
+        assertEquals("[0, 2, 5, 3]", dijkstra.pathTo("3").toString());
+        assertEquals("[0, 2, 5, 7, 4]", dijkstra.pathTo("4").toString());
+        assertEquals("[0, 2, 5]", dijkstra.pathTo("5").toString());
+        assertEquals("[0, 1, 6]", dijkstra.pathTo("6").toString());
+        assertEquals("[0, 2, 5, 7]", dijkstra.pathTo("7").toString());
     }
 
     @Test
@@ -54,23 +58,23 @@ public class TestDijsktra {
         graph.addEdge("4","6",3.0);
         graph.addEdge("5","6",2.0);
 
-        Dijkstra dijkstra = new Dijkstra(graph);
         String startVertex = "0";
-        assertEquals(dijkstra.distTo(startVertex,"0"), 0.0);
-        assertEquals(dijkstra.distTo(startVertex,"1"), 8.0);
-        assertEquals(dijkstra.distTo(startVertex,"2"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"3"), 2.0);
-        assertEquals(dijkstra.distTo(startVertex,"4"), 6.0);
-        assertEquals(dijkstra.distTo(startVertex,"5"), 10.0);
-        assertEquals(dijkstra.distTo(startVertex,"6"), 9.0);
+        Dijkstra dijkstra = new Dijkstra(graph, startVertex);
+        assertEquals(0.0, dijkstra.distTo("0"));
+        assertEquals(8.0, dijkstra.distTo("1"));
+        assertEquals(7.0, dijkstra.distTo("2"));
+        assertEquals(2.0, dijkstra.distTo("3"));
+        assertEquals(6.0, dijkstra.distTo("4"));
+        assertEquals(10.0, dijkstra.distTo("5"));
+        assertEquals(9.0, dijkstra.distTo("6"));
 
-        assertEquals(dijkstra.pathTo(startVertex,"0").toString(), "[0]");
-        assertEquals(dijkstra.pathTo(startVertex,"1").toString(), "[0, 1]");
-        assertEquals(dijkstra.pathTo(startVertex,"2").toString(), "[0, 2]");
-        assertEquals(dijkstra.pathTo(startVertex,"3").toString(), "[0, 3]");
-        assertEquals(dijkstra.pathTo(startVertex,"4").toString(), "[0, 4]");
-        assertEquals(dijkstra.pathTo(startVertex,"5").toString(), "[0, 3, 5]");
-        assertEquals(dijkstra.pathTo(startVertex,"6").toString(), "[0, 4, 6]");
+        assertEquals("[0]", dijkstra.pathTo("0").toString());
+        assertEquals("[0, 1]", dijkstra.pathTo("1").toString());
+        assertEquals("[0, 2]", dijkstra.pathTo("2").toString());
+        assertEquals("[0, 3]", dijkstra.pathTo("3").toString());
+        assertEquals("[0, 4]", dijkstra.pathTo("4").toString());
+        assertEquals("[0, 3, 5]", dijkstra.pathTo("5").toString());
+        assertEquals("[0, 4, 6]", dijkstra.pathTo("6").toString());
     }
 
     @Test
@@ -87,67 +91,65 @@ public class TestDijsktra {
         graph.addEdge("5","7",3.0);
         graph.addEdge("6","7",5.0);
 
-        Dijkstra dijkstra = new Dijkstra(graph);
         String startVertex = "0";
-        assertEquals(dijkstra.distTo(startVertex,"0"), 0.0);
-        assertEquals(dijkstra.distTo(startVertex,"1"), 5.0);
-        assertEquals(dijkstra.distTo(startVertex,"2"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"3"), 9.0);
-        assertEquals(dijkstra.distTo(startVertex,"4"), 16.0);
-        assertEquals(dijkstra.distTo(startVertex,"5"), 9.0);
-        assertEquals(dijkstra.distTo(startVertex,"6"), 17.0);
-        assertEquals(dijkstra.distTo(startVertex,"7"), 12.0);
+        Dijkstra dijkstra = new Dijkstra(graph, startVertex);
+        assertEquals(0.0, dijkstra.distTo("0"));
+        assertEquals(5.0, dijkstra.distTo("1"));
+        assertEquals(7.0, dijkstra.distTo("2"));
+        assertEquals(9.0, dijkstra.distTo("3"));
+        assertEquals(16.0, dijkstra.distTo("4"));
+        assertEquals(9.0, dijkstra.distTo("5"));
+        assertEquals(17.0, dijkstra.distTo("6"));
+        assertEquals(12.0, dijkstra.distTo("7"));
 
-        assertEquals(dijkstra.pathTo(startVertex,"0").toString(), "[0]");
-        assertEquals(dijkstra.pathTo(startVertex,"1").toString(), "[0, 1]");
-        assertEquals(dijkstra.pathTo(startVertex,"2").toString(), "[0, 1, 2]");
-        assertEquals(dijkstra.pathTo(startVertex,"3").toString(), "[0, 1, 3]");
-        assertEquals(dijkstra.pathTo(startVertex,"4").toString(), "[0, 1, 2, 4]");
-        assertEquals(dijkstra.pathTo(startVertex,"5").toString(), "[0, 1, 5]");
-        assertEquals(dijkstra.pathTo(startVertex,"6").toString(), "[0, 1, 5, 7, 6]");
-        assertEquals(dijkstra.pathTo(startVertex,"7").toString(), "[0, 1, 5, 7]");
+        assertEquals("[0]", dijkstra.pathTo("0").toString());
+        assertEquals("[0, 1]", dijkstra.pathTo("1").toString());
+        assertEquals("[0, 1, 2]", dijkstra.pathTo("2").toString());
+        assertEquals("[0, 1, 3]", dijkstra.pathTo("3").toString());
+        assertEquals("[0, 1, 2, 4]", dijkstra.pathTo("4").toString());
+        assertEquals("[0, 1, 5]", dijkstra.pathTo("5").toString());
+        assertEquals("[0, 1, 5, 7, 6]", dijkstra.pathTo("6").toString());
+        assertEquals("[0, 1, 5, 7]", dijkstra.pathTo("7").toString());
 
         startVertex = "5";
-        assertEquals(dijkstra.distTo(startVertex,"0"), 9.0);
-        assertEquals(dijkstra.distTo(startVertex,"1"), 4.0);
-        assertEquals(dijkstra.distTo(startVertex,"2"), 6.0);
-        assertEquals(dijkstra.distTo(startVertex,"3"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"4"), 10.0);
-        assertEquals(dijkstra.distTo(startVertex,"5"), 0.0);
-        assertEquals(dijkstra.distTo(startVertex,"6"), 8.0);
-        assertEquals(dijkstra.distTo(startVertex,"7"), 3.0);
+        dijkstra = new Dijkstra(graph, startVertex);
+        assertEquals(9.0, dijkstra.distTo("0"));
+        assertEquals(4.0, dijkstra.distTo("1"));
+        assertEquals(6.0, dijkstra.distTo("2"));
+        assertEquals(7.0, dijkstra.distTo("3"));
+        assertEquals(10.0, dijkstra.distTo("4"));
+        assertEquals(0.0, dijkstra.distTo("5"));
+        assertEquals(8.0, dijkstra.distTo("6"));
+        assertEquals(3.0, dijkstra.distTo("7"));
 
-        assertEquals(dijkstra.pathTo(startVertex,"0").toString(), "[5, 1, 0]");
-        assertEquals(dijkstra.pathTo(startVertex,"1").toString(), "[5, 1]");
-        assertEquals(dijkstra.pathTo(startVertex,"2").toString(), "[5, 1, 2]");
-        assertEquals(dijkstra.pathTo(startVertex,"3").toString(), "[5, 7, 3]");
-        assertEquals(dijkstra.pathTo(startVertex,"4").toString(), "[5, 7, 4]");
-        assertEquals(dijkstra.pathTo(startVertex,"5").toString(), "[5]");
-        assertEquals(dijkstra.pathTo(startVertex,"6").toString(), "[5, 7, 6]");
-        assertEquals(dijkstra.pathTo(startVertex,"7").toString(), "[5, 7]");
+        assertEquals("[5, 1, 0]", dijkstra.pathTo("0").toString());
+        assertEquals("[5, 1]", dijkstra.pathTo("1").toString());
+        assertEquals("[5, 1, 2]", dijkstra.pathTo("2").toString());
+        assertEquals("[5, 7, 3]", dijkstra.pathTo("3").toString());
+        assertEquals("[5, 7, 4]", dijkstra.pathTo("4").toString());
+        assertEquals("[5]", dijkstra.pathTo("5").toString());
+        assertEquals("[5, 7, 6]", dijkstra.pathTo("6").toString());
+        assertEquals("[5, 7]", dijkstra.pathTo("7").toString());
 
         startVertex = "2";
-        assertEquals(dijkstra.distTo(startVertex,"0"), 7.0);
-        assertEquals(dijkstra.distTo(startVertex,"1"), 2.0);
-        assertEquals(dijkstra.distTo(startVertex,"2"), 0.0);
-        assertEquals(dijkstra.distTo(startVertex,"3"), 6.0);
-        assertEquals(dijkstra.distTo(startVertex,"4"), 9.0);
-        assertEquals(dijkstra.distTo(startVertex,"5"), 6.0);
-        assertEquals(dijkstra.distTo(startVertex,"6"), 14.0);
-        assertEquals(dijkstra.distTo(startVertex,"7"), 9.0);
+        dijkstra = new Dijkstra(graph, startVertex);
+        assertEquals(7.0, dijkstra.distTo("0"));
+        assertEquals(2.0, dijkstra.distTo("1"));
+        assertEquals(0.0, dijkstra.distTo("2"));
+        assertEquals(6.0, dijkstra.distTo("3"));
+        assertEquals(9.0, dijkstra.distTo("4"));
+        assertEquals(6.0, dijkstra.distTo("5"));
+        assertEquals(14.0, dijkstra.distTo("6"));
+        assertEquals(9.0, dijkstra.distTo("7"));
 
-        assertEquals(dijkstra.pathTo(startVertex,"0").toString(), "[2, 1, 0]");
-        assertEquals(dijkstra.pathTo(startVertex,"1").toString(), "[2, 1]");
-        assertEquals(dijkstra.pathTo(startVertex,"2").toString(), "[2]");
-        assertEquals(dijkstra.pathTo(startVertex,"3").toString(), "[2, 1, 3]");
-        assertEquals(dijkstra.pathTo(startVertex,"4").toString(), "[2, 4]");
-        assertEquals(dijkstra.pathTo(startVertex,"5").toString(), "[2, 1, 5]");
-        assertEquals(dijkstra.pathTo(startVertex,"6").toString(), "[2, 1, 5, 7, 6]");
-        assertEquals(dijkstra.pathTo(startVertex,"7").toString(), "[2, 1, 5, 7]");
-
-        assertEquals(dijkstra.distTo("0","4"), 16.0);
-        assertEquals(dijkstra.pathTo("0","4").toString(), "[0, 1, 2, 4]");
-
+        assertEquals("[2, 1, 0]", dijkstra.pathTo("0").toString());
+        assertEquals("[2, 1]", dijkstra.pathTo("1").toString());
+        assertEquals("[2]", dijkstra.pathTo("2").toString());
+        assertEquals("[2, 1, 3]", dijkstra.pathTo("3").toString());
+        assertEquals("[2, 4]", dijkstra.pathTo("4").toString());
+        assertEquals("[2, 1, 5]", dijkstra.pathTo("5").toString());
+        assertEquals("[2, 1, 5, 7, 6]", dijkstra.pathTo("6").toString());
+        assertEquals("[2, 1, 5, 7]", dijkstra.pathTo("7").toString());
 
 
     }
