@@ -6,6 +6,7 @@ import edu.yu.da.ThereAndBackAgain;
 import edu.yu.da.ThereAndBackAgainBase;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,8 +22,8 @@ class ThereAndBackAgainTest {
         taba.doIt();
         assertEquals(null,taba.goalVertex(),"goalVertex");
         assertEquals(0.0,taba.goalCost(),"goalCost");
-        assertEquals(null,taba.getOneLongestPath());
-        assertEquals(null,taba.getOtherLongestPath());
+        assertEquals(Collections.EMPTY_LIST,taba.getOneLongestPath());
+        assertEquals(Collections.EMPTY_LIST,taba.getOtherLongestPath());
     }
 
     @Test
@@ -67,8 +68,8 @@ class ThereAndBackAgainTest {
         System.out.println(otherLongestPath);
 
         printPath(graph,oneLongestPath,otherLongestPath);
-
         assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+        assertTrue(oneLongestPath.hashCode() < otherLongestPath.hashCode());
 
 
     }
@@ -91,6 +92,8 @@ class ThereAndBackAgainTest {
         printPath(graph,oneLongestPath,otherLongestPath);
 
         assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+        assertTrue(oneLongestPath.hashCode() < otherLongestPath.hashCode());
+
 
     }
 
@@ -111,6 +114,8 @@ class ThereAndBackAgainTest {
 
         printPath(graph,oneLongestPath,otherLongestPath);
         assertTrue(sameStartAndEnd(oneLongestPath,otherLongestPath));
+        assertTrue(oneLongestPath.hashCode() < otherLongestPath.hashCode());
+
 
     }
 

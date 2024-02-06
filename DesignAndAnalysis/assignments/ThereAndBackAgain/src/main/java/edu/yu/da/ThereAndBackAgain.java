@@ -1,5 +1,6 @@
 package edu.yu.da;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -94,11 +95,20 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
 
             goal = current.getVertex();
             goalCost = current.getDist();
-            oneLongestPath = dijkstra.pathTo(goal).get(0);
-            otherLongestPath = dijkstra.pathTo(goal).get(1);
+            assignPaths(dijkstra.pathTo(goal).get(0),dijkstra.pathTo(goal).get(1));
             break;
         }
         didIt = true;
+    }
+
+    private void assignPaths(List<String> path1, List<String> path2){
+        if(path1.hashCode() < path2.hashCode()){
+            oneLongestPath = path1;
+            otherLongestPath = path2;
+        }else{
+            oneLongestPath = path2;
+            otherLongestPath = path1;
+        }
     }
 
     /**
@@ -142,6 +152,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public List<String> getOneLongestPath() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
+        if(oneLongestPath == null) return Collections.EMPTY_LIST;
         return oneLongestPath;
     }
 
@@ -160,6 +171,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public List<String> getOtherLongestPath() {
         if(!didIt) throw new IllegalStateException("doIt() has not been invoked yet");
+        if(otherLongestPath == null) return Collections.EMPTY_LIST;
         return otherLongestPath;
     }
 
