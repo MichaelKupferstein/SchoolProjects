@@ -64,7 +64,7 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     public void addEdge(String v, String w, double weight) {
         if (didIt) throw new IllegalStateException("doIt has previously been invoked");
         if(v.equals(w)) throw new IllegalArgumentException("The two vertices must differ from one another");
-        if(graph.edgeExists(v,w)) throw new IllegalArgumentException("Edge between " + v + " and " + " already exists");
+        if(graph.edgeExists(v,w)) throw new IllegalArgumentException("Edge between " + v + " and " + w +  " already exists");
         if(v.isEmpty() || w.isEmpty()) throw new IllegalArgumentException("Vertex length must be greater that 0");
         graph.addEdge(v,w,weight);
     }
@@ -83,7 +83,10 @@ public class ThereAndBackAgain extends ThereAndBackAgainBase{
     @Override
     public void doIt(){
         if(didIt) throw new IllegalStateException("doIt() has previously been invoked");
-
+        if(graph.adj(startVertex) == null) {
+            didIt = true;
+            return;
+        }
         Dijkstra dijkstra = new Dijkstra(graph, startVertex);
         PriorityQueue<Vertex> pq = new PriorityQueue<>();
         for(String s : graph.vertices()){
