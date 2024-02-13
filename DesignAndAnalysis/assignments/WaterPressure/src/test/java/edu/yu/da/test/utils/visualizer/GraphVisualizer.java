@@ -140,7 +140,14 @@ public class GraphVisualizer{
     private void addCheckboxesToControlPanel(JPanel controlPanel) {
         HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
         List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
-        Collections.sort(sortedVertices);
+
+        // Use a custom comparator that compares the numeric values of the vertices
+        Collections.sort(sortedVertices, (v1, v2) -> {
+            int num1 = Integer.parseInt(v1.substring(5)); // Assuming the vertex name is "Node X"
+            int num2 = Integer.parseInt(v2.substring(5));
+            return Integer.compare(num1, num2);
+        });
+
         for(String vertex : sortedVertices){
             JCheckBox checkbox = new JCheckBox(vertex, true);
             checkbox.addItemListener(e -> toggleVertexVisibility(checkboxToVertexMap, checkbox, e));
