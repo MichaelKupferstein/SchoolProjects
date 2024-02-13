@@ -11,6 +11,8 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.util.ArrayList;
@@ -147,7 +149,18 @@ public class GraphVisualizer{
 
         // Create "Search" field
         JTextField searchField = new JTextField();
-        searchField.addActionListener(e -> searchNode(searchField.getText()));
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, searchField.getPreferredSize().height)); // Set maximum size
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                searchNode(searchField.getText());
+            }
+            public void removeUpdate(DocumentEvent e) {
+                searchNode(searchField.getText());
+            }
+            public void insertUpdate(DocumentEvent e) {
+                searchNode(searchField.getText());
+            }
+        });
         controlPanel.add(searchField);
 
         addCheckboxesToControlPanel(controlPanel);
@@ -168,10 +181,10 @@ public class GraphVisualizer{
 
     private void searchNode(String nodeName) {
         for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
-            if (checkboxToVertexMap.get(checkbox).equals(nodeName)) {
-                checkbox.setSelected(true);
+            if (checkboxToVertexMap.get(checkbox).contains(nodeName)) {
+                checkbox.setVisible(true); // Show the checkbox if it matches the search query
             } else {
-                checkbox.setSelected(false);
+                checkbox.setVisible(false); // Hide the checkbox if it doesn't match the search query
             }
         }
     }
