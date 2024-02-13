@@ -2,14 +2,11 @@ package edu.yu.da.test.utils.visualizer;
 
 import com.mxgraph.layout.*;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
-import com.mxgraph.model.mxCell;
 import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.util.mxConstants;
-import edu.yu.da.DirectedEdge;
-import edu.yu.da.EdgeWeightedDirectedGraph;
+import edu.yu.da.graph.DirectedEdge;
+import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import org.jgrapht.Graph;
 import org.jgrapht.ext.JGraphXAdapter;
-import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 

@@ -1,16 +1,12 @@
 package edu.yu.da.test;
 
 
-import edu.yu.da.DirectedEdge;
-import edu.yu.da.EdgeWeightedDirectedGraph;
+import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import edu.yu.da.test.utils.visualizer.GraphVisualizer;
 import edu.yu.da.tests.RandomGraphGenerator;
 
 
 import org.junit.jupiter.api.Test;
-
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class EdgeWeightedDirectedGraphTest {
 

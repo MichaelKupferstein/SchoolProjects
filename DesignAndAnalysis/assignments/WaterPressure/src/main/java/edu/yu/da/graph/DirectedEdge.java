@@ -1,4 +1,4 @@
-package edu.yu.da;
+package edu.yu.da.graph;
 
 /**
  * Represents an directed edge in a graph.

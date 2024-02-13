@@ -1,7 +1,7 @@
 package edu.yu.da.tests;
 
-import edu.yu.da.EdgeWeightedDirectedGraph;
-import edu.yu.da.DirectedEdge;
+import edu.yu.da.graph.EdgeWeightedDirectedGraph;
+import edu.yu.da.graph.DirectedEdge;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

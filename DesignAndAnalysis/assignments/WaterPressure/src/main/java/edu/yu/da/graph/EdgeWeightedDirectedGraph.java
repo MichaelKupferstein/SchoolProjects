@@ -1,4 +1,6 @@
-package edu.yu.da;
+package edu.yu.da.graph;
+
+import edu.yu.da.graph.DirectedEdge;
 
 import java.util.ArrayList;
 import java.util.HashMap;
