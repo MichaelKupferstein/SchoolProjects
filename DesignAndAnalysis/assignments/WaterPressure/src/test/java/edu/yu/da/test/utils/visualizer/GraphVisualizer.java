@@ -23,6 +23,7 @@ public class GraphVisualizer{
     Graph<String, DefaultWeightedEdge> graph;
     private final Dimension FULL_SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
     private JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter;
+    HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
 
     public GraphVisualizer(EdgeWeightedDirectedGraph graph) {
         this.graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
@@ -133,12 +134,49 @@ public class GraphVisualizer{
         JScrollPane scrollPane = new JScrollPane(controlPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(100, FULL_SCREEN.height));
+
+        // Create "Select All" button
+        JButton selectAllButton = new JButton("Select All");
+        selectAllButton.addActionListener(e -> selectAllNodes());
+        controlPanel.add(selectAllButton);
+
+        // Create "Unselect All" button
+        JButton unselectAllButton = new JButton("Unselect All");
+        unselectAllButton.addActionListener(e -> unselectAllNodes());
+        controlPanel.add(unselectAllButton);
+
+        // Create "Search" field
+        JTextField searchField = new JTextField();
+        searchField.addActionListener(e -> searchNode(searchField.getText()));
+        controlPanel.add(searchField);
+
         addCheckboxesToControlPanel(controlPanel);
         return scrollPane;
     }
 
+    private void selectAllNodes() {
+        for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
+            checkbox.setSelected(true);
+        }
+    }
+
+    private void unselectAllNodes() {
+        for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
+            checkbox.setSelected(false);
+        }
+    }
+
+    private void searchNode(String nodeName) {
+        for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
+            if (checkboxToVertexMap.get(checkbox).equals(nodeName)) {
+                checkbox.setSelected(true);
+            } else {
+                checkbox.setSelected(false);
+            }
+        }
+    }
+
     private void addCheckboxesToControlPanel(JPanel controlPanel) {
-        HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
         List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
 
         // Use a custom comparator that compares the numeric values of the vertices
