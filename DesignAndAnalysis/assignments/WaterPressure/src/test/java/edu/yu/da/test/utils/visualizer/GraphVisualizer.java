@@ -2,10 +2,14 @@ package edu.yu.da.test.utils.visualizer;
 
 
 import com.mxgraph.layout.mxCircleLayout;
+import com.mxgraph.layout.mxCompactTreeLayout;
+import com.mxgraph.layout.mxFastOrganicLayout;
 import com.mxgraph.layout.mxIGraphLayout;
+import com.mxgraph.model.mxCell;
 import com.mxgraph.shape.mxEllipseShape;
 import com.mxgraph.shape.mxIShape;
 import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxCellState;
 import edu.yu.da.DirectedEdge;
 import edu.yu.da.EdgeWeightedDirectedGraph;
@@ -17,6 +21,7 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Map;
 
 public class GraphVisualizer{
 
@@ -42,24 +47,27 @@ public class GraphVisualizer{
 
         // Create a layout for the graph
         mxCircleLayout layout = new mxCircleLayout(graphAdapter);
-        double radius = layout.getRadius();
-        layout.setX0((FULL_SCREEN.width / 2) - radius);
-        layout.setY0((FULL_SCREEN.height / 2) - radius);
+//        double radius = layout.getRadius();
+//        layout.setX0((FULL_SCREEN.width / 2) - radius);
+//        layout.setY0((FULL_SCREEN.height / 2) - radius);
         layout.setMoveCircle(true);
 
         layout.execute(graphAdapter.getDefaultParent());
 
         displayGraph(graphComponent);
     }
-    public void visualizeGraphWithCustomLayout(mxIGraphLayout layout) {
+    public void visualizeGraphWithFastOrganicLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
         // Create a JGraph component for the adapter
         mxGraphComponent graphComponent = new mxGraphComponent(graphAdapter);
 
+        mxFastOrganicLayout layout = new mxFastOrganicLayout(graphAdapter);
         layout.execute(graphAdapter.getDefaultParent());
 
         displayGraph(graphComponent);
+
+
     }
 
     private JGraphXAdapter<String, DefaultWeightedEdge> createGraphAdapter(){
