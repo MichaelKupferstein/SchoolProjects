@@ -20,13 +20,25 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This class is used to visualize a graph using different layouts.
+ * It provides a GUI with a control panel for selecting nodes and a separate panel for selecting graph algorithms.
+ */
 public class GraphVisualizer{
 
+    // The graph to visualize
     Graph<String, DefaultWeightedEdge> graph;
+    // The full screen dimension
     private final Dimension FULL_SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
+    // The adapter to convert the graph into a JGraph
     private JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter;
+    // A map to associate checkboxes with vertices
     HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
 
+    /**
+     * Constructs a GraphVisualizer with the given graph.
+     * @param graph The graph to visualize
+     */
     public GraphVisualizer(EdgeWeightedDirectedGraph graph) {
         this.graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
         for(String vertex : graph.vertices()) {
@@ -38,6 +50,9 @@ public class GraphVisualizer{
         }
     }
 
+    /**
+     * Visualizes the graph with a circle layout.
+     */
     public void visualizeGraphWithCircleLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -53,6 +68,9 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
+    /**
+     * Visualizes the graph with a fast organic layout.
+     */
     public void visualizeGraphWithFastOrganicLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -65,6 +83,9 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
+    /**
+     * Visualizes the graph with a hierarchical layout.
+     */
     public void visualizeGraphWithHierarchicalLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -77,6 +98,10 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
+    /**
+     * Creates a JGraphXAdapter for the graph and configures it.
+     * @return The created and configured JGraphXAdapter
+     */
     private JGraphXAdapter<String, DefaultWeightedEdge> createGraphAdapter(){
         graphAdapter  = new JGraphXAdapter<String, DefaultWeightedEdge>(this.graph) {
             @Override
@@ -115,12 +140,21 @@ public class GraphVisualizer{
         return graphAdapter;
     }
 
+    /**
+     * Displays the graph in a JFrame.
+     * @param graphComponent The JGraph component to display
+     */
     private void displayGraph(mxGraphComponent graphComponent){
         JFrame frame = createFrame(graphComponent);
         frame.setVisible(true);
         keepFrameOpen(frame);
     }
 
+    /**
+     * Creates a JFrame to display the graph.
+     * @param graphComponent The JGraph component to display
+     * @return The created JFrame
+     */
     private JFrame createFrame(mxGraphComponent graphComponent) {
         JFrame frame = new JFrame();
         frame.getContentPane().add(graphComponent, BorderLayout.CENTER);
@@ -139,6 +173,10 @@ public class GraphVisualizer{
         return frame;
     }
 
+    /**
+     * Creates a JPanel for the algorithm buttons.
+     * @return The created JPanel
+     */
     private JPanel createAlgorithmPanel() {
         JPanel algorithmPanel = new JPanel();
         algorithmPanel.setLayout(new BoxLayout(algorithmPanel, BoxLayout.Y_AXIS));
@@ -146,6 +184,10 @@ public class GraphVisualizer{
         return algorithmPanel;
     }
 
+    /**
+     * Creates a JScrollPane for the control panel.
+     * @return The created JScrollPane
+     */
     private JScrollPane createControlPanel() {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -160,6 +202,10 @@ public class GraphVisualizer{
         return scrollPane;
     }
 
+    /**
+     * Adds the "Select All" and "Unselect All" buttons to the control panel.
+     * @param controlPanel The control panel to add the buttons to
+     */
     private void addSelectButtons(JPanel controlPanel) {
         // Create "Select All" button
         JButton selectAllButton = new JButton("Select All");
@@ -172,6 +218,10 @@ public class GraphVisualizer{
         controlPanel.add(unselectAllButton);
     }
 
+    /**
+     * Adds a search field to the control panel.
+     * @param controlPanel The control panel to add the search field to
+     */
     private void addSearchField(JPanel controlPanel) {
         // Create "Search" field
         JTextField searchField = new JTextField();
@@ -190,6 +240,10 @@ public class GraphVisualizer{
         controlPanel.add(searchField);
     }
 
+    /**
+     * Adds the algorithm buttons to the algorithm panel.
+     * @param controlPanel The algorithm panel to add the buttons to
+     */
     private void addAlgorithmButtons(JPanel controlPanel) {
         // Create a separate panel for the buttons
         JPanel buttonPanel = new JPanel();
@@ -214,18 +268,28 @@ public class GraphVisualizer{
         controlPanel.add(buttonPanel);
     }
 
+    /**
+     * Selects all nodes in the graph.
+     */
     private void selectAllNodes() {
         for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
             checkbox.setSelected(true);
         }
     }
 
+    /**
+     * Unselects all nodes in the graph.
+     */
     private void unselectAllNodes() {
         for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
             checkbox.setSelected(false);
         }
     }
 
+    /**
+     * Searches for a node in the graph.
+     * @param nodeName The name of the node to search for
+     */
     private void searchNode(String nodeName) {
         for (JCheckBox checkbox : checkboxToVertexMap.keySet()) {
             if (checkboxToVertexMap.get(checkbox).contains(nodeName)) {
@@ -236,6 +300,10 @@ public class GraphVisualizer{
         }
     }
 
+    /**
+     * Adds checkboxes for each vertex to the control panel.
+     * @param controlPanel The control panel to add the checkboxes to
+     */
     private void addCheckboxesToControlPanel(JPanel controlPanel) {
         List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
 
@@ -254,6 +322,12 @@ public class GraphVisualizer{
         }
     }
 
+    /**
+     * Toggles the visibility of a vertex in the graph.
+     * @param checkboxToVertexMap The map associating checkboxes with vertices
+     * @param checkbox The checkbox associated with the vertex
+     * @param e The item event
+     */
     private void toggleVertexVisibility(HashMap<JCheckBox, String> checkboxToVertexMap, JCheckBox checkbox, ItemEvent e) {
         String vertexToToggle = checkboxToVertexMap.get(checkbox);
         Object cell = graphAdapter.getVertexToCellMap().get(vertexToToggle);
@@ -264,6 +338,10 @@ public class GraphVisualizer{
         }
     }
 
+    /**
+     * Keeps the JFrame open.
+     * @param frame The JFrame to keep open
+     */
     private void keepFrameOpen(JFrame frame) {
         while (frame.isVisible()) {
             try {
@@ -274,15 +352,26 @@ public class GraphVisualizer{
         }
     }
 
-    // Placeholder methods for the graph algorithms
+    /**
+     * Visualizes the shortest path algorithm.
+     * This is a placeholder method to be implemented.
+     */
     private void visualizeShortestPath() {
         // Implement the visualization for the shortest path algorithm
     }
 
+    /**
+     * Visualizes the minimum spanning tree algorithm.
+     * This is a placeholder method to be implemented.
+     */
     private void visualizeMinimumSpanningTree() {
         // Implement the visualization for the minimum spanning tree algorithm
     }
 
+    /**
+     * Visualizes another algorithm.
+     * This is a placeholder method to be implemented.
+     */
     private void visualizeOtherAlgorithm() {
         // Implement the visualization for the other algorithm
     }
