@@ -12,19 +12,18 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
-/**
- * A class to visualize graphs using JGraphX library.
- */
 public class GraphVisualizer{
 
     Graph<String, DefaultWeightedEdge> graph;
     private final Dimension FULL_SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
+    private JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter;
 
-    /**
-     * Constructor for GraphVisualizer.
-     * @param graph The graph to be visualized.
-     */
     public GraphVisualizer(EdgeWeightedDirectedGraph graph) {
         this.graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
         for(String vertex : graph.vertices()) {
@@ -36,9 +35,6 @@ public class GraphVisualizer{
         }
     }
 
-    /**
-     * Visualizes the graph with a circle layout.
-     */
     public void visualizeGraphWithCircleLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -54,9 +50,6 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
-    /**
-     * Visualizes the graph with a fast organic layout.
-     */
     public void visualizeGraphWithFastOrganicLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -69,9 +62,6 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
-    /**
-     * Visualizes the graph with a hierarchical layout.
-     */
     public void visualizeGraphWithHierarchicalLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -84,12 +74,8 @@ public class GraphVisualizer{
         displayGraph(graphComponent);
     }
 
-    /**
-     * Creates a JGraphXAdapter for the graph.
-     * @return The created JGraphXAdapter.
-     */
     private JGraphXAdapter<String, DefaultWeightedEdge> createGraphAdapter(){
-        JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter  = new JGraphXAdapter<String, DefaultWeightedEdge>(this.graph) {
+        graphAdapter  = new JGraphXAdapter<String, DefaultWeightedEdge>(this.graph) {
             @Override
             public String convertValueToString(Object cell) {
                 if (model.isEdge(cell)) {
@@ -119,7 +105,6 @@ public class GraphVisualizer{
             }
         };
 
-        // Set the shape of the vertices
         for(String vertex : this.graph.vertexSet()){
             graphAdapter.setCellStyle("shape=ellipse;perimeter=ellipsePerimeter" , new Object[]{graphAdapter.getVertexToCellMap().get(vertex)});
         }
@@ -127,18 +112,45 @@ public class GraphVisualizer{
         return graphAdapter;
     }
 
-    /**
-     * Displays the graph in a JFrame.
-     * @param graphComponent The graph component to be displayed.
-     */
     private void displayGraph(mxGraphComponent graphComponent){
         JFrame frame = new JFrame();
-        frame.getContentPane().add(graphComponent);
+        frame.getContentPane().add(graphComponent, BorderLayout.CENTER);
+
+        JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+
+        // Create a JScrollPane to enable scrolling
+        JScrollPane scrollPane = new JScrollPane(controlPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(100, FULL_SCREEN.height));
+
+        HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
+
+        // Sort the vertices before creating the checkboxes
+        List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
+        Collections.sort(sortedVertices);
+
+        for(String vertex : sortedVertices){
+            JCheckBox checkbox = new JCheckBox(vertex, true);
+            checkbox.addItemListener(e -> {
+                String vertexToToggle = checkboxToVertexMap.get(checkbox);
+                Object cell = graphAdapter.getVertexToCellMap().get(vertexToToggle);
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    graphAdapter.getModel().setVisible(cell, true);
+                } else {
+                    graphAdapter.getModel().setVisible(cell, false);
+                }
+            });
+            checkboxToVertexMap.put(checkbox, vertex);
+            controlPanel.add(checkbox);
+        }
+
+        frame.getContentPane().add(scrollPane, BorderLayout.EAST);
+
         frame.setSize(FULL_SCREEN.width, FULL_SCREEN.height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
-        // Wait for the user to close the window
         while (frame.isVisible()) {
             try {
                 Thread.sleep(1000);
