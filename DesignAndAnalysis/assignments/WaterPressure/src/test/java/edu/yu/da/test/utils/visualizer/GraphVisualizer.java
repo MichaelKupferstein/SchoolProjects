@@ -113,44 +113,53 @@ public class GraphVisualizer{
     }
 
     private void displayGraph(mxGraphComponent graphComponent){
+        JFrame frame = createFrame(graphComponent);
+        frame.setVisible(true);
+        keepFrameOpen(frame);
+    }
+
+    private JFrame createFrame(mxGraphComponent graphComponent) {
         JFrame frame = new JFrame();
         frame.getContentPane().add(graphComponent, BorderLayout.CENTER);
+        frame.getContentPane().add(createControlPanel(), BorderLayout.EAST);
+        frame.setSize(FULL_SCREEN.width, FULL_SCREEN.height);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        return frame;
+    }
 
+    private JScrollPane createControlPanel() {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
-
-        // Create a JScrollPane to enable scrolling
         JScrollPane scrollPane = new JScrollPane(controlPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(100, FULL_SCREEN.height));
+        addCheckboxesToControlPanel(controlPanel);
+        return scrollPane;
+    }
 
+    private void addCheckboxesToControlPanel(JPanel controlPanel) {
         HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
-
-        // Sort the vertices before creating the checkboxes
         List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
         Collections.sort(sortedVertices);
-
         for(String vertex : sortedVertices){
             JCheckBox checkbox = new JCheckBox(vertex, true);
-            checkbox.addItemListener(e -> {
-                String vertexToToggle = checkboxToVertexMap.get(checkbox);
-                Object cell = graphAdapter.getVertexToCellMap().get(vertexToToggle);
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    graphAdapter.getModel().setVisible(cell, true);
-                } else {
-                    graphAdapter.getModel().setVisible(cell, false);
-                }
-            });
+            checkbox.addItemListener(e -> toggleVertexVisibility(checkboxToVertexMap, checkbox, e));
             checkboxToVertexMap.put(checkbox, vertex);
             controlPanel.add(checkbox);
         }
+    }
 
-        frame.getContentPane().add(scrollPane, BorderLayout.EAST);
+    private void toggleVertexVisibility(HashMap<JCheckBox, String> checkboxToVertexMap, JCheckBox checkbox, ItemEvent e) {
+        String vertexToToggle = checkboxToVertexMap.get(checkbox);
+        Object cell = graphAdapter.getVertexToCellMap().get(vertexToToggle);
+        if (e.getStateChange() == ItemEvent.SELECTED) {
+            graphAdapter.getModel().setVisible(cell, true);
+        } else {
+            graphAdapter.getModel().setVisible(cell, false);
+        }
+    }
 
-        frame.setSize(FULL_SCREEN.width, FULL_SCREEN.height);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-
+    private void keepFrameOpen(JFrame frame) {
         while (frame.isVisible()) {
             try {
                 Thread.sleep(1000);
