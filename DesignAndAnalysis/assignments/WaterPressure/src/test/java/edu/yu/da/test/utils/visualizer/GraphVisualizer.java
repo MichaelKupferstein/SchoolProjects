@@ -1,10 +1,8 @@
 package edu.yu.da.test.utils.visualizer;
 
 
-import com.mxgraph.layout.mxCircleLayout;
-import com.mxgraph.layout.mxCompactTreeLayout;
-import com.mxgraph.layout.mxFastOrganicLayout;
-import com.mxgraph.layout.mxIGraphLayout;
+import com.mxgraph.layout.*;
+import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.model.mxCell;
 import com.mxgraph.shape.mxEllipseShape;
 import com.mxgraph.shape.mxIShape;
@@ -67,9 +65,19 @@ public class GraphVisualizer{
 
         displayGraph(graphComponent);
 
-
     }
 
+    public void visualizeGraphWithHierarchicalLayout() {
+        JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
+
+        // Create a JGraph component for the adapter
+        mxGraphComponent graphComponent = new mxGraphComponent(graphAdapter);
+
+        mxHierarchicalLayout layout = new mxHierarchicalLayout(graphAdapter);
+        layout.execute(graphAdapter.getDefaultParent());
+
+        displayGraph(graphComponent);
+    }
     private JGraphXAdapter<String, DefaultWeightedEdge> createGraphAdapter(){
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter  = new JGraphXAdapter<String, DefaultWeightedEdge>(this.graph) {
             @Override

@@ -21,6 +21,7 @@ class EdgeWeightedDirectedGraphTest {
         GraphVisualizer gv = new GraphVisualizer(graph);
         //gv.visualizeGraphWithCircleLayout();
         gv.visualizeGraphWithFastOrganicLayout();
+        //gv.visualizeGraphWithHierarchicalLayout();
     }
 
 
