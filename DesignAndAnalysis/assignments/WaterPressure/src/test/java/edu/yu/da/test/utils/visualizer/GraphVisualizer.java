@@ -1,14 +1,10 @@
 package edu.yu.da.test.utils.visualizer;
 
-
 import com.mxgraph.layout.*;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.model.mxCell;
-import com.mxgraph.shape.mxEllipseShape;
-import com.mxgraph.shape.mxIShape;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxConstants;
-import com.mxgraph.view.mxCellState;
 import edu.yu.da.DirectedEdge;
 import edu.yu.da.EdgeWeightedDirectedGraph;
 import org.jgrapht.Graph;
@@ -19,13 +15,19 @@ import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Map;
 
+/**
+ * A class to visualize graphs using JGraphX library.
+ */
 public class GraphVisualizer{
 
     Graph<String, DefaultWeightedEdge> graph;
     private final Dimension FULL_SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
 
+    /**
+     * Constructor for GraphVisualizer.
+     * @param graph The graph to be visualized.
+     */
     public GraphVisualizer(EdgeWeightedDirectedGraph graph) {
         this.graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
         for(String vertex : graph.vertices()) {
@@ -37,6 +39,9 @@ public class GraphVisualizer{
         }
     }
 
+    /**
+     * Visualizes the graph with a circle layout.
+     */
     public void visualizeGraphWithCircleLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -45,15 +50,16 @@ public class GraphVisualizer{
 
         // Create a layout for the graph
         mxCircleLayout layout = new mxCircleLayout(graphAdapter);
-//        double radius = layout.getRadius();
-//        layout.setX0((FULL_SCREEN.width / 2) - radius);
-//        layout.setY0((FULL_SCREEN.height / 2) - radius);
         layout.setMoveCircle(true);
 
         layout.execute(graphAdapter.getDefaultParent());
 
         displayGraph(graphComponent);
     }
+
+    /**
+     * Visualizes the graph with a fast organic layout.
+     */
     public void visualizeGraphWithFastOrganicLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -64,9 +70,11 @@ public class GraphVisualizer{
         layout.execute(graphAdapter.getDefaultParent());
 
         displayGraph(graphComponent);
-
     }
 
+    /**
+     * Visualizes the graph with a hierarchical layout.
+     */
     public void visualizeGraphWithHierarchicalLayout() {
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter = createGraphAdapter();
 
@@ -78,6 +86,11 @@ public class GraphVisualizer{
 
         displayGraph(graphComponent);
     }
+
+    /**
+     * Creates a JGraphXAdapter for the graph.
+     * @return The created JGraphXAdapter.
+     */
     private JGraphXAdapter<String, DefaultWeightedEdge> createGraphAdapter(){
         JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter  = new JGraphXAdapter<String, DefaultWeightedEdge>(this.graph) {
             @Override
@@ -109,7 +122,6 @@ public class GraphVisualizer{
             }
         };
 
-
         // Set the shape of the vertices
         for(String vertex : this.graph.vertexSet()){
             graphAdapter.setCellStyle("shape=ellipse;perimeter=ellipsePerimeter" , new Object[]{graphAdapter.getVertexToCellMap().get(vertex)});
@@ -118,6 +130,10 @@ public class GraphVisualizer{
         return graphAdapter;
     }
 
+    /**
+     * Displays the graph in a JFrame.
+     * @param graphComponent The graph component to be displayed.
+     */
     private void displayGraph(mxGraphComponent graphComponent){
         JFrame frame = new JFrame();
         frame.getContentPane().add(graphComponent);
@@ -134,5 +150,4 @@ public class GraphVisualizer{
             }
         }
     }
-
 }
