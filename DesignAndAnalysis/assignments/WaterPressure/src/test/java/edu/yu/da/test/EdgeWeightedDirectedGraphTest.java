@@ -20,5 +20,14 @@ class EdgeWeightedDirectedGraphTest {
         //gv.visualizeGraphWithHierarchicalLayout();
     }
 
+    @Test
+    void testWithVerSmallGraph(){
+        EdgeWeightedDirectedGraph graph = new EdgeWeightedDirectedGraph("Node 0");
+        graph.addEdge("Node 0","Node 1",1.0);
+        graph.addEdge("Node 1","Node 2",2.0);
+        GraphVisualizer gv = new GraphVisualizer(graph);
+        gv.visualizeGraphWithFastOrganicLayout();
+    }
+
 
 }

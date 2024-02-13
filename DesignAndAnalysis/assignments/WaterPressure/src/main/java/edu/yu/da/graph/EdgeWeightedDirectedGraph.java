@@ -35,6 +35,7 @@ public class EdgeWeightedDirectedGraph {
         if(startVertex == null || startVertex.length() == 0) throw new IllegalArgumentException("Start vertex must be non-null and not empty");
         this.startVertex = startVertex;
         this.E = 0;
+        this.V = new HashSet<>();
         this.adj = new HashMap<>();
     }
 
@@ -158,5 +159,14 @@ public class EdgeWeightedDirectedGraph {
         return s.toString();
     }
 
+    /**
+     * Checks if the vertex v exists in the graph.
+     *
+     * @param v the vertex
+     * @return true if the vertex v exists in the graph, false otherwise
+     */
+    public boolean vertexExists(String v) {
+        return V.contains(v);
+    }
 
 }

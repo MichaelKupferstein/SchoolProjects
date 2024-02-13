@@ -1,13 +1,22 @@
 package edu.yu.da;
 
+import edu.yu.da.graph.EdgeWeightedDirectedGraph;
+
 public class WaterPressure extends WaterPressureBase{
-    /**
-     * Constructor which supplies the initial input pump.
+
+    private EdgeWeightedDirectedGraph graph;
+    private boolean didIt = false;
+    private boolean secondInputPump = false;
+
+    /** Constructor which supplies the initial input pump.
      *
-     * @param initialInputPump@throws IllegalArgumentException if the pre-conditions are violated.
+     * @param initialStartPump, length must be greater than 0.
+     * @throws IllegalArgumentException if the pre-conditions are violated.
      */
     public WaterPressure(String initialInputPump) {
         super(initialInputPump);
+        if(initialInputPump.isEmpty()) throw new IllegalArgumentException("The initial input pump must not be empty.");
+        this.graph = new EdgeWeightedDirectedGraph(initialInputPump);
     }
 
     /**
@@ -18,10 +27,16 @@ public class WaterPressure extends WaterPressureBase{
      * addBlockage): this method only designates the pump as also being an input
      * pump.
      *
-     * @param secondInputPump@throws IllegalArgumentException if the pre-conditions are violated.
+     * @param secondInputPump
+     * @throws IllegalArgumentException if the pre-conditions are violated.
      */
     @Override
     public void addSecondInputPump(String secondInputPump) {
+        if(this.secondInputPump) throw new IllegalStateException("The second input pump has already been added.");
+        if(secondInputPump.isEmpty()) throw new IllegalArgumentException("The second input pump must not be empty.");
+        if(!graph.vertexExists(secondInputPump)) throw new IllegalArgumentException("The second input pump must already be in the channel system.");
+
+        this.secondInputPump = true;
 
     }
 
@@ -42,7 +57,12 @@ public class WaterPressure extends WaterPressureBase{
      */
     @Override
     public void addBlockage(String v, String w, double blockage) {
-
+        if (didIt) throw new IllegalStateException("minAmount() has previously been invoked.");
+        if(v.isEmpty() || w.isEmpty()) throw new IllegalArgumentException("The pump stations must not be empty.");
+        if(v.equals(w)) throw new IllegalArgumentException("The two pump stations must differ from one another");
+        if(blockage <= 0) throw new IllegalArgumentException("The magnitude of the blockage on the channel, must be > 0.");
+        if(graph.edgeExists(v, w)) throw new IllegalArgumentException("No channel can already exist between the two pump stations.");
+        graph.addEdge(v, w, blockage);
     }
 
     /**
