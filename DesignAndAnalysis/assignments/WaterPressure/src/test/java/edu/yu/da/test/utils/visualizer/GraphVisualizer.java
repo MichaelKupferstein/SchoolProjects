@@ -124,10 +124,26 @@ public class GraphVisualizer{
     private JFrame createFrame(mxGraphComponent graphComponent) {
         JFrame frame = new JFrame();
         frame.getContentPane().add(graphComponent, BorderLayout.CENTER);
-        frame.getContentPane().add(createControlPanel(), BorderLayout.EAST);
+
+        // Create a tabbed pane
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        // Add the control panel and the algorithm dropdown panel to the tabbed pane
+        tabbedPane.addTab("Control Panel", createControlPanel());
+        tabbedPane.addTab("Algorithm Selection", createAlgorithmPanel());
+
+        frame.getContentPane().add(tabbedPane, BorderLayout.EAST);
+
         frame.setSize(FULL_SCREEN.width, FULL_SCREEN.height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         return frame;
+    }
+
+    private JPanel createAlgorithmPanel() {
+        JPanel algorithmPanel = new JPanel();
+        algorithmPanel.setLayout(new BoxLayout(algorithmPanel, BoxLayout.Y_AXIS));
+        addAlgorithmButtons(algorithmPanel);
+        return algorithmPanel;
     }
 
     private JScrollPane createControlPanel() {
@@ -137,6 +153,14 @@ public class GraphVisualizer{
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(100, FULL_SCREEN.height));
 
+        addSelectButtons(controlPanel);
+        addSearchField(controlPanel);
+        addCheckboxesToControlPanel(controlPanel);
+
+        return scrollPane;
+    }
+
+    private void addSelectButtons(JPanel controlPanel) {
         // Create "Select All" button
         JButton selectAllButton = new JButton("Select All");
         selectAllButton.addActionListener(e -> selectAllNodes());
@@ -146,7 +170,9 @@ public class GraphVisualizer{
         JButton unselectAllButton = new JButton("Unselect All");
         unselectAllButton.addActionListener(e -> unselectAllNodes());
         controlPanel.add(unselectAllButton);
+    }
 
+    private void addSearchField(JPanel controlPanel) {
         // Create "Search" field
         JTextField searchField = new JTextField();
         searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, searchField.getPreferredSize().height)); // Set maximum size
@@ -162,9 +188,30 @@ public class GraphVisualizer{
             }
         });
         controlPanel.add(searchField);
+    }
 
-        addCheckboxesToControlPanel(controlPanel);
-        return scrollPane;
+    private void addAlgorithmButtons(JPanel controlPanel) {
+        // Create a separate panel for the buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+
+        // Create "Shortest Path" button
+        JButton shortestPathButton = new JButton("Shortest Path");
+        shortestPathButton.addActionListener(e -> visualizeShortestPath());
+        buttonPanel.add(shortestPathButton);
+
+        // Create "Minimum Spanning Tree" button
+        JButton minimumSpanningTreeButton = new JButton("Minimum Spanning Tree");
+        minimumSpanningTreeButton.addActionListener(e -> visualizeMinimumSpanningTree());
+        buttonPanel.add(minimumSpanningTreeButton);
+
+        // Create "Other Algorithm" button
+        JButton otherAlgorithmButton = new JButton("Other Algorithm");
+        otherAlgorithmButton.addActionListener(e -> visualizeOtherAlgorithm());
+        buttonPanel.add(otherAlgorithmButton);
+
+        // Add the button panel to the control panel
+        controlPanel.add(buttonPanel);
     }
 
     private void selectAllNodes() {
@@ -225,5 +272,18 @@ public class GraphVisualizer{
                 e.printStackTrace();
             }
         }
+    }
+
+    // Placeholder methods for the graph algorithms
+    private void visualizeShortestPath() {
+        // Implement the visualization for the shortest path algorithm
+    }
+
+    private void visualizeMinimumSpanningTree() {
+        // Implement the visualization for the minimum spanning tree algorithm
+    }
+
+    private void visualizeOtherAlgorithm() {
+        // Implement the visualization for the other algorithm
     }
 }
