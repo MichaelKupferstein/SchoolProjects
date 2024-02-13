@@ -2,6 +2,8 @@ package edu.yu.da;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The EdgeWeightedDirectedGraph class represents a directed graph where each edge has a weight.
@@ -11,12 +13,14 @@ public class EdgeWeightedDirectedGraph {
     private String startVertex; // The starting vertex of the graph
     private int E; // The number of edges in the graph
     private HashMap<String, ArrayList<DirectedEdge>> adj; // The adjacency list
+    private Set<String> V; // The set of vertices in the graph
 
     /**
      * Initializes an empty EdgeWeightedDirectedGraph with no vertices and no edges.
      */
     public EdgeWeightedDirectedGraph(){
         this.E = 0;
+        this.V = new HashSet<>();
         this.adj = new HashMap<>();
     }
 
@@ -48,7 +52,7 @@ public class EdgeWeightedDirectedGraph {
      * @return the number of vertices in the graph
      */
     public int V(){
-        return adj.size();
+        return V.size();
     }
 
     /**
@@ -87,6 +91,8 @@ public class EdgeWeightedDirectedGraph {
         String v = e.from();
         adj.putIfAbsent(v, new ArrayList<>());
         adj.get(v).add(e);
+        V.add(e.from());
+        V.add(e.to());
         E++;
     }
 
@@ -133,7 +139,7 @@ public class EdgeWeightedDirectedGraph {
      * @return all vertices in the graph as an Iterable
      */
     public Iterable<String> vertices(){
-        return this.adj.keySet();
+        return this.V;
     }
 
     /**
@@ -149,4 +155,6 @@ public class EdgeWeightedDirectedGraph {
         }
         return s.toString();
     }
+
+
 }
