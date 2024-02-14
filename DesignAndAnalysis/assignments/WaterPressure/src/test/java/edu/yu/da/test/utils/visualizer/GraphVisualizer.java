@@ -6,6 +6,8 @@ import com.mxgraph.swing.mxGraphComponent;
 import edu.yu.da.graph.DirectedEdge;
 import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.ext.JGraphXAdapter;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
@@ -27,13 +29,15 @@ import java.util.List;
 public class GraphVisualizer{
 
     // The graph to visualize
-    Graph<String, DefaultWeightedEdge> graph;
+    private Graph<String, DefaultWeightedEdge> graph;
     // The full screen dimension
     private final Dimension FULL_SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
     // The adapter to convert the graph into a JGraph
     private JGraphXAdapter<String, DefaultWeightedEdge> graphAdapter;
     // A map to associate checkboxes with vertices
-    HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
+    private HashMap<JCheckBox, String> checkboxToVertexMap = new HashMap<>();
+    private JComboBox<String> sourceVertexComboBox;
+    private JComboBox<String> targetVertexComboBox;
 
     /**
      * Constructs a GraphVisualizer with the given graph.
@@ -181,7 +185,17 @@ public class GraphVisualizer{
         JPanel algorithmPanel = new JPanel();
         algorithmPanel.setLayout(new BoxLayout(algorithmPanel, BoxLayout.Y_AXIS));
         addAlgorithmButtons(algorithmPanel);
+        addSourceAndTargetVertexComboBoxes(algorithmPanel);
+        addClearPathButton(algorithmPanel);
+
         return algorithmPanel;
+    }
+
+    private void addClearPathButton(JPanel algorithmPanel){
+        // Create "Clear Path" button
+        JButton clearPathButton = new JButton("Clear Path");
+        clearPathButton.addActionListener(e -> clearPath());
+        algorithmPanel.add(clearPathButton);
     }
 
     /**
@@ -264,8 +278,16 @@ public class GraphVisualizer{
         otherAlgorithmButton.addActionListener(e -> visualizeOtherAlgorithm());
         buttonPanel.add(otherAlgorithmButton);
 
+
+
         // Add the button panel to the control panel
         controlPanel.add(buttonPanel);
+    }
+
+    private void clearPath() {
+        for (DefaultWeightedEdge edge : graph.edgeSet()) {
+            graphAdapter.setCellStyle("strokeColor=#6482B9", new Object[]{graphAdapter.getEdgeToCellMap().get(edge)});
+        }
     }
 
     /**
@@ -352,12 +374,52 @@ public class GraphVisualizer{
         }
     }
 
+    private void addSourceAndTargetVertexComboBoxes(JPanel controlPanel){
+        //Create source vertext selection
+        controlPanel.add(new JLabel("Source Vertex:"));
+        List<String> sortedVertices = new ArrayList<>(this.graph.vertexSet());
+        Collections.sort(sortedVertices, (v1, v2) -> {
+            int num1 = Integer.parseInt(v1.substring(5)); // Assuming the vertex name is "Node X"
+            int num2 = Integer.parseInt(v2.substring(5));
+            return Integer.compare(num1, num2);
+        });
+        sourceVertexComboBox = new JComboBox<>(sortedVertices.toArray(new String[0]));
+        sourceVertexComboBox.setMaximumSize(new Dimension(200,30));
+        controlPanel.add(sourceVertexComboBox);
+
+        //Create target vertext selection
+        controlPanel.add(new JLabel("Target Vertex:"));
+        targetVertexComboBox = new JComboBox<>(sortedVertices.toArray(new String[0]));
+        targetVertexComboBox.setMaximumSize(new Dimension(200,30));
+        controlPanel.add(targetVertexComboBox);
+    }
+
     /**
      * Visualizes the shortest path algorithm.
      * This is a placeholder method to be implemented.
      */
     private void visualizeShortestPath() {
-        // Implement the visualization for the shortest path algorithm
+        String source = (String) sourceVertexComboBox.getSelectedItem();
+        String target = (String) targetVertexComboBox.getSelectedItem();
+        List<String> shortestPath = shortestPath(source, target);
+
+        if(shortestPath == null){
+            JOptionPane.showMessageDialog(null, "There is no path from " + source + " to " + target, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        for(int i = 0; i < shortestPath.size() - 1; i++){
+            String vertex1 = shortestPath.get(i);
+            String vertex2 = shortestPath.get(i + 1);
+            DefaultWeightedEdge edge = graph.getEdge(vertex1, vertex2);
+            graphAdapter.setCellStyle("strokeColor=red", new Object[]{graphAdapter.getEdgeToCellMap().get(edge)});
+        }
+    }
+
+    private List<String> shortestPath(String source, String target){
+        DijkstraShortestPath<String, DefaultWeightedEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
+        GraphPath<String,DefaultWeightedEdge> path = dijkstraAlg.getPath(source, target);
+        return path != null ? path.getVertexList() : null;
     }
 
     /**
