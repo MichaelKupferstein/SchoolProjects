@@ -1,4 +1,4 @@
-package Graph.edge.tests;
+package Tests.Graph.edge;
 
 import Graph.edges.DirectedEdge;
 import org.junit.jupiter.api.Test;
