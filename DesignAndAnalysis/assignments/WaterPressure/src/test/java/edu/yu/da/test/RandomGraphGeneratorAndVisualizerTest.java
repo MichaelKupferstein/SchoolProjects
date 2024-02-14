@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-class EdgeWeightedDirectedGraphTest {
+class RandomGraphGeneratorAndVisualizerTest {
 
     @Test
     void testRandomGraphGenerator() throws Exception {
@@ -36,7 +36,7 @@ class EdgeWeightedDirectedGraphTest {
     void testingSortingEdges(){
         EdgeWeightedDirectedGraph graph = new RandomGraphGenerator(10).generate();
         List<DirectedEdge> edges = new ArrayList<>((Collection) graph.edges());
-        edges.sort(Comparator.reverseOrder());
+        Collections.sort(edges);
         for(DirectedEdge e : edges){
             System.out.println(e.from() + " -> " + e.to() + " : " + e.weight());
         }
