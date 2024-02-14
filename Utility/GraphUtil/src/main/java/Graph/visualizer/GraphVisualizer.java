@@ -2,6 +2,7 @@ package Graph.visualizer;
 
 
 import Graph.edges.DirectedEdge;
+import Graph.graphs.BaseGraph;
 import Graph.graphs.EdgeWeightedDirectedGraph;
 import com.mxgraph.layout.*;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
@@ -47,7 +48,7 @@ public class GraphVisualizer{
      * Constructs a GraphVisualizer with the given graph.
      * @param graph The graph to visualize
      */
-    public GraphVisualizer(EdgeWeightedDirectedGraph graph) {
+    public GraphVisualizer(BaseGraph<DirectedEdge> graph) {
         this.graph = new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
         for(String vertex : graph.vertices()) {
             this.graph.addVertex(vertex);
