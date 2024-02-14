@@ -14,10 +14,14 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.util.*;
 import java.util.List;
 
@@ -150,7 +154,40 @@ public class GraphVisualizer{
     private void displayGraph(mxGraphComponent graphComponent){
         JFrame frame = createFrame(graphComponent);
         frame.setVisible(true);
+        graphComponent.setWheelScrollingEnabled(true);
+        graphComponent.getVerticalScrollBar().setUnitIncrement(10);
+        graphComponent.getHorizontalScrollBar().setUnitIncrement(10);
+
+        graphComponent.setPanning(true);
+        addMouseMotionListener(graphComponent);
+
         keepFrameOpen(frame);
+    }
+    private void addMouseMotionListener(mxGraphComponent graphComponent) {
+        graphComponent.getGraphControl().addMouseMotionListener(new MouseMotionListener() {
+            Point lastPoint = null;
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (lastPoint != null) {
+                    int dx = e.getX() - lastPoint.x;
+                    int dy = e.getY() - lastPoint.y;
+
+                    Rectangle view = graphComponent.getViewport().getViewRect();
+                    view.x -= dx;
+                    view.y -= dy;
+
+                    graphComponent.getGraphControl().scrollRectToVisible(view);
+                }
+
+                lastPoint = e.getPoint();
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                lastPoint = null;
+            }
+        });
     }
 
     /**
@@ -207,6 +244,7 @@ public class GraphVisualizer{
         JScrollPane scrollPane = new JScrollPane(controlPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(100, FULL_SCREEN.height));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         addSelectButtons(controlPanel);
         addSearchField(controlPanel);
