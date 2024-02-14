@@ -1,5 +1,7 @@
 package edu.yu.da;
 
+import Graph.graphs.EdgeWeightedGraph;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;

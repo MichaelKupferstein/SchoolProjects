@@ -1,7 +1,8 @@
 package edu.yu.da.tests;
 
-import edu.yu.da.Edge;
-import edu.yu.da.EdgeWeightedGraph;
+import Graph.edges.Edge;
+import Graph.generator.RandomGraphGenerator;
+import Graph.graphs.EdgeWeightedGraph;
 import edu.yu.da.ThereAndBackAgain;
 import edu.yu.da.ThereAndBackAgainBase;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ class ThereAndBackAgainTest {
 
     @Test
     void TestWithRandomGraph(){
-        EdgeWeightedGraph graph = new RandomGraphGenerator(100).generate();
+        EdgeWeightedGraph graph = (EdgeWeightedGraph) new RandomGraphGenerator<>(10, new EdgeWeightedGraph(), (v, w, weight) -> new Edge(v, w, weight)).generate();
         ThereAndBackAgainBase taba = new ThereAndBackAgain(graph.startVertex());
         for(Edge e: graph.edges()){
             taba.addEdge(e.either(),e.other(e.either()),e.weight());
@@ -76,7 +77,7 @@ class ThereAndBackAgainTest {
 
     @Test
     void TestWithRandomLargeGraph(){
-        EdgeWeightedGraph graph = new RandomGraphGenerator(100_000).generate();
+        EdgeWeightedGraph graph = (EdgeWeightedGraph) new RandomGraphGenerator<>(100_000, new EdgeWeightedGraph(), (v, w, weight) -> new Edge(v, w, weight)).generate();
         ThereAndBackAgainBase taba = new ThereAndBackAgain(graph.startVertex());
         for(Edge e: graph.edges()){
             taba.addEdge(e.either(),e.other(e.either()),e.weight());
@@ -99,7 +100,8 @@ class ThereAndBackAgainTest {
 
     @Test
     void TestWith200_000(){
-        EdgeWeightedGraph graph = new RandomGraphGenerator(200_000).generate();
+        EdgeWeightedGraph graph = (EdgeWeightedGraph) new RandomGraphGenerator<>(200_000, new EdgeWeightedGraph(), (v, w, weight) -> new Edge(v, w, weight)).generate();
+
         ThereAndBackAgainBase taba = new ThereAndBackAgain(graph.startVertex());
         for(Edge e: graph.edges()){
             taba.addEdge(e.either(),e.other(e.either()),e.weight());

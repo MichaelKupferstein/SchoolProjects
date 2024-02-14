@@ -1,6 +1,7 @@
 package edu.yu.da.tests;
+import Graph.graphs.EdgeWeightedGraph;
 import edu.yu.da.Dijkstra;
-import edu.yu.da.EdgeWeightedGraph;
+
 
 import org.junit.jupiter.api.Test;
 

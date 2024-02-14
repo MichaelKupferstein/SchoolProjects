@@ -1,5 +1,8 @@
 package edu.yu.da;
 
+import Graph.edges.Edge;
+import Graph.graphs.EdgeWeightedGraph;
+
 import java.util.*;
 
 public class Dijkstra {

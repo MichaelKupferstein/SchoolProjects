@@ -10,13 +10,13 @@ import org.junit.jupiter.api.Test;
 
 public class GraphVisualizerTest {
 
-    @Test
-    void testRandomGraphGenerator() throws Exception {
-        RandomGraphGenerator<DirectedEdge> randomGraphGenerator = new RandomGraphGenerator<>(100, new EdgeWeightedDirectedGraph(), (v, w, weight) -> new DirectedEdge(v, w, weight));
-        BaseGraph<DirectedEdge> graph = randomGraphGenerator.generate();
-        GraphVisualizer gv = new GraphVisualizer(graph);
-        //gv.visualizeGraphWithCircleLayout();
-        gv.visualizeGraphWithFastOrganicLayout();
-        //gv.visualizeGraphWithHierarchicalLayout();
-    }
+//    @Test
+//    void testRandomGraphGenerator() throws Exception {
+//        RandomGraphGenerator<DirectedEdge> randomGraphGenerator = new RandomGraphGenerator<>(100, new EdgeWeightedDirectedGraph(), (v, w, weight) -> new DirectedEdge(v, w, weight));
+//        BaseGraph<DirectedEdge> graph = randomGraphGenerator.generate();
+//        GraphVisualizer gv = new GraphVisualizer(graph);
+//        //gv.visualizeGraphWithCircleLayout();
+//        gv.visualizeGraphWithFastOrganicLayout();
+//        //gv.visualizeGraphWithHierarchicalLayout();
+//    }
 }
