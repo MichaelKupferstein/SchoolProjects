@@ -5,7 +5,7 @@ package edu.yu.da.graph;
  * This class is a slightly modified version of the Edge class from
  * https://algs4.cs.princeton.edu/43mst/Edge.java.html to fit the project requirements.
  */
-public class DirectedEdge {
+public class DirectedEdge implements Comparable<DirectedEdge>{
     private final String v; // starting vertex
     private final String w; // ending vertex
     private final double weight; // weight of the edge

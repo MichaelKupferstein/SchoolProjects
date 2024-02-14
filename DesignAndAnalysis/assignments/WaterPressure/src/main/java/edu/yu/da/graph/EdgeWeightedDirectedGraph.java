@@ -1,7 +1,5 @@
 package edu.yu.da.graph;
 
-import edu.yu.da.graph.DirectedEdge;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,16 +11,16 @@ import java.util.Set;
  */
 public class EdgeWeightedDirectedGraph {
     private String startVertex; // The starting vertex of the graph
-    private int E; // The number of edges in the graph
     private HashMap<String, ArrayList<DirectedEdge>> adj; // The adjacency list
-    private Set<String> V; // The set of vertices in the graph
+    private Set<String> vertices; // The set of vertices in the graph
+    private Set<DirectedEdge> edges; // The set of edges in the graph
 
     /**
      * Initializes an empty EdgeWeightedDirectedGraph with no vertices and no edges.
      */
     public EdgeWeightedDirectedGraph(){
-        this.E = 0;
-        this.V = new HashSet<>();
+        this.vertices = new HashSet<>();
+        this.edges = new HashSet<>();
         this.adj = new HashMap<>();
     }
 
@@ -34,9 +32,10 @@ public class EdgeWeightedDirectedGraph {
     public EdgeWeightedDirectedGraph(String startVertex){
         if(startVertex == null || startVertex.length() == 0) throw new IllegalArgumentException("Start vertex must be non-null and not empty");
         this.startVertex = startVertex;
-        this.E = 0;
-        this.V = new HashSet<>();
+        this.vertices = new HashSet<>();
+        this.edges = new HashSet<>();
         this.adj = new HashMap<>();
+        this.vertices.add(startVertex);
     }
 
     /**
@@ -55,7 +54,7 @@ public class EdgeWeightedDirectedGraph {
      * @return the number of vertices in the graph
      */
     public int V(){
-        return V.size();
+        return vertices.size();
     }
 
     /**
@@ -64,7 +63,7 @@ public class EdgeWeightedDirectedGraph {
      * @return the number of edges in the graph
      */
     public int E(){
-        return E;
+        return edges.size();
     }
 
     /**
@@ -94,9 +93,9 @@ public class EdgeWeightedDirectedGraph {
         String v = e.from();
         adj.putIfAbsent(v, new ArrayList<>());
         adj.get(v).add(e);
-        V.add(e.from());
-        V.add(e.to());
-        E++;
+        vertices.add(e.from());
+        vertices.add(e.to());
+        edges.add(e);
     }
 
     /**
@@ -127,13 +126,7 @@ public class EdgeWeightedDirectedGraph {
      * @return all edges in the graph as an Iterable
      */
     public Iterable<DirectedEdge> edges(){
-        ArrayList<DirectedEdge> list = new ArrayList<>();
-        for(String v : adj.keySet()){
-            for(DirectedEdge e : adj.get(v)){
-                list.add(e);
-            }
-        }
-        return list;
+        return this.edges;
     }
 
     /**
@@ -142,7 +135,7 @@ public class EdgeWeightedDirectedGraph {
      * @return all vertices in the graph as an Iterable
      */
     public Iterable<String> vertices(){
-        return this.V;
+        return this.vertices;
     }
 
     /**
@@ -166,7 +159,11 @@ public class EdgeWeightedDirectedGraph {
      * @return true if the vertex v exists in the graph, false otherwise
      */
     public boolean vertexExists(String v) {
-        return V.contains(v);
+        return vertices.contains(v);
+    }
+
+    public Set<DirectedEdge> getEdges(){
+        return this.edges;
     }
 
 }
