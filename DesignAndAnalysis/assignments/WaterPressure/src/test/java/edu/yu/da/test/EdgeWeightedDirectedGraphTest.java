@@ -12,7 +12,7 @@ class EdgeWeightedDirectedGraphTest {
 
     @Test
     void testRandomGraphGenerator() throws Exception {
-        RandomGraphGenerator randomGraphGenerator = new RandomGraphGenerator(50);
+        RandomGraphGenerator randomGraphGenerator = new RandomGraphGenerator(100);
         EdgeWeightedDirectedGraph graph = randomGraphGenerator.generate();
         GraphVisualizer gv = new GraphVisualizer(graph);
         //gv.visualizeGraphWithCircleLayout();

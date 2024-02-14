@@ -8,6 +8,7 @@ import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.alg.spanning.PrimMinimumSpanningTree;
 import org.jgrapht.ext.JGraphXAdapter;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
@@ -17,9 +18,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -427,7 +426,23 @@ public class GraphVisualizer{
      * This is a placeholder method to be implemented.
      */
     private void visualizeMinimumSpanningTree() {
-        // Implement the visualization for the minimum spanning tree algorithm
+        //Create an instance of the PrimMinimumSpanningTree algorithm
+        PrimMinimumSpanningTree<String, DefaultWeightedEdge> primAlg = new PrimMinimumSpanningTree<>(graph);
+        //Get the edges of the minimum spanning tree
+        Set<DefaultWeightedEdge> spanningTreeEdges = primAlg.getSpanningTree().getEdges();
+
+        //Iterate over all the edges in the graoh
+        for(DefaultWeightedEdge edge : graph.edgeSet()){
+            //If the edge is part of the minimum spanning tree, change its color to red
+            if(spanningTreeEdges.contains(edge)){
+                graphAdapter.setCellStyle("strokeColor=red", new Object[]{graphAdapter.getEdgeToCellMap().get(edge)});
+            }else {
+                //Otherwise, change its color to the default color
+                graphAdapter.setCellStyle("strokeColor=#6482B9", new Object[]{graphAdapter.getEdgeToCellMap().get(edge)});
+            }
+
+        }
+
     }
 
     /**
