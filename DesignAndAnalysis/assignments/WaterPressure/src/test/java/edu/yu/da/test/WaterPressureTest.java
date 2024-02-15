@@ -64,7 +64,7 @@ class WaterPressureTest {
         if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
         WaterPressure wp = new WaterPressure("Node 0");
         addBlockages(wp, graph);
-        assertEquals(7.0, wp.minAmount());
+        assertEquals(6.0, wp.minAmount());
 
         wp = new WaterPressure("Node 0");
         graph.addEdge(new DirectedEdge("Node 8", "Node 9", 7.5));
@@ -79,6 +79,23 @@ class WaterPressureTest {
         wp.addSecondInputPump("Node 8");
         if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
         assertEquals(-1.0, wp.minAmount());
+    }
+
+    @Test
+    void testWithSmallGraph() {
+        EdgeWeightedDirectedGraph graph = new EdgeWeightedDirectedGraph();
+        graph.addEdge(new DirectedEdge("Node 0", "Node 1", 3.0));
+        graph.addEdge(new DirectedEdge("Node 0", "Node 3", 7.0));
+        graph.addEdge(new DirectedEdge("Node 0", "Node 4", 8.0));
+        graph.addEdge(new DirectedEdge("Node 1", "Node 2", 1.0));
+        graph.addEdge(new DirectedEdge("Node 1", "Node 3", 4.0));
+        graph.addEdge(new DirectedEdge("Node 3", "Node 2", 2.0));
+        graph.addEdge(new DirectedEdge("Node 4", "Node 3", 3.0));
+        WaterPressure wp = new WaterPressure("Node 0");
+        addBlockages(wp, graph);
+        assertEquals(8.0, wp.minAmount());
+        wp.addSecondInputPump("Node 4");
+        assertEquals(3.0, wp.minAmount());
     }
 
     @Test

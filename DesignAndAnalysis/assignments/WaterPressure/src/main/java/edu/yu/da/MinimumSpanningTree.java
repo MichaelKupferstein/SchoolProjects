@@ -15,7 +15,6 @@ public class MinimumSpanningTree {
     private IndexMinPQ<Double> pq;
     private String startVertex;
     private String secondStartVertex;
-    private DirectedEdge maxWeightEdge;
     private Set<String> connectedVertices;
     private EdgeWeightedDirectedGraph graph;
 
@@ -56,21 +55,21 @@ public class MinimumSpanningTree {
         connectedVertices.add(v);
         for (DirectedEdge e : G.adj(v)) {
             String w = e.to();
-            if (marked.get(w)) continue;
             if (e.weight() < distTo.get(w)) {
                 distTo.put(w, e.weight());
                 edgeTo.put(w, e);
-                if (maxWeightEdge == null || e.weight() > maxWeightEdge.weight()) {
-                    maxWeightEdge = e;
-                }
                 if (pq.contains(w)) pq.changeKey(w, distTo.get(w));
-                else pq.insert(w, distTo.get(w));
+                else if (!marked.get(w)) pq.insert(w, distTo.get(w));
             }
         }
     }
 
     public double getMaxWeightEdge() {
-        return maxWeightEdge.weight();
+        double maxWeight = 0;
+        for(double e : distTo.values()){
+            if (e > maxWeight) maxWeight = e;
+        }
+        return maxWeight;
     }
 
     public boolean isGraphConnected() {

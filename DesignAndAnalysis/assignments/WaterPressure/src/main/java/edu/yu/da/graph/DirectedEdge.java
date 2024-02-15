@@ -1,5 +1,7 @@
 package edu.yu.da.graph;
 
+import java.util.Objects;
+
 /**
  * Represents an directed edge in a graph.
  * This class is a slightly modified version of the Edge class from
@@ -75,5 +77,28 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
                 ", to='" + to + '\'' +
                 ", weight=" + weight +
                 '}';
+    }
+
+
+    /**
+     * Compares this edge to the specified object.
+     * @param o the object to compare this edge against
+     * @return true if the given object represents a directed edge that is equivalent to this edge, false otherwise
+     * */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DirectedEdge that = (DirectedEdge) o;
+        return Double.compare(weight, that.weight) == 0 && Objects.equals(from, that.from) && Objects.equals(to, that.to);
+    }
+
+    /**
+     * Returns a hash code for this edge.
+     * @return a hash code for this edge
+     * */
+    @Override
+    public int hashCode() {
+        return Objects.hash(from, to, weight);
     }
 }
