@@ -81,7 +81,6 @@ class WaterPressureTest {
         assertEquals(-1.0, wp.minAmount());
     }
 
-    //make tests that make sure all method throw appropriate exceptions
     @Test
     void testWaterPressureThrows(){
         assertThrows(IllegalArgumentException.class, () -> new WaterPressure(""));
