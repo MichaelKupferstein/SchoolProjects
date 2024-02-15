@@ -6,8 +6,8 @@ package edu.yu.da.graph;
  * https://algs4.cs.princeton.edu/43mst/Edge.java.html to fit the project requirements.
  */
 public class DirectedEdge implements Comparable<DirectedEdge>{
-    private final String v; // starting vertex
-    private final String w; // ending vertex
+    private final String from; // starting vertex
+    private final String to; // ending vertex
     private final double weight; // weight of the edge
 
     /**
@@ -18,9 +18,9 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
      * @param w the ending vertex
      * @param weight the weight of the edge
      */
-    public DirectedEdge(String v, String w, double weight){
-        this.v = v;
-        this.w = w;
+    public DirectedEdge(String from, String to, double weight){
+        this.from = from;
+        this.to = to;
         this.weight = weight;
     }
 
@@ -39,7 +39,7 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
      * @return the starting vertex of the directed edge
      */
     public String from(){
-        return v;
+        return from;
     }
 
     /**
@@ -48,7 +48,7 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
      * @return the ending vertex of the directed edge
      */
     public String to(){
-        return w;
+        return to;
     }
 
     /**
@@ -71,8 +71,8 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
     @Override
     public String toString() {
         return "Edge{" +
-                "from='" + v + '\'' +
-                ", to='" + w + '\'' +
+                "from='" + from + '\'' +
+                ", to='" + to + '\'' +
                 ", weight=" + weight +
                 '}';
     }
