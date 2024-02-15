@@ -117,7 +117,8 @@ public class EdgeWeightedDirectedGraph {
      * @return the edges incident to vertex v as an Iterable
      */
     public Iterable<DirectedEdge> adj(String v){
-        return adj.get(v);
+        if(adj.get(v)!=null) return adj.get(v);
+        else return new ArrayList<DirectedEdge>();
     }
 
     /**

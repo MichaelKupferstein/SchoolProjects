@@ -6,7 +6,8 @@ public class WaterPressure extends WaterPressureBase{
 
     private EdgeWeightedDirectedGraph graph;
     private boolean didIt = false;
-    private boolean secondInputPump = false;
+    private boolean isSecondInputPump = false;
+    private String initialPump, secondInputPump;
 
     /** Constructor which supplies the initial input pump.
      *
@@ -17,6 +18,7 @@ public class WaterPressure extends WaterPressureBase{
         super(initialInputPump);
         if(initialInputPump.isEmpty()) throw new IllegalArgumentException("The initial input pump must not be empty.");
         this.graph = new EdgeWeightedDirectedGraph(initialInputPump);
+        this.initialPump = initialInputPump;
     }
 
     /**
@@ -32,11 +34,11 @@ public class WaterPressure extends WaterPressureBase{
      */
     @Override
     public void addSecondInputPump(String secondInputPump) {
-        if(this.secondInputPump) throw new IllegalStateException("The second input pump has already been added.");
+        if(this.isSecondInputPump) throw new IllegalStateException("The second input pump has already been added.");
         if(secondInputPump.isEmpty()) throw new IllegalArgumentException("The second input pump must not be empty.");
         if(!graph.vertexExists(secondInputPump)) throw new IllegalArgumentException("The second input pump must already be in the channel system.");
-
-        this.secondInputPump = true;
+        this.isSecondInputPump = true;
+        this.secondInputPump = secondInputPump;
 
     }
 
@@ -81,6 +83,8 @@ public class WaterPressure extends WaterPressureBase{
      */
     @Override
     public double minAmount() {
-        return 0;
+        MinimumSpanningTree mst = new MinimumSpanningTree(this.graph,this.initialPump,this.secondInputPump);
+        if(mst.isGraphConnected()) return mst.getMaxWeightEdge();
+        else return -1;
     }
 }

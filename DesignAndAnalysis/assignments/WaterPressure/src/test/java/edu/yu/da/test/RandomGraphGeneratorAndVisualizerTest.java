@@ -4,7 +4,7 @@ package edu.yu.da.test;
 import edu.yu.da.graph.DirectedEdge;
 import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import edu.yu.da.test.utils.visualizer.GraphVisualizer;
-import edu.yu.da.tests.RandomGraphGenerator;
+import edu.yu.da.test.utils.RandomGraphGenerator;
 
 
 import org.junit.jupiter.api.Test;

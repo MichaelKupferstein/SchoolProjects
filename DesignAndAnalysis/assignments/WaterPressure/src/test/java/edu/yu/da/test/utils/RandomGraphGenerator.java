@@ -1,4 +1,4 @@
-package edu.yu.da.tests;
+package edu.yu.da.test.utils;
 
 import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import edu.yu.da.graph.DirectedEdge;
