@@ -34,9 +34,10 @@ public class WaterPressure extends WaterPressureBase{
      */
     @Override
     public void addSecondInputPump(String secondInputPump) {
-        if(this.isSecondInputPump) throw new IllegalStateException("The second input pump has already been added.");
         if(secondInputPump.isEmpty()) throw new IllegalArgumentException("The second input pump must not be empty.");
+        if(secondInputPump.equals(initialPump)) throw new IllegalArgumentException("The second input pump must differ from the initial input pump.");
         if(!graph.vertexExists(secondInputPump)) throw new IllegalArgumentException("The second input pump must already be in the channel system.");
+        if(this.isSecondInputPump) throw new IllegalStateException("The second input pump has already been added.");
         this.isSecondInputPump = true;
         this.secondInputPump = secondInputPump;
 
@@ -84,6 +85,7 @@ public class WaterPressure extends WaterPressureBase{
     @Override
     public double minAmount() {
         MinimumSpanningTree mst = new MinimumSpanningTree(this.graph,this.initialPump,this.secondInputPump);
+        didIt = true;
         if(mst.isGraphConnected()) return mst.getMaxWeightEdge();
         else return -1;
     }

@@ -17,8 +17,10 @@ public class MinimumSpanningTree {
     private String secondStartVertex;
     private DirectedEdge maxWeightEdge;
     private Set<String> connectedVertices;
+    private EdgeWeightedDirectedGraph graph;
 
     public MinimumSpanningTree(EdgeWeightedDirectedGraph G, String startVertex, String secondStartVertex){
+        this.graph = G;
         edgeTo = new HashMap<>();
         distTo = new HashMap<>();
         marked = new HashMap<>();
@@ -33,13 +35,11 @@ public class MinimumSpanningTree {
         for(String v : G.vertices()){
             marked.put(v, false);
         }
-        if(secondStartVertex != null) {
-            marked.put(secondStartVertex, true);
-        }
+        if(secondStartVertex != null) marked.put(secondStartVertex, true);
+
         mst(G, startVertex);
-        if (secondStartVertex != null && connectedVertices.size() < G.V()) {
-            mst(G, secondStartVertex);
-        }
+        if (secondStartVertex != null && connectedVertices.size() < G.V()) mst(G, secondStartVertex);
+
     }
 
     private void mst(EdgeWeightedDirectedGraph G, String s) {
@@ -74,7 +74,7 @@ public class MinimumSpanningTree {
     }
 
     public boolean isGraphConnected() {
-        return connectedVertices.size() >= edgeTo.size();
+        return connectedVertices.size() >= graph.V();
     }
 
 }
