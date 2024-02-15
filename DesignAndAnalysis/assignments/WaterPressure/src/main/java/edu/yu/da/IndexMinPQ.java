@@ -1,19 +1,21 @@
 package edu.yu.da;
 
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 
 /**
  * Code from Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayne
  * https://algs4.cs.princeton.edu/24pq/IndexMinPQ.java.html
+ * Modified to work with string keys
  * */
 
 public class IndexMinPQ<Key extends Comparable<Key>>{
 
     private int maxN; // maximum number of elements on PQ
     private int n; // number of elements on PQ
-    private int[] pq; // binary heap using 1-based indexing
-    private int[] qp; // inverse of pq - qp[pq[i]] = pq[qp[i]] = i
-    private Key[] keys; // keys[i] = priority of i
+    private String[] pq; // binary heap using 1-based indexing
+    private HashMap<String, Integer> qp; // inverse of pq - qp[pq[i]] = pq[qp[i]] = i
+    private HashMap<String, Key> keys; // keys[i] = priority of i
 
     /**
      * Initializes an empty indexed priority queue with indices between {@code 0}
@@ -27,12 +29,9 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
         if(maxN < 0) throw new IllegalArgumentException();
         this.maxN = maxN;
         n = 0;
-        keys = (Key[]) new Comparable[maxN + 1]; // make this of length maxN??
-        pq = new int[maxN + 1];
-        qp = new int[maxN + 1]; // make this of length maxN??
-        for(int i = 0; i <= maxN; i++){
-            qp[i] = -1;
-        }
+        keys = new HashMap<>();
+        pq = new String[maxN + 1];
+        qp = new HashMap<>();
     }
 
     /**
@@ -53,9 +52,9 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      *         {@code false} otherwise
      * @throws IllegalArgumentException unless {@code 0 <= i < maxN}
      */
-    public boolean contains(int i){
+    public boolean contains(String i){
         validateIndex(i);
-        return qp[i] != -1;
+        return qp.containsKey(i);
     }
 
     /**
@@ -76,13 +75,13 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException if there already is an item associated
      *         with index {@code i}
      */
-    public void insert(int i, Key key){
+    public void insert(String i, Key key){
         validateIndex(i);
         if(contains(i)) throw new IllegalArgumentException("Index is already in the priority queue");
         n++;
-        qp[i] = n;
+        qp.put(i, n);
         pq[n] = i;
-        keys[i] = key;
+        keys.put(i, key);
         swim(n);
     }
 
@@ -92,7 +91,7 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @return an index associated with a minimum key
      * @throws NoSuchElementException if this priority queue is empty
      */
-    public int minIndex(){
+    public String minIndex(){
         if(n == 0) throw new NoSuchElementException("Priority queue underflow");
         return pq[1];
     }
@@ -105,7 +104,7 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      */
     public Key minKey(){
         if(n == 0) throw new NoSuchElementException("Priority queue underflow");
-        return keys[pq[1]];
+        return keys.get(pq[1]);
     }
 
     /**
@@ -114,15 +113,15 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @return an index associated with a minimum key
      * @throws NoSuchElementException if this priority queue is empty
      */
-    public int delMin(){
+    public String delMin(){
         if(n == 0) throw new NoSuchElementException("Priority queue underflow");
-        int min = pq[1];
+        String min = pq[1];
         exch(1, n--);
         sink(1);
-        assert min == pq[n + 1];
-        qp[min] = -1;
-        keys[min] = null;
-        pq[n + 1] = -1;
+        assert min.equals(pq[n + 1]);
+        qp.remove(min);
+        keys.remove(min);
+        pq[n + 1] = null;
         return min;
     }
 
@@ -134,10 +133,10 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException unless {@code 0 <= i < maxN}
      * @throws NoSuchElementException no key is associated with index {@code i}
      */
-    public Key keyOf(int i){
+    public Key keyOf(String i){
         validateIndex(i);
         if(!contains(i)) throw new NoSuchElementException("Index is not in the priority queue");
-        else return keys[i];
+        else return keys.get(i);
     }
 
     /**
@@ -148,12 +147,12 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException unless {@code 0 <= i < maxN}
      * @throws NoSuchElementException no key is associated with index {@code i}
      */
-    public void changeKey(int i, Key key){
+    public void changeKey(String i, Key key){
         validateIndex(i);
         if(!contains(i)) throw new NoSuchElementException("Index is not in the priority queue");
-        keys[i] = key;
-        swim(qp[i]);
-        sink(qp[i]);
+        keys.put(i, key);
+        swim(qp.get(i));
+        sink(qp.get(i));
     }
 
     /**
@@ -166,15 +165,15 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException if {@code key >= keyOf(i)}
      * @throws IllegalArgumentException if {@code key == null}
      */
-    public void decreaseKey(int i, Key key){
+    public void decreaseKey(String i, Key key){
         validateIndex(i);
         if(!contains(i)) throw new NoSuchElementException("Index is not in the priority queue");
-        if (keys[i].compareTo(key) == 0)
+        if (keys.get(i).compareTo(key) == 0)
             throw new IllegalArgumentException("Calling decreaseKey() with a key equal to the key in the priority queue");
-        if (keys[i].compareTo(key) < 0)
+        if (keys.get(i).compareTo(key) < 0)
             throw new IllegalArgumentException("Calling decreaseKey() with a key strictly greater than the key in the priority queue");
-        keys[i] = key;
-        swim(qp[i]);
+        keys.put(i, key);
+        swim(qp.get(i));
     }
 
     /**
@@ -187,15 +186,15 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException if {@code key <= keyOf(i)}
      * @throws IllegalArgumentException if {@code key == null}
      */
-    public void increaseKey(int i, Key key){
+    public void increaseKey(String i, Key key){
         validateIndex(i);
         if(!contains(i)) throw new NoSuchElementException("Index is not in the priority queue");
-        if (keys[i].compareTo(key) == 0)
+        if (keys.get(i).compareTo(key) == 0)
             throw new IllegalArgumentException("Calling increaseKey() with a key equal to the key in the priority queue");
-        if (keys[i].compareTo(key) > 0)
+        if (keys.get(i).compareTo(key) > 0)
             throw new IllegalArgumentException("Calling increaseKey() with a key strictly less than the key in the priority queue");
-        keys[i] = key;
-        sink(qp[i]);
+        keys.put(i, key);
+        sink(qp.get(i));
     }
 
     /**
@@ -205,27 +204,24 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @throws IllegalArgumentException unless {@code 0 <= i < maxN}
      * @throws NoSuchElementException no key is associated with index {@code i}
      */
-    public void delete(int i){
+    public void delete(String i){
         validateIndex(i);
         if(!contains(i)) throw new NoSuchElementException("Index is not in the priority queue");
-        int index = qp[i];
+        int index = qp.get(i);
         exch(index, n--);
         swim(index);
         sink(index);
-        keys[i] = null;
-        qp[i] = -1;
+        keys.remove(i);
+        qp.remove(i);
     }
-
 
     /**
      * @param i index of key
-     * @throws IllegalArgumentException if i is negative or if i is greater than or equal to maxN
+     * @throws IllegalArgumentException if i is null or empty
      * */
-    private void validateIndex(int i){
-        if(i < 0) throw new IllegalArgumentException("index is negative: " + i);
-        if(i >= maxN) throw new IllegalArgumentException("index >= capacity: " + i);
+    private void validateIndex(String i){
+        if(i == null || i.length() == 0) throw new IllegalArgumentException("index is null or empty");
     }
-
 
     /**
      * returns true if the key at index i is greater than the key at index j
@@ -235,7 +231,7 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      *
      * */
     private boolean greater(int i, int j){
-        return keys[pq[i]].compareTo(keys[pq[j]]) > 0;
+        return keys.get(pq[i]).compareTo(keys.get(pq[j])) > 0;
     }
 
     /**
@@ -245,11 +241,11 @@ public class IndexMinPQ<Key extends Comparable<Key>>{
      * @param j the index of the second element
      */
     private void exch(int i, int j){
-        int swap = pq[i];
+        String swap = pq[i];
         pq[i] = pq[j];
         pq[j] = swap;
-        qp[pq[i]] = i;
-        qp[pq[j]] = j;
+        qp.put(pq[i], i);
+        qp.put(pq[j], j);
     }
 
     /**
