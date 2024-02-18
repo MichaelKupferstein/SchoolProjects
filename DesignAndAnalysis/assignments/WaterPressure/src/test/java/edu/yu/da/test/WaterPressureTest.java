@@ -21,7 +21,7 @@ class WaterPressureTest {
            wp.addBlockage(e.from(), e.to(), e.weight());
        }
        //System.out.println(wp.minAmount());
-       if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
+       //if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
 
 
     }
@@ -34,7 +34,7 @@ class WaterPressureTest {
         WaterPressure wp = new WaterPressure("Node 0");
         addBlockages(wp, graph);
         assertEquals(2.0, wp.minAmount());
-        if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
+        //if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
     }
     @Test
     void testFromDocWithTwoInput(){
@@ -45,7 +45,7 @@ class WaterPressureTest {
         addBlockages(wp, graph);
         wp.addSecondInputPump("Node 2");
         assertEquals(1.0, wp.minAmount());
-        if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
+        //if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
     }
 
     @Test
@@ -61,7 +61,7 @@ class WaterPressureTest {
         graph.addEdge(new DirectedEdge("Node 2", "Node 3", 2.0));
         graph.addEdge(new DirectedEdge("Node 3", "Node 6", 4.0));
 
-        if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
+        //if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
         WaterPressure wp = new WaterPressure("Node 0");
         addBlockages(wp, graph);
         assertEquals(6.0, wp.minAmount());
@@ -77,7 +77,7 @@ class WaterPressureTest {
         graph.addEdge(new DirectedEdge("Node 11", "Node 12", 9.0));
         addBlockages(wp, graph);
         wp.addSecondInputPump("Node 8");
-        if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
+        //if(visualize) new GraphVisualizer(graph).visualizeGraphWithFastOrganicLayout();
         assertEquals(-1.0, wp.minAmount());
     }
 
