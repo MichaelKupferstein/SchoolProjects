@@ -99,6 +99,33 @@ class WaterPressureTest {
     }
 
     @Test
+    void testWithNoPumps(){
+        WaterPressure wp = new WaterPressure("Node 0");
+        assertEquals(0, wp.minAmount());
+    }
+    @Test
+    void testIntialNotValid(){
+        WaterPressure wp = new WaterPressure("Node 0");
+        wp.addBlockage("Node 1", "Node 2", 1.0); //not connected to initial pump
+        assertEquals(-1.0, wp.minAmount());
+    }
+
+    @Test
+    void testWithExtremlyLargeGraph(){
+        RandomGraphGenerator rgg = new RandomGraphGenerator(4_000_000);
+        EdgeWeightedDirectedGraph graph = rgg.generateMST();
+        System.out.println("Generated graph");;
+        WaterPressure wp = new WaterPressure("Node 0");
+        System.out.println("Created water pressure");
+        addBlockages(wp, graph);
+        System.out.println("Added blockages");
+        //long start = System.currentTimeMillis();
+        assertEquals(1.0, wp.minAmount());
+        //long end = System.currentTimeMillis();
+        //System.out.println("Time: " + (end - start) + "ms");
+    }
+
+    @Test
     void testWaterPressureThrows(){
         assertThrows(IllegalArgumentException.class, () -> new WaterPressure(""));
     }

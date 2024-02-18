@@ -19,7 +19,7 @@ class RandomGraphGeneratorAndVisualizerTest {
         EdgeWeightedDirectedGraph graph = randomGraphGenerator.generate();
         GraphVisualizer gv = new GraphVisualizer(graph);
         //gv.visualizeGraphWithCircleLayout();
-        gv.visualizeGraphWithFastOrganicLayout();
+        //gv.visualizeGraphWithFastOrganicLayout();
         //gv.visualizeGraphWithHierarchicalLayout();
     }
 
@@ -29,18 +29,26 @@ class RandomGraphGeneratorAndVisualizerTest {
         graph.addEdge("Node 0","Node 1",1.0);
         graph.addEdge("Node 1","Node 2",2.0);
         GraphVisualizer gv = new GraphVisualizer(graph);
-        gv.visualizeGraphWithFastOrganicLayout();
+        //gv.visualizeGraphWithFastOrganicLayout();
     }
 
     @Test
     void testingSortingEdges(){
-        EdgeWeightedDirectedGraph graph = new RandomGraphGenerator(10).generate();
+        EdgeWeightedDirectedGraph graph = new RandomGraphGenerator(15).generate();
         List<DirectedEdge> edges = new ArrayList<>((Collection) graph.edges());
         Collections.sort(edges);
         for(DirectedEdge e : edges){
             System.out.println(e.from() + " -> " + e.to() + " : " + e.weight());
         }
 
+    }
+
+    @Test
+    void testMST(){
+        RandomGraphGenerator randomGraphGenerator = new RandomGraphGenerator(1000);
+        EdgeWeightedDirectedGraph graph = randomGraphGenerator.generateMST();
+        GraphVisualizer gv = new GraphVisualizer(graph);
+        //gv.visualizeGraphWithFastOrganicLayout();
     }
 
 

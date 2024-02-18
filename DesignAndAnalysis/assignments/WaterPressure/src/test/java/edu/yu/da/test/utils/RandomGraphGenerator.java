@@ -2,9 +2,8 @@ package edu.yu.da.test.utils;
 
 import edu.yu.da.graph.EdgeWeightedDirectedGraph;
 import edu.yu.da.graph.DirectedEdge;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
 
 public class RandomGraphGenerator {
     private final int edges;
@@ -33,6 +32,18 @@ public class RandomGraphGenerator {
             graph.addEdge(new DirectedEdge(v, w, Math.round(weight)));
         }
 
+        return graph;
+    }
+
+    public EdgeWeightedDirectedGraph generateMST() {
+        EdgeWeightedDirectedGraph graph = new EdgeWeightedDirectedGraph();
+        List<String> nodes = new ArrayList<>();
+        for(int i = 0; i < edges; i++){
+            DirectedEdge edge = new DirectedEdge("Node " + i, "Node " + (i+1), 1.0);
+            nodes.add(edge.to());
+            nodes.add(edge.from());
+            graph.addEdge(edge);
+        }
         return graph;
     }
 }
