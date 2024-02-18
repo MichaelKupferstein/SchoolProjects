@@ -141,6 +141,15 @@ class WaterPressureTest {
     }
 
     @Test
+    void testWithOnlyPumps(){
+        WaterPressure wp = new WaterPressure("Node 0");
+        wp.addBlockage("Node 0", "Node 1", 5.0);
+        assertEquals(5.0, wp.minAmount());
+        wp.addSecondInputPump("Node 1");
+        assertEquals(0.0, wp.minAmount());
+    }
+
+    @Test
     void testWaterPressureThrows(){
         assertThrows(IllegalArgumentException.class, () -> new WaterPressure(""));
     }
