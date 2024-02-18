@@ -13,11 +13,11 @@ public class DirectedEdge implements Comparable<DirectedEdge>{
     private final double weight; // weight of the edge
 
     /**
-     * Initializes a directed edge from vertex {@code v} to vertex {@code w} with
-     * the given {@code weight}.
+     * Initializes a directed edge from vertex from to vertex to with
+     * the given weight.
      *
-     * @param v the starting vertex
-     * @param w the ending vertex
+     * @param from the starting vertex
+     * @param to the ending vertex
      * @param weight the weight of the edge
      */
     public DirectedEdge(String from, String to, double weight){
