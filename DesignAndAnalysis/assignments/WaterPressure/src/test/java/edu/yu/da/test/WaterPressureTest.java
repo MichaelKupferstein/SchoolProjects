@@ -126,6 +126,21 @@ class WaterPressureTest {
     }
 
     @Test
+    void testWithTree(){
+        WaterPressure wp = new WaterPressure("Node 0");
+        wp.addBlockage("Node 0", "Node 1", 1.0);
+        wp.addBlockage("Node 0", "Node 2", 2.0);
+        wp.addBlockage("Node 0", "Node 3", 3.0);
+        wp.addBlockage("Node 1", "Node 4", 2.0);
+        wp.addBlockage("Node 1", "Node 5", 2.0);
+        wp.addBlockage("Node 2", "Node 6", 4.0);
+        wp.addBlockage("Node 2", "Node 7", 4.0);
+        wp.addBlockage("Node 3", "Node 8", 6.0);
+        wp.addBlockage("Node 3", "Node 9", 6.0);
+        assertEquals(6.0, wp.minAmount());
+    }
+
+    @Test
     void testWaterPressureThrows(){
         assertThrows(IllegalArgumentException.class, () -> new WaterPressure(""));
     }
