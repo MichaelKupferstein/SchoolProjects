@@ -30,10 +30,9 @@ public class MinimumSpanningTree {
 
         for (String v : G.vertices()) {
             distTo.put(v, Double.POSITIVE_INFINITY);
-        }
-        for(String v : G.vertices()){
             marked.put(v, false);
         }
+
         if(secondStartVertex != null) marked.put(secondStartVertex, true);
 
         mst(G, startVertex);
