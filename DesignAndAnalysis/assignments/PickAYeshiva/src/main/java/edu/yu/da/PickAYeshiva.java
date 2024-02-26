@@ -1,6 +1,11 @@
 package edu.yu.da;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class PickAYeshiva extends PickAYeshivaBase{
+
+    private Set<Yeshiva> yeshivas;
     /**
      * Constructor which supplies the yeshiva rankings in terms of two factors
      * of interest.  The constructor executes a divide-and-conquer algorithm to
@@ -22,6 +27,17 @@ public class PickAYeshiva extends PickAYeshivaBase{
      */
     public PickAYeshiva(double[] facultyRatioRankings, double[] cookingRankings) {
         super(facultyRatioRankings, cookingRankings);
+        if(facultyRatioRankings == null || cookingRankings == null) throw new IllegalArgumentException("Arrays must be non-null");
+        if(facultyRatioRankings.length == 0 || cookingRankings.length == 0) throw new IllegalArgumentException("Array lengths must be > 0");
+        if(facultyRatioRankings.length != cookingRankings. length) throw new IllegalArgumentException("Arrays must be equal in length");
+
+        this.yeshivas = new HashSet<>();//might remove from here
+        for(int i = 0; i < facultyRatioRankings.length; i++){
+            if(!yeshivas.add(new Yeshiva(facultyRatioRankings[i], cookingRankings[i]))) throw new IllegalArgumentException("Arrays can't contain duplicates");
+        }//to here
+
+        //do divde and conqure stuff
+
     }
 
     /**
