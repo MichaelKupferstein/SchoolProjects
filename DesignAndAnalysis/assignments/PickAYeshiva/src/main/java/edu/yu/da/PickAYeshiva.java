@@ -1,9 +1,6 @@
 package edu.yu.da;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PickAYeshiva extends PickAYeshivaBase{
 
@@ -45,7 +42,7 @@ public class PickAYeshiva extends PickAYeshivaBase{
         }//to here
 
 
-        divideAndConquer(yeshivaList);
+        this.yeshivaList = divideAndConquer(yeshivaList);
         this.facultyRatioRankings = new double[yeshivaList.size()];
         this.cookingRankings = new double[yeshivaList.size()];
         for(int i = 0; i < yeshivaList.size(); i++){
@@ -55,33 +52,40 @@ public class PickAYeshiva extends PickAYeshivaBase{
 
     }
 
-    private void divideAndConquer(List<Yeshiva> yeshivaList){
-        if(yeshivaList.size() == 1) return;
+    private List<Yeshiva> divideAndConquer(List<Yeshiva> yeshivaList){
+        if(yeshivaList.size() <= 1) return yeshivaList;
         int mid = yeshivaList.size() / 2;
+
         List<Yeshiva> left = new ArrayList<>(yeshivaList.subList(0, mid));
         List<Yeshiva> right = new ArrayList<>(yeshivaList.subList(mid, yeshivaList.size()));
-        divideAndConquer(left);
-        divideAndConquer(right);
-        merge(left, right, yeshivaList);
+
+        return merge(left, right);
     }
 
-    private void merge(List<Yeshiva> left, List<Yeshiva> right, List<Yeshiva> yeshivaList){
-        int leftIndex = 0;
-        int rightIndex = 0;
-        while(leftIndex < left.size() && rightIndex < right.size()){
-            int check = left.get(leftIndex).check(right.get(rightIndex));
-            if(check == 1){
-                right.remove(rightIndex); // remove the Yeshiva from the right list
+    private List<Yeshiva> merge(List<Yeshiva> left, List<Yeshiva> right){
+        List<Yeshiva> res = new ArrayList<>();
+        int i = 0;
+        int j = 0;
+        while(i < left.size() && j < right.size()){
+            Yeshiva leftTemp = left.get(i);
+            Yeshiva rightTemp = right.get(j);
+            int check = leftTemp.check(rightTemp);
+            if(check == 1) {
+                j++;
             }else if(check == -1){
-                left.remove(leftIndex); // remove the Yeshiva from the left list
-            }else{
-                leftIndex++;
-                rightIndex++;
+                i++;
+            }else {
+                res.add(leftTemp);
+                res.add(rightTemp);
+                i++;
+                j++;
             }
+
         }
-        yeshivaList.clear();
-        yeshivaList.addAll(left);
-        yeshivaList.addAll(right);
+        res.addAll(left.subList(i, left.size()));
+        res.addAll(right.subList(j, right.size()));
+
+        return res;
     }
 
     /**

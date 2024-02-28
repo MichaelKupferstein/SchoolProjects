@@ -32,9 +32,9 @@ public class Yeshiva {
      */
     public int check(Yeshiva other){
         //if(this.cookingRanking == other.cookingRanking && this.facultyRatioRanking == other.facultyRatioRanking) return 0; //cant be bc no duplicates
-        if(this.cookingRanking > other.cookingRanking && this.facultyRatioRanking > other.facultyRatioRanking)
+        if(this.cookingRanking >= other.cookingRanking && this.facultyRatioRanking >= other.facultyRatioRanking)
             return 1; // this is greater in both aspects, so other should be deleted
-        if(this.cookingRanking < other.cookingRanking && this.facultyRatioRanking < other.facultyRatioRanking)
+        if(this.cookingRanking <= other.cookingRanking && this.facultyRatioRanking <= other.facultyRatioRanking)
             return -1; //other is greater in both aspects, so this should be deleted
         return 0; // neither should be deleted
     }
