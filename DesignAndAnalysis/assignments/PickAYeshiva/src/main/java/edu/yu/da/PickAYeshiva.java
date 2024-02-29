@@ -8,7 +8,8 @@ public class PickAYeshiva extends PickAYeshivaBase{
     private List<Yeshiva> yeshivaList;
     private double[] facultyRatioRankings;
     private double[] cookingRankings;
-    private Yeshiva highest;
+
+
     /**
      * Constructor which supplies the yeshiva rankings in terms of two factors
      * of interest.  The constructor executes a divide-and-conquer algorithm to
@@ -36,15 +37,12 @@ public class PickAYeshiva extends PickAYeshivaBase{
 
         this.yeshivaSet = new HashSet<>();//might remove from here
         this.yeshivaList = new ArrayList<>();
-        this.highest = null;
 
         for(int i = 0; i < facultyRatioRankings.length; i++){
             Yeshiva temp = new Yeshiva(facultyRatioRankings[i], cookingRankings[i]);
             if(!yeshivaSet.add(temp)) throw new IllegalArgumentException("Arrays can't contain duplicates");
             yeshivaList.add(temp);
-            if(this.highest == null || temp.check(this.highest) == 1){
-                this.highest = temp;
-            }
+
         }//to here
 
         Collections.sort(yeshivaList);
