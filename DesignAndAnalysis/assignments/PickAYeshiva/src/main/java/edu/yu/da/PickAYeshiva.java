@@ -47,7 +47,7 @@ public class PickAYeshiva extends PickAYeshivaBase{
             }
         }//to here
 
-        Collections.sort(yeshivaList, Comparator.reverseOrder());
+        Collections.sort(yeshivaList);
         divideAndConquer(yeshivaList);
 
         this.facultyRatioRankings = new double[yeshivaList.size()];
