@@ -2,7 +2,7 @@ package edu.yu.da;
 
 import java.util.Objects;
 
-public class Yeshiva {
+public class Yeshiva implements Comparable<Yeshiva> {
 
     private double facultyRatioRanking;
     private double cookingRanking;
@@ -37,6 +37,14 @@ public class Yeshiva {
         if(this.cookingRanking <= other.cookingRanking && this.facultyRatioRanking <= other.facultyRatioRanking)
             return -1; //other is greater in both aspects, so this should be deleted
         return 0; // neither should be deleted
+    }
+
+    @Override
+    public int compareTo(Yeshiva other) { //compare by only facultyRatioRankin
+        if(this.facultyRatioRanking > other.facultyRatioRanking) return 1;
+        if(this.facultyRatioRanking < other.facultyRatioRanking) return -1;
+        return 0;
+
     }
 
     @Override

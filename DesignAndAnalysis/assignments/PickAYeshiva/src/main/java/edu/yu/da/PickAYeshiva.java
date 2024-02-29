@@ -8,6 +8,7 @@ public class PickAYeshiva extends PickAYeshivaBase{
     private List<Yeshiva> yeshivaList;
     private double[] facultyRatioRankings;
     private double[] cookingRankings;
+    private Yeshiva highest;
     /**
      * Constructor which supplies the yeshiva rankings in terms of two factors
      * of interest.  The constructor executes a divide-and-conquer algorithm to
@@ -35,14 +36,20 @@ public class PickAYeshiva extends PickAYeshivaBase{
 
         this.yeshivaSet = new HashSet<>();//might remove from here
         this.yeshivaList = new ArrayList<>();
+        this.highest = null;
+
         for(int i = 0; i < facultyRatioRankings.length; i++){
             Yeshiva temp = new Yeshiva(facultyRatioRankings[i], cookingRankings[i]);
             if(!yeshivaSet.add(temp)) throw new IllegalArgumentException("Arrays can't contain duplicates");
             yeshivaList.add(temp);
+            if(this.highest == null || temp.check(this.highest) == 1){
+                this.highest = temp;
+            }
         }//to here
 
+        Collections.sort(yeshivaList, Comparator.reverseOrder());
+        divideAndConquer(yeshivaList);
 
-        this.yeshivaList = divideAndConquer(yeshivaList);
         this.facultyRatioRankings = new double[yeshivaList.size()];
         this.cookingRankings = new double[yeshivaList.size()];
         for(int i = 0; i < yeshivaList.size(); i++){
@@ -52,40 +59,38 @@ public class PickAYeshiva extends PickAYeshivaBase{
 
     }
 
-    private List<Yeshiva> divideAndConquer(List<Yeshiva> yeshivaList){
-        if(yeshivaList.size() <= 1) return yeshivaList;
-        int mid = yeshivaList.size() / 2;
+    private void divideAndConquer(List<Yeshiva> yeshivaList){
+        if(yeshivaList.size() <= 1) {
+            return;
+        }
 
+        int mid = yeshivaList.size() / 2;
         List<Yeshiva> left = new ArrayList<>(yeshivaList.subList(0, mid));
         List<Yeshiva> right = new ArrayList<>(yeshivaList.subList(mid, yeshivaList.size()));
+        divideAndConquer(left);
+        divideAndConquer(right);
+        //System.out.println(yeshivaList);
+        merge(left, right, yeshivaList);
 
-        return merge(left, right);
     }
 
-    private List<Yeshiva> merge(List<Yeshiva> left, List<Yeshiva> right){
-        List<Yeshiva> res = new ArrayList<>();
-        int i = 0;
-        int j = 0;
-        while(i < left.size() && j < right.size()){
-            Yeshiva leftTemp = left.get(i);
-            Yeshiva rightTemp = right.get(j);
-            int check = leftTemp.check(rightTemp);
-            if(check == 1) {
-                j++;
+    private void merge(List<Yeshiva> left, List<Yeshiva> right, List<Yeshiva> yeshivaList){
+        int leftIndex = 0;
+        int rightIndex = 0;
+        while(leftIndex < left.size() && rightIndex < right.size()){
+            int check = left.get(leftIndex).check(right.get(rightIndex));
+            if(check == 1){
+                right.remove(rightIndex); // remove the Yeshiva from the right list
             }else if(check == -1){
-                i++;
-            }else {
-                res.add(leftTemp);
-                res.add(rightTemp);
-                i++;
-                j++;
+                left.remove(leftIndex); // remove the Yeshiva from the left list
+            }else{
+                leftIndex++;
+                rightIndex++;
             }
-
         }
-        res.addAll(left.subList(i, left.size()));
-        res.addAll(right.subList(j, right.size()));
-
-        return res;
+        yeshivaList.clear();
+        yeshivaList.addAll(left);
+        yeshivaList.addAll(right);
     }
 
     /**
