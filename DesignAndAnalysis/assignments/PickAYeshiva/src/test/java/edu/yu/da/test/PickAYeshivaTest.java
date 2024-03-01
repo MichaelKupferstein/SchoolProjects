@@ -82,7 +82,68 @@ class PickAYeshivaTest {
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
         assertArrayEquals(new double[]{3,7,8,9}, pickAYeshiva.getFacultyRatioRankings());
         assertArrayEquals(new double[]{10,7,5,2}, pickAYeshiva.getCookingRankings());
+    }
+
+    @Test
+    void testMillion(){
+        double[] facultyRatioRankings = new double[1_000_000];
+        double[] cookingRankings = new double[1_000_000];
+
+
+        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+            facultyRatioRankings[i] = i;
+            cookingRankings[i] = j;
+        }
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
+        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
+        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
 
     }
+    @Test
+    void testFiveMillion(){
+        double[] facultyRatioRankings = new double[5_000_000];
+        double[] cookingRankings = new double[5_000_000];
+
+
+        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+            facultyRatioRankings[i] = i;
+            cookingRankings[i] = j;
+        }
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
+        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
+        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+
+    }
+
+    @Test
+    void testTenMillion(){
+        double[] facultyRatioRankings = new double[10_000_000];
+        double[] cookingRankings = new double[10_000_000];
+
+
+        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+            facultyRatioRankings[i] = i;
+            cookingRankings[i] = j;
+        }
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
+        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
+        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+    }
+
+    @Test
+    void test20Million(){
+        double[] facultyRatioRankings = new double[20_000_000];
+        double[] cookingRankings = new double[20_000_000];
+
+
+        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+            facultyRatioRankings[i] = i;
+            cookingRankings[i] = j;
+        }
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
+        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
+        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+    }
+
 
 }
