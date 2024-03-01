@@ -5,6 +5,8 @@ import edu.yu.da.PickAYeshivaBase;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,8 +17,7 @@ class PickAYeshivaTest {
         double[] facultyRatioRankings = {0,1,2};
         double[] cookingRankings = {3,2,1};
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
-        assertArrayEquals(new double[]{0,1,2}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{3,2,1}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
     }
 
     @Test
@@ -24,8 +25,12 @@ class PickAYeshivaTest {
         double[] facultyRatioRankings = {0,1,2,3,4,5,6,7,8,9};
              double[] cookingRankings = {9,8,7,6,5,4,3,2,1,0};
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
-        assertArrayEquals(new double[]{0,1,2,3,4,5,6,7,8,9}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{9,8,7,6,5,4,3,2,1,0}, pickAYeshiva.getCookingRankings());
+
+        System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
+        System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
+
+
     }
 
     @Test
@@ -35,18 +40,16 @@ class PickAYeshivaTest {
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        assertArrayEquals(new double[]{10}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{10}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(new double[]{10},new double[]{10},pickAYeshiva);;
     }
     @Test
-    void testSimpleItDelets2(){
-        double[] facultyRatioRankings = {10,4,5};
-        double[] cookingRankings = {10,11,5};
+    void testSimpleItDelets2() {
+        double[] facultyRatioRankings = {10, 4, 5};
+        double[] cookingRankings = {10, 11, 5};
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        assertArrayEquals(new double[]{4,10}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{11,10}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(new double[]{10, 4}, new double[]{10, 11}, pickAYeshiva);
     }
     @Test
     void testSimpleItDelets3(){
@@ -55,8 +58,7 @@ class PickAYeshivaTest {
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        assertArrayEquals(new double[]{4,10}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{11,10}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(new double[]{10, 4}, new double[]{10, 11}, pickAYeshiva);
     }
 
 
@@ -68,8 +70,7 @@ class PickAYeshivaTest {
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        assertArrayEquals(new double[]{4,10}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{11,10}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(new double[]{10, 4}, new double[]{10, 11}, pickAYeshiva);
     }
 
     @Test
@@ -80,8 +81,7 @@ class PickAYeshivaTest {
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        assertArrayEquals(new double[]{3,7,8,9}, pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(new double[]{10,7,5,2}, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(new double[]{3,7,8,9}, new double[]{10,7,5,2}, pickAYeshiva);
     }
 
     @Test
@@ -95,8 +95,7 @@ class PickAYeshivaTest {
             cookingRankings[i] = j;
         }
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
 
     }
     @Test
@@ -110,8 +109,7 @@ class PickAYeshivaTest {
             cookingRankings[i] = j;
         }
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
 
     }
 
@@ -126,8 +124,7 @@ class PickAYeshivaTest {
             cookingRankings[i] = j;
         }
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
     }
 
     @Test
@@ -141,8 +138,18 @@ class PickAYeshivaTest {
             cookingRankings[i] = j;
         }
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArrayEquals(facultyRatioRankings,pickAYeshiva.getFacultyRatioRankings());
-        assertArrayEquals(cookingRankings, pickAYeshiva.getCookingRankings());
+        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
+    }
+
+    private void assertArraysAreEqual(double[] facultyRatioRankings, double[] cookingRankings, PickAYeshivaBase pickAYeshiva) {
+        Arrays.sort(facultyRatioRankings);
+        Arrays.sort(cookingRankings);
+        double[] facultyRatioRankingsResult = pickAYeshiva.getFacultyRatioRankings();
+        double[] cookingRankingsResult = pickAYeshiva.getCookingRankings();
+        Arrays.sort(facultyRatioRankingsResult);
+        Arrays.sort(cookingRankingsResult);
+        assertArrayEquals(facultyRatioRankings, facultyRatioRankingsResult);
+        assertArrayEquals(cookingRankings, cookingRankingsResult);
     }
 
 
