@@ -31,6 +31,7 @@ public class Yeshiva implements Comparable<Yeshiva> {
      * It returns 0 if neither of the Yeshiva objects should be deleted.
      */
     public int check(Yeshiva other){
+        if(other == null) return -1;
         //if(this.cookingRanking == other.cookingRanking && this.facultyRatioRanking == other.facultyRatioRanking) return 0; //cant be bc no duplicates
         if(this.cookingRanking >= other.cookingRanking && this.facultyRatioRanking >= other.facultyRatioRanking)
             return 1; // this is greater in both aspects, so other should be deleted

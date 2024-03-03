@@ -17,6 +17,8 @@ class PickAYeshivaTest {
         double[] facultyRatioRankings = {0,1,2};
         double[] cookingRankings = {3,2,1};
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
+        System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
+        System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
         assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
     }
 
