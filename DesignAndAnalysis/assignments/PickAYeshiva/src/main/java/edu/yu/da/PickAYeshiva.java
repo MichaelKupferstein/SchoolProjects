@@ -5,7 +5,8 @@ import java.util.*;
 public class PickAYeshiva extends PickAYeshivaBase{
 
     private Set<Yeshiva> yeshivaSet;
-    private List<Yeshiva> yeshivaList;
+    //private List<Yeshiva> yeshivaList;
+    private Yeshiva[] yeshivaArray;
     private double[] facultyRatioRankings;
     private double[] cookingRankings;
 
@@ -16,27 +17,31 @@ public class PickAYeshiva extends PickAYeshivaBase{
         if(facultyRatioRankings.length != cookingRankings. length) throw new IllegalArgumentException("Arrays must be equal in length");
 
         this.yeshivaSet = new HashSet<>();
-        this.yeshivaList = new ArrayList<>();
+        //this.yeshivaList = new ArrayList<>();
+        this.yeshivaArray = new Yeshiva[facultyRatioRankings.length];
 
         for(int i = 0; i < facultyRatioRankings.length; i++){
             Yeshiva temp = new Yeshiva(facultyRatioRankings[i], cookingRankings[i]);
-            if(!yeshivaSet.add(temp)) throw new IllegalArgumentException("Arrays can't contain duplicates");
-            yeshivaList.add(temp);
+            //if(!yeshivaSet.add(temp)) throw new IllegalArgumentException("Arrays can't contain duplicates");
+            //yeshivaList.add(temp);
+            yeshivaArray[i] = temp;
         }
 
-        Collections.sort(yeshivaList,Comparator.reverseOrder());
+        Arrays.parallelSort(yeshivaArray,Comparator.reverseOrder());
+        //Collections.sort(yeshivaList,Comparator.reverseOrder());
 
-        this.yeshivaList = divideAndConquer(this.yeshivaList);
+        //this.yeshivaList = divideAndConquer(this.yeshivaList);
         //this.yeshivaList = notDC(this.yeshivaList);
+        this.yeshivaArray = divideAndConquer(this.yeshivaArray);
 
         finishUp();
     }
     private void finishUp(){
-        this.facultyRatioRankings = new double[yeshivaList.size()];
-        this.cookingRankings = new double[yeshivaList.size()];
-        for(int i = 0; i < yeshivaList.size(); i++){
-            this.facultyRatioRankings[i] = yeshivaList.get(i).getFacultyRatioRanking();
-            this.cookingRankings[i] = yeshivaList.get(i).getCookingRanking();
+        this.facultyRatioRankings = new double[yeshivaArray.length];
+        this.cookingRankings = new double[yeshivaArray.length];
+        for(int i = 0; i < yeshivaArray.length; i++){
+            facultyRatioRankings[i] = yeshivaArray[i].getFacultyRatioRanking();
+            cookingRankings[i] = yeshivaArray[i].getCookingRanking();
         }
     }
 
@@ -51,17 +56,18 @@ public class PickAYeshiva extends PickAYeshivaBase{
         }
         return res;
     }
-    private List<Yeshiva> divideAndConquer(List<Yeshiva> yeshivas) {
-        if (yeshivas.size() == 1) {
+
+    private Yeshiva[] divideAndConquer(Yeshiva[] yeshivas) {
+        if (yeshivas.length == 1) {
             return yeshivas;
         }
 
-        int mid = yeshivas.size() / 2;
+        int mid = yeshivas.length / 2;
 
-        List<Yeshiva> leftHalf = divideAndConquer(yeshivas.subList(0, mid));
-        List<Yeshiva> rightHalf = divideAndConquer(yeshivas.subList(mid, yeshivas.size()));
+        Yeshiva[] left = divideAndConquer(Arrays.copyOfRange(yeshivas, 0, mid));
+        Yeshiva[] right = divideAndConquer(Arrays.copyOfRange(yeshivas, mid, yeshivas.length));
 
-        List<Yeshiva> res = new ArrayList<>();
+        List<Yeshiva> res = new ArrayList<>(yeshivas.length);
         double bestCooking = Double.MIN_VALUE;
         for(Yeshiva yeshiva : yeshivas){
             if(yeshiva.getCookingRanking() > bestCooking){
@@ -69,7 +75,7 @@ public class PickAYeshiva extends PickAYeshivaBase{
                 res.add(yeshiva);
             }
         }
-        return res;
+        return res.toArray(new Yeshiva[res.size()]);
     }
 
     @Override
