@@ -107,6 +107,18 @@ class PickAYeshivaTest {
 
         assertArraysAreEqual(new double[]{1,43,48}, new double[]{39,36,10}, pickAYeshiva);
     }
+    @Test
+    void largeRandomTest3(){
+        double[] facultyRatioRankings = {3.0, 45.0, 24.0, 34.0, 48.0, 31.0, 11.0, 34.0, 20.0, 21.0, 23.0, 15.0, 49.0, 33.0, 42.0};
+        double[] cookingRankings =      {11.0, 9.0, 25.0, 14.0, 9.0, 13.0, 30.0, 12.0, 43.0, 31.0, 48.0, 9.0, 50.0, 23.0, 43.0};
+
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
+        System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
+        System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
+
+        assertArraysAreEqual(new double[]{49}, new double[]{50}, pickAYeshiva);
+    }
+
 
     @Test
     void testWithSameFacultyRatio(){
