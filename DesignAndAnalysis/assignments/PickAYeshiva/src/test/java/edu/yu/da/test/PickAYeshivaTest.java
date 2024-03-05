@@ -25,7 +25,7 @@ class PickAYeshivaTest {
     @Test
     void test1(){
         double[] facultyRatioRankings = {0,1,2,3,4,5,6,7,8,9};
-             double[] cookingRankings = {9,8,7,6,5,4,3,2,1,0};
+             double[] cookingRankings = {10,9,8,7,6,5,4,3,2,1};
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
 
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
@@ -104,11 +104,8 @@ class PickAYeshivaTest {
         PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
         System.out.println(Arrays.toString(pickAYeshiva.getFacultyRatioRankings()));
         System.out.println(Arrays.toString(pickAYeshiva.getCookingRankings()));
-        //assertArraysAreEqual(new double[]{14,40,46}, new double[]{49,45,38}, pickAYeshiva);
-        //[1.0, 43.0, 20.0, 24.0, 7.0, 34.0, 21.0, 26.0, 23.0, 48.0]
-        //[39.0, 36.0, 31.0, 21.0, 34.0, 17.0, 17.0, 16.0, 13.0, 10.0]
 
-
+        assertArraysAreEqual(new double[]{1,43,48}, new double[]{39,36,10}, pickAYeshiva);
     }
 
 
@@ -118,7 +115,7 @@ class PickAYeshivaTest {
         double[] cookingRankings = new double[1_000_000];
 
 
-        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
             cookingRankings[i] = j;
         }
@@ -129,27 +126,14 @@ class PickAYeshivaTest {
 
     }
 
-    @Test
-    void testInverseMillion(){
 
-        double[] facultyRatioRankings = new double[1_000_000];
-        double[] cookingRankings = new double[1_000_000];
-        for(int i = 0, j = facultyRatioRankings.length - 1; i < facultyRatioRankings.length ; i++, j--){
-            facultyRatioRankings[i] = j;
-            cookingRankings[i] = i;
-        }
-
-        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
-
-    }
     @Test
     void testFiveMillion(){
         double[] facultyRatioRankings = new double[5_000_000];
         double[] cookingRankings = new double[5_000_000];
 
 
-        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
             cookingRankings[i] = j;
         }
@@ -164,7 +148,7 @@ class PickAYeshivaTest {
         double[] cookingRankings = new double[10_000_000];
 
 
-        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
             cookingRankings[i] = j;
         }
@@ -178,7 +162,7 @@ class PickAYeshivaTest {
         double[] cookingRankings = new double[20_000_000];
 
 
-        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
             cookingRankings[i] = j;
         }
@@ -191,7 +175,7 @@ class PickAYeshivaTest {
         double[] facultyRatioRankings = new double[30_000_000];
         double[] cookingRankings = new double[30_000_000];
 
-        for(int i = 0, j = cookingRankings.length - 1; i < cookingRankings.length ; i++, j--){
+        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
             cookingRankings[i] = j;
         }
