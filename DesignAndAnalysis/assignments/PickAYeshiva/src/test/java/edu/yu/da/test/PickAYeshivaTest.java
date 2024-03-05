@@ -108,72 +108,52 @@ class PickAYeshivaTest {
         assertArraysAreEqual(new double[]{1,43,48}, new double[]{39,36,10}, pickAYeshiva);
     }
 
+    @Test
+    void testWithSameFacultyRatio(){
+        double[] facultyRatioRankings = {1,1,1,1,1,1,1,1,1,1};
+        double[] cookingRankings = {10,9,8,7,6,5,4,3,2,1};
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
+        assertArraysAreEqual(new double[]{1}, new double[]{10}, pickAYeshiva);
+    }
+    @Test
+    void testWithSameCooking(){
+        double[] facultyRatioRankings = {10,9,8,7,6,5,4,3,2,1};
+        double[] cookingRankings = {1,1,1,1,1,1,1,1,1,1};
+        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings, cookingRankings);
+        assertArraysAreEqual(new double[]{10}, new double[]{1}, pickAYeshiva);
+    }
+
+
 
     @Test
     void testMillion(){
-        double[] facultyRatioRankings = new double[1_000_000];
-        double[] cookingRankings = new double[1_000_000];
-
-
-        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
-            facultyRatioRankings[i] = i;
-            cookingRankings[i] = j;
-        }
-
-        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-
-        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
-
+        testN(1_000_000);
     }
 
 
     @Test
     void testFiveMillion(){
-        double[] facultyRatioRankings = new double[5_000_000];
-        double[] cookingRankings = new double[5_000_000];
-
-
-        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
-            facultyRatioRankings[i] = i;
-            cookingRankings[i] = j;
-        }
-        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
-
+        testN(5_000_000);
     }
 
     @Test
     void testTenMillion(){
-        double[] facultyRatioRankings = new double[10_000_000];
-        double[] cookingRankings = new double[10_000_000];
-
-
-        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
-            facultyRatioRankings[i] = i;
-            cookingRankings[i] = j;
-        }
-        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
+        testN(10_000_000);
     }
 
     @Test
     void test20Million(){
-        double[] facultyRatioRankings = new double[20_000_000];
-        double[] cookingRankings = new double[20_000_000];
-
-
-        for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
-            facultyRatioRankings[i] = i;
-            cookingRankings[i] = j;
-        }
-        PickAYeshivaBase pickAYeshiva = new PickAYeshiva(facultyRatioRankings,cookingRankings);
-        assertArraysAreEqual(facultyRatioRankings, cookingRankings, pickAYeshiva);
+        testN(20_000_000);
     }
 
     @Test
     void test30Million() {
-        double[] facultyRatioRankings = new double[30_000_000];
-        double[] cookingRankings = new double[30_000_000];
+        testN(30_000_000);
+    }
+
+    void testN(int N){
+        double[] facultyRatioRankings = new double[N];
+        double[] cookingRankings = new double[N];
 
         for(int i = 0, j = cookingRankings.length; i < cookingRankings.length ; i++, j--){
             facultyRatioRankings[i] = i;
@@ -185,8 +165,8 @@ class PickAYeshivaTest {
 
     @Test
     void randomTest(){
-        double[] facultyRatioRankings = new double[15];
-        double[] cookingRankings = new double[15];
+        double[] facultyRatioRankings = new double[50];
+        double[] cookingRankings = new double[50];
         for(int i = 0; i < facultyRatioRankings.length; i++){
             facultyRatioRankings[i] = Math.round(Math.random() * 50);
             cookingRankings[i] = Math.round(Math.random() * 50);
