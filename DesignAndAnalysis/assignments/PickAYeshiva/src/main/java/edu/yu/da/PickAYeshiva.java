@@ -26,8 +26,8 @@ public class PickAYeshiva extends PickAYeshivaBase{
 
         Collections.sort(yeshivaList,Comparator.reverseOrder());
 
-        //this.yeshivaList = divideAndConquer(this.yeshivaList);
-        this.yeshivaList = notDC(this.yeshivaList);
+        this.yeshivaList = divideAndConquer(this.yeshivaList);
+        //this.yeshivaList = notDC(this.yeshivaList);
 
         finishUp();
     }
@@ -41,6 +41,26 @@ public class PickAYeshiva extends PickAYeshivaBase{
     }
 
     private List<Yeshiva> notDC(List<Yeshiva> yeshivas){
+        List<Yeshiva> res = new ArrayList<>();
+        double bestCooking = Double.MIN_VALUE;
+        for(Yeshiva yeshiva : yeshivas){
+            if(yeshiva.getCookingRanking() > bestCooking){
+                bestCooking = yeshiva.getCookingRanking();
+                res.add(yeshiva);
+            }
+        }
+        return res;
+    }
+    private List<Yeshiva> divideAndConquer(List<Yeshiva> yeshivas) {
+        if (yeshivas.size() == 1) {
+            return yeshivas;
+        }
+
+        int mid = yeshivas.size() / 2;
+
+        List<Yeshiva> leftHalf = divideAndConquer(yeshivas.subList(0, mid));
+        List<Yeshiva> rightHalf = divideAndConquer(yeshivas.subList(mid, yeshivas.size()));
+
         List<Yeshiva> res = new ArrayList<>();
         double bestCooking = Double.MIN_VALUE;
         for(Yeshiva yeshiva : yeshivas){
