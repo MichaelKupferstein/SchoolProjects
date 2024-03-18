@@ -1,8 +1,14 @@
 package edu.yu.da;
 
-import java.util.List;
+import java.util.*;
 
 public class SpheresOfInfluence extends SpheresOfInfluenceBase {
+
+    private final int maxStrength, maxRight;
+    private Set<Influencer> influencers; //Tree set sorts by radius
+    private int yValue;
+    private boolean[][] plane;
+
     /**
      * Constructor that defines the MU rectangular 2D plane of student values.
      *
@@ -14,6 +20,12 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     public SpheresOfInfluence(int maxStrength, int maxRight) {
         super(maxStrength, maxRight);
+        if(maxStrength <= 0 || maxRight <= 0) throw new IllegalArgumentException("Values must be greater than 0");
+        this.maxStrength = maxStrength;
+        this.maxRight = maxRight;
+        this.influencers = new TreeSet<>(Comparator.reverseOrder());
+        this.yValue = maxStrength / 2;
+        this.plane = new boolean[maxStrength][maxRight];
     }
 
     /**
@@ -33,7 +45,9 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     @Override
     public void addInfluencer(String id, int xValue, int radius) {
-
+        if(xValue < 0) throw new IllegalArgumentException("xValue must be non-negative");
+        if(radius <=0 ) throw new IllegalArgumentException("radius mst be greater than 0");
+        if(influencers.add(new Influencer(id, xValue, yValue, radius)) == false) throw new IllegalArgumentException("Influencer with this id has previously been added");
     }
 
     /**
@@ -46,6 +60,8 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     @Override
     public List<String> getMinimalCoverageInfluencers() {
-        return null;
+
+        return Collections.EMPTY_LIST;
     }
+
 }
