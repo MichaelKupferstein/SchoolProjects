@@ -3,16 +3,26 @@ package edu.yu.da;
 import java.util.Objects;
 
 public class Influencer implements Comparable<Influencer> {
-    String id;
-    int xValue;
-    int yValue;
-    int radius;
+    private String id;
+    private int xValue;
+    private int radius;
 
-    public Influencer(String id, int xValue, int yValue, int radius) {
+    public Influencer(String id, int xValue, int radius) {
         this.id = id;
         this.xValue = xValue;
-        this.yValue = yValue;
         this.radius = radius;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getXValue() {
+        return xValue;
+    }
+
+    public int getRadius() {
+        return radius;
     }
 
 
@@ -21,16 +31,16 @@ public class Influencer implements Comparable<Influencer> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Influencer that = (Influencer) o;
-        return xValue == that.xValue && yValue == that.yValue && radius == that.radius && Objects.equals(id, that.id);
+        return xValue == that.xValue && radius == that.radius && Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, xValue, yValue, radius);
+        return Objects.hash(xValue, radius);
     }
 
     @Override
     public int compareTo(Influencer o) {
-        return Integer.compare(this.radius, o.radius);
+        return Integer.compare(this.xValue, o.xValue);
     }
 }

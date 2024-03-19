@@ -3,11 +3,9 @@ package edu.yu.da;
 import java.util.*;
 
 public class SpheresOfInfluence extends SpheresOfInfluenceBase {
-
-    private final int maxStrength, maxRight;
-    private Set<Influencer> influencers; //Tree set sorts by radius
-    private int yValue;
-    private boolean[][] plane;
+    private int maxStrength;
+    private int maxRight;
+    private Map<String, Influencer> influencerMap;
 
     /**
      * Constructor that defines the MU rectangular 2D plane of student values.
@@ -20,12 +18,10 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     public SpheresOfInfluence(int maxStrength, int maxRight) {
         super(maxStrength, maxRight);
-        if(maxStrength <= 0 || maxRight <= 0) throw new IllegalArgumentException("Values must be greater than 0");
+        if (maxStrength <= 0 || maxRight <= 0) throw new IllegalArgumentException("maxStrength and maxRight must be greater than 0");
         this.maxStrength = maxStrength;
         this.maxRight = maxRight;
-        this.influencers = new TreeSet<>(Comparator.reverseOrder());
-        this.yValue = maxStrength / 2;
-        this.plane = new boolean[maxStrength][maxRight];
+        this.influencerMap = new HashMap<>();
     }
 
     /**
@@ -45,9 +41,14 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     @Override
     public void addInfluencer(String id, int xValue, int radius) {
-        if(xValue < 0) throw new IllegalArgumentException("xValue must be non-negative");
-        if(radius <=0 ) throw new IllegalArgumentException("radius mst be greater than 0");
-        if(influencers.add(new Influencer(id, xValue, yValue, radius)) == false) throw new IllegalArgumentException("Influencer with this id has previously been added");
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("id must be non-empty");
+        if (xValue < 0) throw new IllegalArgumentException("xValue must be non-negative");
+        if (radius <= 0) throw new IllegalArgumentException("radius must be greater than 0");
+        if (influencerMap.containsKey(id)) throw new IllegalArgumentException("influencer with id " + id + " already exists");
+        if(influencerMap.values().stream().anyMatch(influencer -> influencer.getXValue() == xValue && influencer.getRadius() == radius))
+            throw new IllegalArgumentException("influencer with xValue " + xValue + " and radius " + radius + " already exists");
+        influencerMap.put(id, new Influencer(id, xValue, radius));
+
     }
 
     /**
@@ -60,8 +61,27 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
      */
     @Override
     public List<String> getMinimalCoverageInfluencers() {
+        List<Influencer> influencers = new ArrayList<>(influencerMap.values());
+        influencers.sort(Comparator.comparingInt(Influencer::getXValue));
 
-        return Collections.EMPTY_LIST;
+        List<String> res = new ArrayList<>();
+        int rightmost = 0;
+
+        for (Influencer influencer : influencers) {
+            if (influencer.getXValue() - influencer.getRadius() > rightmost) return Collections.emptyList();
+
+            if(influencer.getXValue() + influencer.getRadius() <= maxStrength) continue;
+
+            if (influencer.getXValue() + influencer.getRadius() > rightmost) {
+                rightmost = influencer.getXValue() + influencer.getRadius();
+                res.add(influencer.getId());
+            }
+            if (rightmost >= maxRight) break;
+        }
+
+        if (rightmost < maxRight) return Collections.emptyList();
+
+        Collections.sort(res);
+        return res;
     }
-
 }
