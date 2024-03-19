@@ -47,8 +47,26 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
         if (influencerMap.containsKey(id)) throw new IllegalArgumentException("influencer with id " + id + " already exists");
         if(influencerMap.values().stream().anyMatch(influencer -> influencer.getXValue() == xValue && influencer.getRadius() == radius))
             throw new IllegalArgumentException("influencer with xValue " + xValue + " and radius " + radius + " already exists");
-        influencerMap.put(id, new Influencer(id, xValue, radius));
 
+        double[] intersectionPoints = calculateIntersectionPoint(xValue, maxStrength/2, radius, maxStrength);
+        if(intersectionPoints != null) {
+            influencerMap.put(id, new Influencer(id, xValue, radius, intersectionPoints[0], intersectionPoints[1],maxStrength, maxRight));
+        }
+
+    }
+
+    private double[] calculateIntersectionPoint(int h, int k, int r, int y){
+        //solve for x (x-h)^2 + (y-k)^2 = r^2, h = xValue, k = yValue, r = radius, y = maxStrength
+
+        //check if line intersects circle
+        double distance = Math.abs(y - k);
+        if(distance > r) return null;
+
+        double dx = Math.sqrt(r * r - distance * distance);
+        double x1 = h - dx;
+        double x2 = h + dx;
+
+        return new double[]{x1, x2};
     }
 
     /**
@@ -62,26 +80,32 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
     @Override
     public List<String> getMinimalCoverageInfluencers() {
         List<Influencer> influencers = new ArrayList<>(influencerMap.values());
-        influencers.sort(Comparator.comparingInt(Influencer::getXValue));
+        influencers.sort(Comparator.reverseOrder());
 
-        List<String> res = new ArrayList<>();
-        int rightmost = 0;
+        List<String> result = new ArrayList<>();
 
-        for (Influencer influencer : influencers) {
-            if (influencer.getXValue() - influencer.getRadius() > rightmost) return Collections.emptyList();
+        double left = Double.MAX_VALUE;
+        double right = Double.MIN_VALUE;
+        for(Influencer influencer : influencers){
 
-            if(influencer.getXValue() + influencer.getRadius() <= maxStrength) continue;
-
-            if (influencer.getXValue() + influencer.getRadius() > rightmost) {
-                rightmost = influencer.getXValue() + influencer.getRadius();
-                res.add(influencer.getId());
+            if(!fullyCovered(left,right)){
+                left = Math.min(left, influencer.getLeft());
+                right = Math.max(right, influencer.getRight());
+                result.add(influencer.getId());
+            }else{
+                break;
             }
-            if (rightmost >= maxRight) break;
         }
 
-        if (rightmost < maxRight) return Collections.emptyList();
-
-        Collections.sort(res);
-        return res;
+        if(!fullyCovered(left,right)){
+            return Collections.EMPTY_LIST;
+        }
+        Collections.sort(result);
+        return result;
     }
+
+    private boolean fullyCovered(double left, double right){
+        return left <= 0 && right >= maxRight;
+    }
+
 }
