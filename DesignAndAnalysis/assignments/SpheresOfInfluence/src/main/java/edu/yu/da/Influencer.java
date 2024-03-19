@@ -36,7 +36,7 @@ public class Influencer implements Comparable<Influencer> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(xValue, radius);
+        return Objects.hash(id, xValue, radius);
     }
 
     @Override
