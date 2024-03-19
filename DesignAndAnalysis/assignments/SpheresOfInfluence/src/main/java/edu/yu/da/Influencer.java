@@ -3,9 +3,9 @@ package edu.yu.da;
 import java.util.Objects;
 
 public class Influencer implements Comparable<Influencer> {
-    private String id;
-    private int xValue, radius, maxStrength, maxRight;
-    private double area, left, right;
+    private final String id;
+    private final int xValue, radius, maxStrength;
+    private final double area, left, right;
 
     public Influencer(String id, int xValue, int radius, double leftIntersection, double rightIntersection, int maxStrength, int maxRight) {
         this.id = id;
@@ -13,14 +13,14 @@ public class Influencer implements Comparable<Influencer> {
         this.radius = radius;
         this.left = Math.max(leftIntersection, 0);
         this.right = Math.min(rightIntersection, maxRight);
+        this.maxStrength = maxStrength;
         this.area = calculateArea();
     }
 
     private double calculateArea(){
         //calculate the area of the rectangle
         double width = right - left;
-        double height = maxStrength;
-        return width * height;
+        return width * (double) maxStrength;
     }
 
     public String getId() {
@@ -35,10 +35,6 @@ public class Influencer implements Comparable<Influencer> {
         return radius;
     }
 
-    public double getArea() {
-        return area;
-    }
-
     public double getLeft() {
         return left;
     }
@@ -47,9 +43,9 @@ public class Influencer implements Comparable<Influencer> {
         return right;
     }
 
-    public boolean areaAlreadyCovered(double left, double right){
-        return left >= this.left && right <= this.right;
-    }
+//    public boolean areaAlreadyCovered(double left, double right){
+//        return left >= this.left && right <= this.right;
+//    }
 
     @Override
     public boolean equals(Object o) {

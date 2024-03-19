@@ -3,8 +3,8 @@ package edu.yu.da;
 import java.util.*;
 
 public class SpheresOfInfluence extends SpheresOfInfluenceBase {
-    private int maxStrength;
-    private int maxRight;
+    private final int maxStrength;
+    private final int maxRight;
     private Map<String, Influencer> influencerMap;
 
     /**
@@ -87,21 +87,17 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
         double left = Double.MAX_VALUE;
         double right = Double.MIN_VALUE;
         for(Influencer influencer : influencers){
+            left = Math.min(left, influencer.getLeft());
+            right = Math.max(right, influencer.getRight());
+            result.add(influencer.getId());
 
-            if(!fullyCovered(left,right)){
-                left = Math.min(left, influencer.getLeft());
-                right = Math.max(right, influencer.getRight());
-                result.add(influencer.getId());
-            }else{
-                break;
+            if(fullyCovered(left, right)){
+                Collections.sort(result);
+                return result;
             }
         }
 
-        if(!fullyCovered(left,right)){
-            return Collections.EMPTY_LIST;
-        }
-        Collections.sort(result);
-        return result;
+        return Collections.EMPTY_LIST;
     }
 
     private boolean fullyCovered(double left, double right){
