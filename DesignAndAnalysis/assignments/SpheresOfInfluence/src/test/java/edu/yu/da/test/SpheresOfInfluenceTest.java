@@ -84,4 +84,36 @@ class SpheresOfInfluenceTest {
         assertEquals(List.of("A","B","C"), soi.getMinimalCoverageInfluencers());
     }
 
+    @Test
+    void test7(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(10,10);
+        soi.addInfluencer("A", 0, 6);
+        soi.addInfluencer("B", 6, 6);
+        soi.addInfluencer("C", 8, 6);
+        soi.addInfluencer("D", 9, 1);
+        assertEquals(List.of("A","B","C"), soi.getMinimalCoverageInfluencers());
+    }
+    @Test
+    void testWithTooSmall(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(10,10);
+        soi.addInfluencer("A", 3, 4);
+        soi.addInfluencer("B", 2, 3);
+        soi.addInfluencer("C", 8, 5);
+        soi.addInfluencer("D", 5, 2);
+        assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
+    }
+
+    @Test
+    void testWith8000(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(8000,8000);
+        for(int i = 0; i < 8000; i++){
+            int r = (int) (Math.random() * 4500) + 1;
+            int x = (int) (Math.random() * 8000);
+            soi.addInfluencer("A" + i, x, r);
+        }
+        System.out.println(soi.getMinimalCoverageInfluencers());
+    }
+
+
+
 }

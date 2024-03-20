@@ -52,12 +52,12 @@ public class Influencer implements Comparable<Influencer> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Influencer that = (Influencer) o;
-        return xValue == that.xValue && radius == that.radius && Objects.equals(id, that.id);
+        return xValue == that.xValue && radius == that.radius;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, xValue, radius);
+        return Objects.hash(xValue, radius);
     }
 
     @Override
