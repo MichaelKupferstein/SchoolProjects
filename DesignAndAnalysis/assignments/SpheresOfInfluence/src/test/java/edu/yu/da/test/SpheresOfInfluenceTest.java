@@ -114,6 +114,13 @@ class SpheresOfInfluenceTest {
         System.out.println(soi.getMinimalCoverageInfluencers());
     }
 
+    @Test
+    void testWithNotInPlane(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(2,2);
+        soi.addInfluencer("A", 10,3);
+        assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
+    }
+
 
 
 }

@@ -45,13 +45,12 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
         if (xValue < 0) throw new IllegalArgumentException("xValue must be non-negative");
         if (radius <= 0) throw new IllegalArgumentException("radius must be greater than 0");
         if (influencerMap.containsKey(id)) throw new IllegalArgumentException("influencer with id " + id + " already exists");
-        if(influencerMap.values().contains(new Influencer(id, xValue, radius, 0, 0, 0, maxRight)))
-            throw new IllegalArgumentException("influencer with xValue " + xValue + " and radius " + radius + " already exists");
-
         double[] intersectionPoints = calculateIntersectionPoint(xValue, maxStrength/2, radius, maxStrength);
-        if(intersectionPoints != null) {
-            influencerMap.put(id, new Influencer(id, xValue, radius, intersectionPoints[0], intersectionPoints[1],maxStrength, maxRight));
-        }
+        if(intersectionPoints == null) return;
+        Influencer temp = new Influencer(id, xValue, radius, intersectionPoints[0], intersectionPoints[1],maxStrength, maxRight);
+        if(influencerMap.values().contains(temp))
+            throw new IllegalArgumentException("influencer with xValue " + xValue + " and radius " + radius + " already exists");
+        influencerMap.put(id, temp);
 
     }
 
