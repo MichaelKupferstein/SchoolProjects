@@ -45,7 +45,7 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
         if (xValue < 0) throw new IllegalArgumentException("xValue must be non-negative");
         if (radius <= 0) throw new IllegalArgumentException("radius must be greater than 0");
         if (influencerMap.containsKey(id)) throw new IllegalArgumentException("influencer with id " + id + " already exists");
-        double[] intersectionPoints = calculateIntersectionPoint(xValue, maxStrength/2, radius, maxStrength);
+        double[] intersectionPoints = calculateIntersectionPoint((double)xValue, (double)maxStrength/2, (double)radius, (double)maxStrength);
         if(intersectionPoints == null) return;
         Influencer temp = new Influencer(id, xValue, radius, intersectionPoints[0], intersectionPoints[1],maxStrength, maxRight);
         if(influencerMap.values().contains(temp))
@@ -54,7 +54,7 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
 
     }
 
-    private double[] calculateIntersectionPoint(int h, int k, int r, int y){
+    private double[] calculateIntersectionPoint(double h, double k, double r, double y){
         //solve for x (x-h)^2 + (y-k)^2 = r^2, h = xValue, k = yValue, r = radius, y = maxStrength
 
         //check if line intersects circle
