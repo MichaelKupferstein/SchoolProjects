@@ -79,7 +79,7 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
     @Override
     public List<String> getMinimalCoverageInfluencers() {
         List<Influencer> influencers = new ArrayList<>(influencerMap.values());
-        influencers.sort(Comparator.reverseOrder());
+        influencers.sort(Comparator.naturalOrder());
 
         List<String> result = new ArrayList<>();
 

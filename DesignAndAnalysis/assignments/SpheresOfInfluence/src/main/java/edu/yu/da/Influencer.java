@@ -11,10 +11,10 @@ public class Influencer implements Comparable<Influencer> {
         this.id = id;
         this.xValue = xValue;
         this.radius = radius;
-        this.left = Math.max(leftIntersection, 0);
-        this.right = Math.min(rightIntersection, maxRight);
-//        this.left = leftIntersection;
-//        this.right = rightIntersection;
+//        this.left = Math.max(leftIntersection, 0);
+//        this.right = Math.min(rightIntersection, maxRight);
+        this.left = leftIntersection;
+        this.right = rightIntersection;
         this.maxStrength = maxStrength;
         this.area = calculateArea();
         //System.out.println("Influencer: " + id + " left: " + left + " right: " + right + " area: " + area);
@@ -68,6 +68,7 @@ public class Influencer implements Comparable<Influencer> {
 
     @Override
     public int compareTo(Influencer o) {
-        return Double.compare(this.area, o.area);
+        if(this.area == o.area) return Double.compare(this.left, o.left);
+        return Double.compare(o.area, this.area);
     }
 }
