@@ -15,6 +15,7 @@ public class Influencer implements Comparable<Influencer> {
         this.right = Math.min(rightIntersection, maxRight);
         this.maxStrength = maxStrength;
         this.area = calculateArea();
+        //System.out.println("Influencer: " + id + " left: " + left + " right: " + right + " area: " + area);
     }
 
     private double calculateArea(){
@@ -41,6 +42,9 @@ public class Influencer implements Comparable<Influencer> {
 
     public double getRight() {
         return right;
+    }
+    public double getArea() {
+        return area;
     }
 
 //    public boolean areaAlreadyCovered(double left, double right){

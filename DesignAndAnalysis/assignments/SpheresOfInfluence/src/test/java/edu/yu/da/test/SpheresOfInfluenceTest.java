@@ -121,6 +121,40 @@ class SpheresOfInfluenceTest {
         assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
     }
 
+    @Test
+    void test8(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(10,10);
+        soi.addInfluencer("A", 0, 5);
+        soi.addInfluencer("B", 5, 5);
+        soi.addInfluencer("C", 10, 5);
+        assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
+    }
+    @Test
+    void test9(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(10,10);
+        soi.addInfluencer("A", 0, 7);
+        soi.addInfluencer("B", 5, 5);
+        soi.addInfluencer("C", 10, 7);
+        assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
+
+    }
+
+    @Test
+    void test10(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(2,10);
+        soi.addInfluencer("A", 2, 2);
+        soi.addInfluencer("B", 6, 5);
+        assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
+    }
+    @Test
+    void test11(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(2,10);
+        soi.addInfluencer("A", 2, 2);
+        soi.addInfluencer("B", 6, 5);
+        soi.addInfluencer("C", 0, 2);
+        assertEquals(List.of("B","C"), soi.getMinimalCoverageInfluencers());
+    }
+
 
 
 }

@@ -85,12 +85,16 @@ public class SpheresOfInfluence extends SpheresOfInfluenceBase {
 
         double left = Double.MAX_VALUE;
         double right = Double.MIN_VALUE;
+        boolean fullyCovered = true;
         for(Influencer influencer : influencers){
+            if(influencer.getArea() <= 0.0) continue;
             left = Math.min(left, influencer.getLeft());
+            if(right < influencer.getLeft() && right != Double.MIN_VALUE) fullyCovered = false;
             right = Math.max(right, influencer.getRight());
             result.add(influencer.getId());
 
-            if(fullyCovered(left, right)){
+
+            if(fullyCovered(left, right) && fullyCovered){
                 Collections.sort(result);
                 return result;
             }
