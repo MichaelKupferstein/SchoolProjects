@@ -13,6 +13,8 @@ public class Influencer implements Comparable<Influencer> {
         this.radius = radius;
         this.left = Math.max(leftIntersection, 0);
         this.right = Math.min(rightIntersection, maxRight);
+//        this.left = leftIntersection;
+//        this.right = rightIntersection;
         this.maxStrength = maxStrength;
         this.area = calculateArea();
         //System.out.println("Influencer: " + id + " left: " + left + " right: " + right + " area: " + area);
