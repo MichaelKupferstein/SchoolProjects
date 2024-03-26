@@ -163,6 +163,15 @@ class SpheresOfInfluenceTest {
         assertEquals(Collections.EMPTY_LIST, soi.getMinimalCoverageInfluencers());
     }
 
+    @Test
+    void test13(){
+        SpheresOfInfluenceBase soi = new SpheresOfInfluence(2,2);
+        soi.addInfluencer("A", 10, 8);
+        soi.addInfluencer("B", 1, 2);
+        assertEquals(List.of("B"), soi.getMinimalCoverageInfluencers());
+    }
+
+
 
 
 
