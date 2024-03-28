@@ -1,6 +1,7 @@
 package edu.yu.da;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -9,7 +10,8 @@ import java.util.List;
 
 public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
 
-    private List<Scheme> schemes; //maybe make a double instead of Object
+    private List<Scheme> schemes; //maybe make a double array instead of Object
+    private double dp[];
 
     /** Constructor: client specifies the price of a single quantity of the
      * desired item.
@@ -57,7 +59,19 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     @Override
     public double cheapestPrice(int threshold) {
         if(threshold <= 0 || threshold > MAX_MATZOS) throw new IllegalArgumentException("threshold must be greater than 0 and less than or equal to MAX_MATZOS");
-        return 0;
+        this.dp = new double[threshold + 1];
+        dp[0] = 0;
+        for(int i = 1; i < dp.length; i++){
+            dp[i] = Double.MAX_VALUE;
+        }
+        for(int i = 1; i < dp.length; i++){
+            for(Scheme scheme : schemes){
+                if(i - scheme.quantity >= 0){
+                    dp[i] = Math.min(dp[i], dp[i - scheme.quantity] + scheme.price);
+                }
+            }
+        }
+        return dp[threshold];
     }
 
     /** Returns a list of optimal price scheme decisions corresponding to the
@@ -70,7 +84,18 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     @Override
     public List<Integer> optimalDecisions() {
-        return null;
+        List<Integer> res = new ArrayList<>();
+        int threshold = dp.length - 1;
+        while(threshold > 0){
+            for(Scheme scheme : schemes){
+                if(threshold - scheme.quantity >= 0 && dp[threshold] == dp[threshold - scheme.quantity] + scheme.price){
+                    res.add(schemes.indexOf(scheme));
+                    threshold -= scheme.quantity;
+                    break;
+                }
+            }
+        }
+        return res;
     }
 
     private class Scheme{
