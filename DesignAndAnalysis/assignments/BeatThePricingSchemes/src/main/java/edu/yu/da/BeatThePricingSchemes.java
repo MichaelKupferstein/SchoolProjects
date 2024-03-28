@@ -1,5 +1,6 @@
 package edu.yu.da;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,8 +8,10 @@ import java.util.List;
  * */
 
 public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
-    /**
-     * Constructor: client specifies the price of a single quantity of the
+
+    private List<Scheme> schemes; //maybe make a double instead of Object
+
+    /** Constructor: client specifies the price of a single quantity of the
      * desired item.
      *
      * @param unitPrice the price-per-single-unit, must be greater than 0.
@@ -18,15 +21,17 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     public BeatThePricingSchemes(double unitPrice) {
         super(unitPrice);
         if(unitPrice <= 0) throw new IllegalArgumentException("unitPrice must be greater than 0");
+        this.schemes = new ArrayList<>();
+        this.schemes.add(new Scheme(unitPrice, 1));
     }
 
-    /**
-     * Adds a pricing scheme to be considered when making the "select optimal
+    /** Adds a pricing scheme to be considered when making the "select optimal
      * pricing schemes" decision.
      *
-     * @param price    the price to be paid for the specified quantity, must be
-     *                 greater than 0.
-     * @param quantity
+     * @param price the price to be paid for the specified quantity, must be
+     * greater than 0.
+     * @param quantity, which for the sake of DP, cannot exceed MAX_MATZOS and
+     * must be greater than zero.
      * @throw IllegalArgumentException if the parameter pre-conditions are violated.
      * @see MAX_SCHEMES
      */
@@ -34,16 +39,16 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     public void addPricingScheme(double price, int quantity) {
         if(price <= 0) throw new IllegalArgumentException("price must be greater than 0");
         if(quantity <= 0 || quantity > MAX_MATZOS) throw new IllegalArgumentException("quantity must be greater than 0 and less than or equal to MAX_MATZOS");
+        this.schemes.add(new Scheme(price, quantity));
     }
 
-    /**
-     * Returns the cheapest price needed to buy at least threshold items.  Thus
+    /** Returns the cheapest price needed to buy at least threshold items.  Thus
      * the quantity bought may exceed the threshold, as long as that is the
      * cheapest price for threshold number of items given the current set of
      * price schemas.
      *
      * @param threshold the minimum number of items to be purchased, cannot
-     *                  exceed MAX_MATZOS, and must be greater than zero.
+     * exceed MAX_MATZOS, and must be greater than zero.
      * @return the cheapest price required to purchase at least the threshold
      * quantity.
      * @throw IllegalArgumentException if the parameter pre-conditions are violated.
@@ -55,8 +60,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
         return 0;
     }
 
-    /**
-     * Returns a list of optimal price scheme decisions corresponding to the
+    /** Returns a list of optimal price scheme decisions corresponding to the
      * cheapest price.  If a unit price decision is made, it's represented by the
      * UNIT_PRICE_DECISION constant.  Otherwise, a price scheme is represented by
      * the order in which it was added to this instance: 1..N
@@ -67,5 +71,16 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     @Override
     public List<Integer> optimalDecisions() {
         return null;
+    }
+
+    private class Scheme{
+        double price;
+        int quantity;
+
+        public Scheme(double price, int quantity){
+            this.price = price;
+            this.quantity = quantity;
+        }
+
     }
 }
