@@ -17,6 +17,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     public BeatThePricingSchemes(double unitPrice) {
         super(unitPrice);
+        if(unitPrice <= 0) throw new IllegalArgumentException("unitPrice must be greater than 0");
     }
 
     /**
@@ -31,7 +32,8 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     @Override
     public void addPricingScheme(double price, int quantity) {
-
+        if(price <= 0) throw new IllegalArgumentException("price must be greater than 0");
+        if(quantity <= 0 || quantity > MAX_MATZOS) throw new IllegalArgumentException("quantity must be greater than 0 and less than or equal to MAX_MATZOS");
     }
 
     /**
@@ -49,6 +51,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     @Override
     public double cheapestPrice(int threshold) {
+        if(threshold <= 0 || threshold > MAX_MATZOS) throw new IllegalArgumentException("threshold must be greater than 0 and less than or equal to MAX_MATZOS");
         return 0;
     }
 
