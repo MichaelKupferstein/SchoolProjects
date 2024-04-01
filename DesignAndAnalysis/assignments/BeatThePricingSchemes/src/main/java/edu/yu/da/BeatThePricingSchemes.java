@@ -1,8 +1,6 @@
 package edu.yu.da;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * See notes above the base class.
@@ -11,7 +9,8 @@ import java.util.List;
 public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
 
     private List<Scheme> schemes; //maybe make a double array instead of Object
-    private double dp[];
+    ArrayList<Integer> decisions;
+    private double dp[][];
 
     /** Constructor: client specifies the price of a single quantity of the
      * desired item.
@@ -59,20 +58,24 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     @Override
     public double cheapestPrice(int threshold) {
         if(threshold <= 0 || threshold > MAX_MATZOS) throw new IllegalArgumentException("threshold must be greater than 0 and less than or equal to MAX_MATZOS");
-        this.dp = new double[threshold + 1];
-        dp[0] = 0;
-        for(int i = 1; i < dp.length; i++){
-            dp[i] = Double.MAX_VALUE;
-        }
-        for(int i = 1; i < dp.length; i++){
-            for(Scheme scheme : schemes){
-                if(i - scheme.quantity >= 0){
-                    dp[i] = Math.min(dp[i], dp[i - scheme.quantity] + scheme.price);
+
+        decisions = new ArrayList<>();
+        dp = new double[schemes.size() + 1][threshold + 1];
+        Arrays.fill(dp[0], Double.MAX_VALUE);
+
+        for(int i = 1; i <= schemes.size(); i++){
+            for(int j = 1; j <= threshold; j++){
+                if(schemes.get(i - 1).quantity > j){
+                    dp[i][j] = dp[i - 1][j];
+                }else{
+                    dp[i][j] = Math.min(dp[i - 1][j], schemes.get(i - 1).price + dp[i][j - schemes.get(i - 1).quantity]);
                 }
             }
         }
-        return dp[threshold];
+
+        return dp[schemes.size()][threshold];
     }
+
 
     /** Returns a list of optimal price scheme decisions corresponding to the
      * cheapest price.  If a unit price decision is made, it's represented by the
@@ -84,18 +87,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     @Override
     public List<Integer> optimalDecisions() {
-        List<Integer> res = new ArrayList<>();
-        int threshold = dp.length - 1;
-        while(threshold > 0){
-            for(Scheme scheme : schemes){
-                if(threshold - scheme.quantity >= 0 && dp[threshold] == dp[threshold - scheme.quantity] + scheme.price){
-                    res.add(schemes.indexOf(scheme));
-                    threshold -= scheme.quantity;
-                    break;
-                }
-            }
-        }
-        return res;
+        return decisions;
     }
 
     private class Scheme{
