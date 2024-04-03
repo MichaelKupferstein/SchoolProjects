@@ -23,7 +23,7 @@ class BeatThePricingSchemesTest {
         BeatThePricingSchemesBase btps = new BeatThePricingSchemes(1.0);
         btps.addPricingScheme(2.0, 2);
         assertEquals(3.0, btps.cheapestPrice(3));
-        assertEquals(List.of(0,0,0), btps.optimalDecisions());
+        assertEquals(List.of(0,1), btps.optimalDecisions());
     }
 
     @Test

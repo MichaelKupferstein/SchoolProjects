@@ -9,8 +9,7 @@ import java.util.*;
 public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
 
     private List<Scheme> schemes; //maybe make a double array instead of Object
-    ArrayList<Integer> decisions;
-    private double dp[][];
+    List<Integer> choices;
 
     /** Constructor: client specifies the price of a single quantity of the
      * desired item.
@@ -40,6 +39,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     public void addPricingScheme(double price, int quantity) {
         if(price <= 0) throw new IllegalArgumentException("price must be greater than 0");
         if(quantity <= 0 || quantity > MAX_MATZOS) throw new IllegalArgumentException("quantity must be greater than 0 and less than or equal to MAX_MATZOS");
+        if(this.schemes.size() > MAX_SCHEMES) throw new IllegalArgumentException("MAX_SCHEMES reached");
         this.schemes.add(new Scheme(price, quantity));
     }
 
@@ -59,21 +59,41 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
     public double cheapestPrice(int threshold) {
         if(threshold <= 0 || threshold > MAX_MATZOS) throw new IllegalArgumentException("threshold must be greater than 0 and less than or equal to MAX_MATZOS");
 
-        decisions = new ArrayList<>();
-        dp = new double[schemes.size() + 1][threshold + 1];
-        Arrays.fill(dp[0], Double.MAX_VALUE);
+        int n = schemes.size();
+        double[] K = new double[threshold + 1];
+        List<List<Integer>> decisions = new ArrayList<>(threshold + 1);
+        Arrays.fill(K, Double.MAX_VALUE);
+        K[0] = 0;
+        decisions.add(0, new ArrayList<>());
 
-        for(int i = 1; i <= schemes.size(); i++){
-            for(int j = 1; j <= threshold; j++){
-                if(schemes.get(i - 1).quantity > j){
-                    dp[i][j] = dp[i - 1][j];
+        for (int x = 1; x <= threshold; x++) {
+            decisions.add(x, new ArrayList<>());
+            for (int i = 0; i < n; i++) {
+                int quantity = schemes.get(i).quantity;
+                double price = schemes.get(i).price;
+                double newPrice;
+                if(x - quantity <= 0){
+                    newPrice = K[0] + price;
                 }else{
-                    dp[i][j] = Math.min(dp[i - 1][j], schemes.get(i - 1).price + dp[i][j - schemes.get(i - 1).quantity]);
+                    newPrice = K[x - quantity] + price;
+                }
+                K[x] = Math.min(K[x], newPrice);
+                if (newPrice <= K[x]) {
+                    K[x] = newPrice;
+                    if(x - quantity < 0){
+                        decisions.set(x, new ArrayList<>(decisions.get(0)));
+                    }else{
+                        decisions.set(x, new ArrayList<>(decisions.get(x - quantity)));
+                    }
+                    decisions.get(x).add(i);
                 }
             }
         }
 
-        return dp[schemes.size()][threshold];
+        //System.out.println(Arrays.toString(K));
+        //System.out.println(decisions);
+        this.choices = decisions.get(threshold);
+        return K[threshold];
     }
 
 
@@ -87,7 +107,7 @@ public class BeatThePricingSchemes extends BeatThePricingSchemesBase{
      */
     @Override
     public List<Integer> optimalDecisions() {
-        return decisions;
+        return this.choices;
     }
 
     private class Scheme{
