@@ -1,5 +1,9 @@
 package edu.yu.da.nf;
 
+/**
+ * @author William Fiset, william.alexandre.fiset@gmail.com
+ * Code from: https://github.com/williamfiset/Algorithms/blob/master/src/main/java/com/williamfiset/algorithms/graphtheory/networkflow/EdmondsKarpAdjacencyList.java
+ * */
 import static java.lang.Math.min;
 
 import java.util.*;

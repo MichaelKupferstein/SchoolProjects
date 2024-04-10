@@ -1,6 +1,20 @@
 package edu.yu.da;
 
+import edu.yu.da.nf.EdmondsKarpAdjacencyList;
+import edu.yu.da.nf.NetworkFlowSolverBase;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class MatzoDistribution extends MatzoDistributionBase{
+
+    private Map<String, Integer> stringIntegerMap;
+    private int counter = 0;
+    private NetworkFlowSolverBase networkFlowSolverBase;
+    List<NetworkFlowSolverBase.Edge> edges;
+
     /**
      * Constructor: defines the two "endpoints" of the distribution network.
      *
@@ -16,6 +30,13 @@ public class MatzoDistribution extends MatzoDistributionBase{
      */
     public MatzoDistribution(String sourceWarehouse, int sourceConstraint, String destinationWarehouse) {
         super(sourceWarehouse, sourceConstraint, destinationWarehouse);
+        if(sourceWarehouse.isEmpty() || destinationWarehouse.isEmpty() || sourceWarehouse.equals(destinationWarehouse)) throw new IllegalArgumentException("sourceWarehouse and destinationWarehouse cannot be empty or equal");
+        if(sourceConstraint <= 0) throw new IllegalArgumentException("sourceConstraint must be positive");
+
+        this.stringIntegerMap = new HashMap<>();
+        stringIntegerMap.put(sourceWarehouse, counter++);
+        stringIntegerMap.put(destinationWarehouse, counter++);
+        this.edges = new ArrayList<>();
     }
 
     /**
@@ -31,7 +52,11 @@ public class MatzoDistribution extends MatzoDistributionBase{
      */
     @Override
     public void addWarehouse(String warehouseId, int constraint) {
+        if(warehouseId.isEmpty()) throw new IllegalArgumentException("warehouseId cannot be empty");
+        if(constraint <= 0) throw new IllegalArgumentException("constraint must be positive");
+        if(stringIntegerMap.containsKey(warehouseId)) throw new IllegalArgumentException("warehouseId already exists");
 
+        stringIntegerMap.put(warehouseId, counter++);
     }
 
     /**
@@ -47,7 +72,12 @@ public class MatzoDistribution extends MatzoDistributionBase{
      */
     @Override
     public void roadExists(String w1, String w2, int constraint) {
+        if(w1.isEmpty() || w2.isEmpty()) throw new IllegalArgumentException("w1 and w2 cannot be empty");
+        if(!stringIntegerMap.containsKey(w1) || !stringIntegerMap.containsKey(w2)) throw new IllegalArgumentException("w1 and w2 must be added to the network");
+        if(w1.equals(w2)) throw new IllegalArgumentException("w1 and w2 cannot be equal");
+        if(constraint <= 0) throw new IllegalArgumentException("constraint must be positive");
 
+        edges.add(new NetworkFlowSolverBase.Edge(stringIntegerMap.get(w1), stringIntegerMap.get(w2), constraint));
     }
 
     /**
@@ -59,6 +89,11 @@ public class MatzoDistribution extends MatzoDistributionBase{
      */
     @Override
     public int max() {
-        return 0;
+        networkFlowSolverBase = new EdmondsKarpAdjacencyList(counter, 0, 1);
+        for(NetworkFlowSolverBase.Edge edge : edges){
+            networkFlowSolverBase.addEdge(edge.from, edge.to, edge.capacity);
+        }
+        networkFlowSolverBase.solve();
+        return (int) networkFlowSolverBase.getMaxFlow();
     }
 }
