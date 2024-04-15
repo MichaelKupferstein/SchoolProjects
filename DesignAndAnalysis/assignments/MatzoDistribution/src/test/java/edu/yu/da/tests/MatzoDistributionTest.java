@@ -9,9 +9,9 @@ public class MatzoDistributionTest {
     @Test
     void testFromDoc(){
         MatzoDistributionBase md = new MatzoDistribution("s", 4, "t");
-        md.addWarehouse("A", 2);
-        md.roadExists("s", "A", 2);
-        md.roadExists("A", "t", 2);
+        md.addWarehouse("A", 10);
+        md.roadExists("s", "A", 10);
+        md.roadExists("A", "t", 10);
         System.out.println(md.max());
     }
 }

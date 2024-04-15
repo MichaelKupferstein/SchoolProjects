@@ -2,6 +2,8 @@ package edu.yu.da;
 
 import edu.yu.da.nf.EdmondsKarpAdjacencyList;
 import edu.yu.da.nf.NetworkFlowSolverBase;
+import edu.yu.da.nf.NetworkFlowSolverBase.Edge;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,10 +12,19 @@ import java.util.Map;
 
 public class MatzoDistribution extends MatzoDistributionBase{
 
+    private class Info{
+        int id, capacity;
+        public Info(int id, int capacity){
+            this.id = id;
+            this.capacity = capacity;
+        }
+    }
+
     private Map<String, Integer> stringIntegerMap;
     private int counter = 0;
     private NetworkFlowSolverBase networkFlowSolverBase;
-    List<NetworkFlowSolverBase.Edge> edges;
+    List<Edge> edges;
+
 
     /**
      * Constructor: defines the two "endpoints" of the distribution network.
@@ -34,9 +45,13 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(sourceConstraint <= 0) throw new IllegalArgumentException("sourceConstraint must be positive");
 
         this.stringIntegerMap = new HashMap<>();
-        stringIntegerMap.put(sourceWarehouse, counter++);
-        stringIntegerMap.put(destinationWarehouse, counter++);
         this.edges = new ArrayList<>();
+        stringIntegerMap.put(sourceWarehouse, counter++);
+        stringIntegerMap.put(sourceWarehouse + "z123", counter++);
+        edges.add(new Edge(stringIntegerMap.get(sourceWarehouse), stringIntegerMap.get(sourceWarehouse + "z123"), sourceConstraint));
+        stringIntegerMap.put(destinationWarehouse, counter++);
+
+
     }
 
     /**
@@ -57,6 +72,9 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(stringIntegerMap.containsKey(warehouseId)) throw new IllegalArgumentException("warehouseId already exists");
 
         stringIntegerMap.put(warehouseId, counter++);
+        stringIntegerMap.put(warehouseId + "z123", counter++);
+        edges.add(new Edge(stringIntegerMap.get(warehouseId), stringIntegerMap.get(warehouseId + "z123"), constraint));
+
     }
 
     /**
@@ -77,7 +95,7 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(w1.equals(w2)) throw new IllegalArgumentException("w1 and w2 cannot be equal");
         if(constraint <= 0) throw new IllegalArgumentException("constraint must be positive");
 
-        edges.add(new NetworkFlowSolverBase.Edge(stringIntegerMap.get(w1), stringIntegerMap.get(w2), constraint));
+        edges.add(new Edge(stringIntegerMap.get(w1 + "z123"), stringIntegerMap.get(w2), constraint));
     }
 
     /**
@@ -89,11 +107,20 @@ public class MatzoDistribution extends MatzoDistributionBase{
      */
     @Override
     public int max() {
-        networkFlowSolverBase = new EdmondsKarpAdjacencyList(counter, 0, 1);
-        for(NetworkFlowSolverBase.Edge edge : edges){
+        networkFlowSolverBase = new EdmondsKarpAdjacencyList(counter, 0, 2);
+        for(Edge edge : edges){
             networkFlowSolverBase.addEdge(edge.from, edge.to, edge.capacity);
         }
+        //print graph
+//        for(List<Edge> edge : networkFlowSolverBase.getGraph()){
+//            for(Edge e : edge){
+//                System.out.println(String.format("Edge %s -> %s | flow = %d | capacity = %d " , e.from, e.to, e.flow, e.capacity));
+//            }
+//        }
+
         networkFlowSolverBase.solve();
         return (int) networkFlowSolverBase.getMaxFlow();
     }
+
+
 }
