@@ -47,4 +47,28 @@ public class MatzoDistributionTest {
         md.roadExists("A", "t", 10);
         assertEquals(4, md.max());
     }
+
+    @Test
+    void test1(){
+        MatzoDistributionBase md = new MatzoDistribution("s", 33, "t");
+        md.addWarehouse("A", 4);
+        md.addWarehouse("B", 6);
+        md.addWarehouse("C", 3);
+        md.addWarehouse("D", 9);
+        md.addWarehouse("E", 5);
+        md.addWarehouse("F", 4);
+
+        md.roadExists("s", "A", 11);
+        md.roadExists("s", "B", 9);
+        md.roadExists("s", "E", 7);
+        md.roadExists("A", "C", 3);
+        md.roadExists("A", "F", 2);
+        md.roadExists("B", "D", 5);
+        md.roadExists("C", "t", 12);
+        md.roadExists("D", "t", 13);
+        md.roadExists("E", "D", 6);
+        md.roadExists("F", "C", 6);
+
+        assertEquals(12, md.max());
+    }
 }
