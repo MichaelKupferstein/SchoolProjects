@@ -12,18 +12,11 @@ import java.util.Map;
 
 public class MatzoDistribution extends MatzoDistributionBase{
 
-    private class Info{
-        int id, capacity;
-        public Info(int id, int capacity){
-            this.id = id;
-            this.capacity = capacity;
-        }
-    }
-
     private Map<String, Integer> stringIntegerMap;
     private int counter = 0;
     private NetworkFlowSolverBase networkFlowSolverBase;
-    List<Edge> edges;
+    private List<Edge> edges;
+    private String key;
 
 
     /**
@@ -44,11 +37,12 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(sourceWarehouse.isEmpty() || destinationWarehouse.isEmpty() || sourceWarehouse.equals(destinationWarehouse)) throw new IllegalArgumentException("sourceWarehouse and destinationWarehouse cannot be empty or equal");
         if(sourceConstraint <= 0) throw new IllegalArgumentException("sourceConstraint must be positive");
 
+        this.key = "z$123&?";
         this.stringIntegerMap = new HashMap<>();
         this.edges = new ArrayList<>();
         stringIntegerMap.put(sourceWarehouse, counter++);
-        stringIntegerMap.put(sourceWarehouse + "z123", counter++);
-        edges.add(new Edge(stringIntegerMap.get(sourceWarehouse), stringIntegerMap.get(sourceWarehouse + "z123"), sourceConstraint));
+        stringIntegerMap.put(sourceWarehouse + key, counter++);
+        edges.add(new Edge(stringIntegerMap.get(sourceWarehouse), stringIntegerMap.get(sourceWarehouse + key), sourceConstraint));
         stringIntegerMap.put(destinationWarehouse, counter++);
 
 
@@ -72,8 +66,8 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(stringIntegerMap.containsKey(warehouseId)) throw new IllegalArgumentException("warehouseId already exists");
 
         stringIntegerMap.put(warehouseId, counter++);
-        stringIntegerMap.put(warehouseId + "z123", counter++);
-        edges.add(new Edge(stringIntegerMap.get(warehouseId), stringIntegerMap.get(warehouseId + "z123"), constraint));
+        stringIntegerMap.put(warehouseId + key, counter++);
+        edges.add(new Edge(stringIntegerMap.get(warehouseId), stringIntegerMap.get(warehouseId + key), constraint));
 
     }
 
@@ -95,7 +89,7 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(w1.equals(w2)) throw new IllegalArgumentException("w1 and w2 cannot be equal");
         if(constraint <= 0) throw new IllegalArgumentException("constraint must be positive");
 
-        edges.add(new Edge(stringIntegerMap.get(w1 + "z123"), stringIntegerMap.get(w2), constraint));
+        edges.add(new Edge(stringIntegerMap.get(w1 + key), stringIntegerMap.get(w2), constraint));
     }
 
     /**
