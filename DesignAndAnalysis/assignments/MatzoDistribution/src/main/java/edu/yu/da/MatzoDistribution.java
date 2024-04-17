@@ -87,6 +87,7 @@ public class MatzoDistribution extends MatzoDistributionBase{
         if(w1.isEmpty() || w2.isEmpty()) throw new IllegalArgumentException("w1 and w2 cannot be empty");
         if(!stringIntegerMap.containsKey(w1) || !stringIntegerMap.containsKey(w2)) throw new IllegalArgumentException("w1 and w2 must be added to the network");
         if(w1.equals(w2)) throw new IllegalArgumentException("w1 and w2 cannot be equal");
+        if(w1.equals("t") || w2.equals("s")) throw new IllegalArgumentException("w1 and w2 cannot be source or destination");
         if(constraint <= 0) throw new IllegalArgumentException("constraint must be positive");
 
         edges.add(new Edge(stringIntegerMap.get(w1 + key), stringIntegerMap.get(w2), constraint));

@@ -37,6 +37,9 @@ public class MatzoDistributionTest {
         assertThrows(IllegalArgumentException.class, () -> md.roadExists("A", "A", 10));//w1 and w2 cannot be equal
         assertThrows(IllegalArgumentException.class, () -> md.roadExists("A", "B", 10));//w1 and w2 must be added to the network
         assertThrows(IllegalArgumentException.class, () -> md.roadExists("B", "A", 10));//w1 and w2 must be added to the network
+        assertThrows(IllegalArgumentException.class, () -> md.roadExists("A", "s", 10));//w1 and w2 cannot be source or destination
+        assertThrows(IllegalArgumentException.class, () -> md.roadExists("t", "A", 10));//w1 and w2 cannot be source or destination
+
     }
 
     @Test
@@ -70,5 +73,30 @@ public class MatzoDistributionTest {
         md.roadExists("F", "C", 6);
 
         assertEquals(12, md.max());
+    }
+
+    @Test
+    void noPath(){
+        MatzoDistributionBase md = new MatzoDistribution("s", 5, "t");
+        md.addWarehouse("A", 4);
+        md.addWarehouse("B", 6);
+
+        md.roadExists("s", "A", 3);
+        md.roadExists("B", "t", 3);
+
+        assertEquals(0, md.max());
+    }
+
+    @Test
+    void testAddAfterMax(){
+        MatzoDistributionBase md = new MatzoDistribution("s", 28, "t");
+        md.addWarehouse("A", 10);
+        md.roadExists("s", "A", 10);
+        md.roadExists("A", "t", 10);
+        assertEquals(10, md.max());
+        md.addWarehouse("B", 10);
+        md.roadExists("s", "B", 10);
+        md.roadExists("B", "t", 10);
+        assertEquals(20, md.max());
     }
 }
