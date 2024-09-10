@@ -3,9 +3,13 @@ package edu.yu.cs.com3800.stage1;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
+import edu.yu.cs.com3800.JavaRunner;
 import edu.yu.cs.com3800.SimpleServer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.logging.Logger;
 
@@ -66,6 +70,23 @@ public class SimpleServerImpl implements SimpleServer {
             if(!"text/x-java-source".equals(exchange.getRequestHeaders().getFirst("Content-Type"))){
                 exchange.sendResponseHeaders(400, -1);
                 return;
+            }
+            InputStream is = exchange.getRequestBody();
+            is.close();
+
+            JavaRunner runner = new JavaRunner();
+            try{
+                String result = runner.compileAndRun(is);
+                exchange.sendResponseHeaders(200, result.length());
+                exchange.getResponseBody().write(result.getBytes());
+            } catch (Exception e) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(baos));
+                String response = e.getMessage() + "\n" + baos.toString();
+                exchange.sendResponseHeaders(400, response.length());
+                exchange.getResponseBody().write(response.getBytes());
+            } finally {
+                exchange.close();
             }
         }
     }
