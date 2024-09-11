@@ -72,11 +72,13 @@ public class SimpleServerImpl implements SimpleServer {
                 return;
             }
             InputStream is = exchange.getRequestBody();
-            is.close();
+            //is.close();
 
             JavaRunner runner = new JavaRunner();
+            logger.info("Compiling and running code");
             try{
                 String result = runner.compileAndRun(is);
+                is.close();
                 exchange.sendResponseHeaders(200, result.length());
                 exchange.getResponseBody().write(result.getBytes());
             } catch (Exception e) {
