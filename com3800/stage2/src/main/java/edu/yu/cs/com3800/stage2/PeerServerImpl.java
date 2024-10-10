@@ -2,7 +2,6 @@ package edu.yu.cs.com3800.stage2;
 
 import edu.yu.cs.com3800.*;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,7 +42,7 @@ public class PeerServerImpl extends Thread implements PeerServer {
     }
 
     @Override
-    public void setCurrentLeader(Vote v) throws IOException {
+    public void setCurrentLeader(Vote v){
         this.currentLeader = v;
     }
 
@@ -109,28 +108,32 @@ public class PeerServerImpl extends Thread implements PeerServer {
 
     @Override
     public void run(){
-        //step 1: create and run thread that sends broadcast messages
-        //step 2: create and run thread that listens for messages sent to this server
+        try{
+            //step 1: create and run thread that sends broadcast messages
+            this.senderWorker = new UDPMessageSender(this.outgoingMessages,this.myPort);
+            this.senderWorker.start();
+            //step 2: create and run thread that listens for messages sent to this server
+            this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,null);
+            this.receiverWorker.start();
+        }catch(Exception e){
+            e.printStackTrace();
+            return;
+        }
         //step 3: main server loop
         try{
-            this.senderWorker = new UDPMessageSender(this.outgoingMessages,this.myPort);
-            this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,null);
-            this.senderWorker.start();
-            this.receiverWorker.start();
-
-
             while (!this.shutdown){
                 switch (getPeerState()){
                     case LOOKING:
                         //start leader election, set leader to the election winner
-                        //TODO
-
+                        LeaderElection election = new LeaderElection(this,this.incomingMessages,null);
+                        setCurrentLeader(election.lookForLeader());
                         break;
                 }
             }
         }
         catch (Exception e) {
-            //code...
+            e.printStackTrace();
+            return;
         }
     }
 

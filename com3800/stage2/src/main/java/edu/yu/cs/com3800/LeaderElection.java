@@ -9,7 +9,7 @@ import java.util.logging.Logger;
  */
 public class LeaderElection {
 
-    private static final Logger logger = Logger.getLogger(LeaderElection.class.getName());
+    private static Logger logger;
 
     /**
      * time to wait once we believe we've reached the end of leader election.
@@ -23,8 +23,18 @@ public class LeaderElection {
     private final static int maxNotificationInterval = 30000;
     private long proposedEpoch;
     private long proposedLeader;
+    private PeerServer server;
+    private LinkedBlockingQueue<Message> incomingMessages;
 
     public LeaderElection(PeerServer server, LinkedBlockingQueue<Message> incomingMessages, Logger logger) {
+        this.server = server;
+        this.incomingMessages = incomingMessages;
+        this.logger = logger;
+        this.proposedEpoch = server.getPeerEpoch();
+        this.proposedLeader = server.getServerId();
+        if(logger == null){
+            this.logger = Logger.getLogger(LeaderElection.class.getName());
+        }
     }
 
     public static byte[] buildMsgContent(ElectionNotification notification) {
