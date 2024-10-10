@@ -24,7 +24,7 @@ public class PeerServerImpl extends Thread implements PeerServer {
 
     public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress){
         //code here...
-        this.myAddress = peerIDtoAddress.get(id);
+        this.myAddress = new InetSocketAddress("localhost",myPort);
         this.myPort = myPort;
         this.state = ServerState.LOOKING;
         this.outgoingMessages = new LinkedBlockingQueue<>();
