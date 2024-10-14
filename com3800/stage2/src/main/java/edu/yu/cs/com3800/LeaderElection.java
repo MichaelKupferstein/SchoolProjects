@@ -100,10 +100,28 @@ public class LeaderElection {
                     this.votes.put(notification.getSenderID(), notification);
 
                     if (haveEnoughVotes(this.votes, new Vote(this.proposedLeader, this.proposedEpoch))) {
-                        if(checkForNewVotes()) continue;
+                        long finalizeStart = System.currentTimeMillis();
+                        boolean gotHigherVote = false;
 
-                        ElectionNotification n = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
-                        return acceptElectionWinner(n);
+                        while(System.currentTimeMillis() - finalizeStart < finalizeWait){
+                            Message m = this.incomingMessages.poll(finalizeWait - (System.currentTimeMillis() - finalizeStart), TimeUnit.MILLISECONDS);
+                            if(m !=null){
+                                ElectionNotification n = getNotificationFromMessage(m);
+                                if(supersedesCurrentVote(n.getProposedLeaderID(), n.getPeerEpoch())){
+                                    this.proposedLeader = n.getProposedLeaderID();
+                                    this.proposedEpoch = n.getPeerEpoch();
+                                    this.votes.put(n.getSenderID(), n);
+                                    gotHigherVote = true;
+                                    break;
+                                }
+                                this.votes.put(n.getSenderID(), n);
+                            }
+                        }
+                        if(!gotHigherVote){
+                            ElectionNotification n1 = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
+                            return acceptElectionWinner(n1);
+                        }
+
                     }
                 }
 
