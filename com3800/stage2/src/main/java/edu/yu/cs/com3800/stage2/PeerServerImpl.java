@@ -2,12 +2,16 @@ package edu.yu.cs.com3800.stage2;
 
 import edu.yu.cs.com3800.*;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Logger;
 
 
-public class PeerServerImpl extends Thread implements PeerServer {
+
+
+public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private final InetSocketAddress myAddress;
     private final int myPort;
     private PeerServer.ServerState state;
@@ -22,7 +26,10 @@ public class PeerServerImpl extends Thread implements PeerServer {
     private UDPMessageSender senderWorker;
     private UDPMessageReceiver receiverWorker;
 
-    public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress){
+    private static Logger logger;
+
+
+    public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress) throws IOException {
         //code here...
         this.myAddress = new InetSocketAddress("localhost",myPort);
         this.myPort = myPort;
@@ -32,6 +39,7 @@ public class PeerServerImpl extends Thread implements PeerServer {
         this.id = id;
         this.peerEpoch = peerEpoch;
         this.peerIDtoAddress = peerIDtoAddress;
+        this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
     }
 
     @Override
@@ -103,7 +111,7 @@ public class PeerServerImpl extends Thread implements PeerServer {
 
     @Override
     public int getQuorumSize() {
-        return this.peerIDtoAddress.size();
+        return (this.peerIDtoAddress.size()/2)+1;
     }
 
     @Override
@@ -113,7 +121,7 @@ public class PeerServerImpl extends Thread implements PeerServer {
             this.senderWorker = new UDPMessageSender(this.outgoingMessages,this.myPort);
             this.senderWorker.start();
             //step 2: create and run thread that listens for messages sent to this server
-            this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,null);
+            this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,this);
             this.receiverWorker.start();
         }catch(Exception e){
             e.printStackTrace();
@@ -124,10 +132,13 @@ public class PeerServerImpl extends Thread implements PeerServer {
             while (!this.shutdown){
                 switch (getPeerState()){
                     case LOOKING:
+
                         //start leader election, set leader to the election winner
-                        LeaderElection election = new LeaderElection(this,this.incomingMessages,null);
-                        setCurrentLeader(election.lookForLeader());
-                        break;
+                        LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
+                        Vote leader = election.lookForLeader();
+                        if (leader != null) {
+                            setCurrentLeader(leader);
+                        }
                 }
             }
         }

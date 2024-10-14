@@ -1,7 +1,10 @@
 package edu.yu.cs.com3800;
 
+import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +28,7 @@ public class LeaderElection {
     private long proposedLeader;
     private PeerServer server;
     private LinkedBlockingQueue<Message> incomingMessages;
+    private Map<Long, ElectionNotification> votes;
 
     public LeaderElection(PeerServer server, LinkedBlockingQueue<Message> incomingMessages, Logger logger) {
         this.server = server;
@@ -32,19 +36,29 @@ public class LeaderElection {
         this.logger = logger;
         this.proposedEpoch = server.getPeerEpoch();
         this.proposedLeader = server.getServerId();
-        if(logger == null){
-            this.logger = Logger.getLogger(LeaderElection.class.getName());
-        }
+        this.logger = logger;
+        this.votes = new HashMap<>();
+
+        //System.out.println("LeaderElection created from server " + server.getServerId());
     }
 
     public static byte[] buildMsgContent(ElectionNotification notification) {
-        //TODO
-        return null;
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES * 3 + Character.BYTES);
+        buffer.putLong(notification.getProposedLeaderID());
+        buffer.putChar(notification.getState().getChar());
+        buffer.putLong(notification.getSenderID());
+        buffer.putLong(notification.getPeerEpoch());
+        return buffer.array();
     }
 
     public static ElectionNotification getNotificationFromMessage(Message received) {
-        //TODO
-        return null;
+        byte[] contents = received.getMessageContents();
+        ByteBuffer buffer = ByteBuffer.wrap(contents);
+        long proposedLeaderID = buffer.getLong();
+        char stateChar = buffer.getChar();
+        long senderID = buffer.getLong();
+        long peerEpoch = buffer.getLong();
+        return new ElectionNotification(proposedLeaderID, PeerServer.ServerState.getServerState(stateChar), senderID, peerEpoch);
     }
 
     /**
@@ -53,39 +67,79 @@ public class LeaderElection {
      * @return the elected leader
      */
     public synchronized Vote lookForLeader() {
+        //System.out.println("Looking for leader");
+
         try {
-            //send initial notifications to get things started
             sendNotifications();
-            //Loop in which we exchange notifications with other servers until we find a leader
-            while(true){
-                //Remove next notification from queue
-                //If no notifications received...
-                //...resend notifications to prompt a reply from others
-                //...use exponential back-off when notifications not received but no longer than maxNotificationInterval...
-                //If we did get a message...
-                //...if it's for an earlier epoch, or from an observer, ignore it.
-                //...if the received message has a vote for a leader which supersedes mine, change my vote (and send notifications to all other voters about my new vote).
-                //(Be sure to keep track of the votes I received and who I received them from.)
-                //If I have enough votes to declare my currently proposed leader as the leader...
-                //..do a last check to see if there are any new votes for a higher ranked possible leader. If there are, continue in my election "while" loop.
-                //If there are no new relevant message from the reception queue, set my own state to either LEADING or FOLLOWING and RETURN the elected leader.
+            long start = System.currentTimeMillis();
+
+            while (true) {
+                Message message = this.incomingMessages.poll(maxNotificationInterval, TimeUnit.MILLISECONDS);
+
+                if (message == null) {
+                    if (System.currentTimeMillis() - start > maxNotificationInterval) {
+                        sendNotifications();
+                        start = System.currentTimeMillis();
+                    }
+                } else {
+                    ElectionNotification notification = getNotificationFromMessage(message);
+
+                    if (notification.getPeerEpoch() < this.proposedEpoch) continue;
+
+                    if(supersedesCurrentVote(notification.getProposedLeaderID(), notification.getPeerEpoch())){
+                        this.proposedLeader = notification.getProposedLeaderID();
+                        this.proposedEpoch = notification.getPeerEpoch();
+                        sendNotifications();
+                    }
+
+                    this.votes.put(notification.getSenderID(), notification);
+
+                    if (haveEnoughVotes(this.votes, new Vote(this.proposedLeader, this.proposedEpoch))) {
+                        if(checkForNewVotes()) continue;
+
+                        ElectionNotification n = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
+                        return acceptElectionWinner(n);
+                    }
+                }
+
+
             }
-        }
-        catch (Exception e) {
+        }catch (Exception e){
             this.logger.log(Level.SEVERE,"Exception occurred during election; election canceled",e);
         }
         return null;
     }
 
+    private boolean checkForNewVotes() {
+        Message message = this.incomingMessages.poll();
+        while(message != null){
+            ElectionNotification notification = getNotificationFromMessage(message);
+            if(supersedesCurrentVote(notification.getProposedLeaderID(), notification.getPeerEpoch())){
+                this.incomingMessages.offer(message);
+                return true;
+            }
+            message = this.incomingMessages.poll();
+        }
+        return false;
+    }
+
     private void sendNotifications() {
-        //TODO
+        ElectionNotification n = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
+        byte[] content = buildMsgContent(n);
+        this.server.sendBroadcast(Message.MessageType.ELECTION, content);
     }
 
     private Vote acceptElectionWinner(ElectionNotification n) {
         //set my state to either LEADING or FOLLOWING
+        if(n.getProposedLeaderID() == this.server.getServerId()){
+            this.server.setPeerState(PeerServer.ServerState.LEADING);
+        }else{
+            this.server.setPeerState(PeerServer.ServerState.FOLLOWING);
+        }
         //clear out the incoming queue before returning
-        //TODO
-        return null;
+        this.incomingMessages.clear();
+        return new Vote(n.getProposedLeaderID(), n.getPeerEpoch());
+
     }
 
     /*
@@ -103,7 +157,13 @@ public class LeaderElection {
      */
     protected boolean haveEnoughVotes(Map<Long, ElectionNotification> votes, Vote proposal) {
         //is the number of votes for the proposal > the size of my peer server’s quorum?
-        //TODO
-        return false;
+        int count = 0;
+        for(ElectionNotification n : votes.values()){
+            if(n.getProposedLeaderID() == proposal.getProposedLeaderID() && n.getPeerEpoch() == proposal.getPeerEpoch()){
+                count++;
+            }
+        }
+
+        return count >= this.server.getQuorumSize();
     }
 }
