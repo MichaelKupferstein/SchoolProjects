@@ -24,6 +24,7 @@ public class LeaderElection {
      * This impacts the amount of time to get the system up again after long partitions. Currently 30 seconds.
      */
     private final static int maxNotificationInterval = 30000;
+    private final static int initialNotifcationInterval = 200;
     private long proposedEpoch;
     private long proposedLeader;
     private PeerServer server;
@@ -72,16 +73,20 @@ public class LeaderElection {
         try {
             sendNotifications();
             long start = System.currentTimeMillis();
+            int currentInterval = initialNotifcationInterval;
 
             while (true) {
-                Message message = this.incomingMessages.poll(maxNotificationInterval, TimeUnit.MILLISECONDS);
+                Message message = this.incomingMessages.poll(currentInterval, TimeUnit.MILLISECONDS);
 
                 if (message == null) {
-                    if (System.currentTimeMillis() - start > maxNotificationInterval) {
+                    if (System.currentTimeMillis() - start > currentInterval) {
                         sendNotifications();
                         start = System.currentTimeMillis();
+                        currentInterval = Math.min(currentInterval * 2, maxNotificationInterval);
                     }
                 } else {
+                    currentInterval = initialNotifcationInterval;
+
                     ElectionNotification notification = getNotificationFromMessage(message);
 
                     if (notification.getPeerEpoch() < this.proposedEpoch) continue;
