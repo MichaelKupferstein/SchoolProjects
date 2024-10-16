@@ -1,7 +1,6 @@
-package edu.yu.cs.com3800.stage2.tests;
+package edu.yu.cs.com3800.stage2;
 
 import edu.yu.cs.com3800.*;
-import edu.yu.cs.com3800.stage2.PeerServerImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
-public class PeerServerImplTest {
+public class Stage2test {
 
     private ArrayList<PeerServer> servers;
     private HashMap<Long, InetSocketAddress> peerIDtoAddress;
@@ -71,8 +70,6 @@ public class PeerServerImplTest {
         }
 
         assert allServersHaveLeader : "Not all servers have a leader after waiting";
-
-
 
         for (PeerServer server : servers) {
             assertNotNull(server.getCurrentLeader());
