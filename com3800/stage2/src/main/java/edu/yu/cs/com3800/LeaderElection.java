@@ -72,18 +72,14 @@ public class LeaderElection {
 
         try {
             sendNotifications();
-            long start = System.currentTimeMillis();
             int currentInterval = initialNotifcationInterval;
 
             while (true) {
                 Message message = this.incomingMessages.poll(currentInterval, TimeUnit.MILLISECONDS);
 
                 if (message == null) {
-                    if (System.currentTimeMillis() - start > currentInterval) {
-                        sendNotifications();
-                        start = System.currentTimeMillis();
-                        currentInterval = Math.min(currentInterval * 2, maxNotificationInterval);
-                    }
+                    sendNotifications();
+                    currentInterval = Math.min(currentInterval * 2, maxNotificationInterval);
                 } else {
                     currentInterval = initialNotifcationInterval;
 
@@ -100,11 +96,10 @@ public class LeaderElection {
                     this.votes.put(notification.getSenderID(), notification);
 
                     if (haveEnoughVotes(this.votes, new Vote(this.proposedLeader, this.proposedEpoch))) {
-                        long finalizeStart = System.currentTimeMillis();
                         boolean gotHigherVote = false;
 
-                        while(System.currentTimeMillis() - finalizeStart < finalizeWait){
-                            Message m = this.incomingMessages.poll(finalizeWait - (System.currentTimeMillis() - finalizeStart), TimeUnit.MILLISECONDS);
+                        while(!gotHigherVote){
+                            Message m = this.incomingMessages.poll(finalizeWait, TimeUnit.MILLISECONDS);
                             if(m !=null){
                                 ElectionNotification n = getNotificationFromMessage(m);
                                 if(supersedesCurrentVote(n.getProposedLeaderID(), n.getPeerEpoch())){
@@ -115,6 +110,8 @@ public class LeaderElection {
                                     break;
                                 }
                                 this.votes.put(n.getSenderID(), n);
+                            } else{
+                                break;
                             }
                         }
                         if(!gotHigherVote){
@@ -131,19 +128,6 @@ public class LeaderElection {
             this.logger.log(Level.SEVERE,"Exception occurred during election; election canceled",e);
         }
         return null;
-    }
-
-    private boolean checkForNewVotes() {
-        Message message = this.incomingMessages.poll();
-        while(message != null){
-            ElectionNotification notification = getNotificationFromMessage(message);
-            if(supersedesCurrentVote(notification.getProposedLeaderID(), notification.getPeerEpoch())){
-                this.incomingMessages.offer(message);
-                return true;
-            }
-            message = this.incomingMessages.poll();
-        }
-        return false;
     }
 
     private void sendNotifications() {
