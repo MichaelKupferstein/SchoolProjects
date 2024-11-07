@@ -59,7 +59,7 @@ public interface PeerServer{
             return 'z';
         }
 
-        public static ServerState getServerState(char c) {
+        public static PeerServer.ServerState getServerState(char c) {
             switch (c) {
                 case 'O':
                     return LOOKING;
