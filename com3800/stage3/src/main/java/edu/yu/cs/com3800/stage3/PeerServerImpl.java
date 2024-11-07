@@ -1,14 +1,12 @@
 package edu.yu.cs.com3800.stage3;
 
 import edu.yu.cs.com3800.*;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-
 
 
 public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
@@ -25,12 +23,13 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     private UDPMessageSender senderWorker;
     private UDPMessageReceiver receiverWorker;
+    private JavaRunnerFollower follower;
+    private RoundRobinLeader leader;
 
     private static Logger logger;
 
 
     public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress) throws IOException {
-        //code here...
         this.myAddress = new InetSocketAddress("localhost",myPort);
         this.myPort = myPort;
         this.state = ServerState.LOOKING;
@@ -45,8 +44,11 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     @Override
     public void shutdown(){
         this.shutdown = true;
-        this.senderWorker.shutdown();
-        this.receiverWorker.shutdown();
+        if(this.senderWorker != null)this.senderWorker.shutdown();
+        if(this.receiverWorker != null)this.receiverWorker.shutdown();
+        if(this.follower != null)this.follower.shutdown();
+        if(this.leader != null)this.leader.shutdown();
+
     }
 
     @Override
@@ -117,34 +119,81 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     @Override
     public void run(){
         try{
-            //step 1: create and run thread that sends broadcast messages
             this.senderWorker = new UDPMessageSender(this.outgoingMessages,this.myPort);
             this.senderWorker.start();
-            //step 2: create and run thread that listens for messages sent to this server
             this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,this);
             this.receiverWorker.start();
         }catch(Exception e){
             e.printStackTrace();
             return;
         }
-        //step 3: main server loop
         try{
             while (!this.shutdown){
                 switch (getPeerState()){
                     case LOOKING:
-
                         //start leader election, set leader to the election winner
                         LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
                         Vote leader = election.lookForLeader();
                         if (leader != null) {
                             setCurrentLeader(leader);
+
+                            if(leader.getProposedLeaderID() == this.id) {
+                                setPeerState(ServerState.LEADING);
+                                startLeading();
+                            }else {
+                                setPeerState(ServerState.FOLLOWING);
+                                startFollowing();
+                            }
                         }
+                        break;
+                    case FOLLOWING:
+                        Message message1 = this.incomingMessages.poll(3000, TimeUnit.MILLISECONDS);
+                        if(message1 != null){
+                            if(message1.getMessageType() == Message.MessageType.WORK){
+                                this.follower.work(message1); //TODO: implement work method
+                            }
+                        }
+                        break;
+                    case LEADING:
+                        Message message2 = this.incomingMessages.poll(3000, TimeUnit.MILLISECONDS);
+                        if(message2 != null){
+                            if(message2.getMessageType() == Message.MessageType.COMPLETED_WORK){
+                                this.leader.processMessage(message2); //TODO: implement processMessage method
+                            }
+                        }
+                        break;
                 }
             }
         }
         catch (Exception e) {
             e.printStackTrace();
             return;
+        }
+    }
+
+    private void startFollowing() {
+        if(this.follower == null){
+            try {
+                this.follower = new JavaRunnerFollower(this,this.logger); //TODO: implement JavaRunnerFollower
+                this.follower.start();
+            } catch (IOException e) {
+                logger.severe("Failed to start JavaRunnerFollower" + e.getMessage());
+            }
+        }
+        if(leader != null){
+            leader.shutdown(); //TODO: implement shutdown method
+            leader = null;
+        }
+    }
+
+    private void startLeading() {
+        if(this.leader == null){
+            this.leader = new RoundRobinLeader(this,this.peerIDtoAddress,this.logger); //TODO: implement RoundRobinLeader
+            this.leader.start();
+        }
+        if(follower != null){
+            follower.shutdown(); //TODO: implement shutdown method
+            follower = null;
         }
     }
 
