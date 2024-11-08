@@ -6,7 +6,11 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static edu.yu.cs.com3800.Message.MessageType.COMPLETED_WORK;
+import static edu.yu.cs.com3800.Message.MessageType.WORK;
 
 
 public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
@@ -39,6 +43,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         this.peerEpoch = peerEpoch;
         this.peerIDtoAddress = peerIDtoAddress;
         this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
+        setName("PeerServerImpl-port-" + this.myPort);
     }
 
     @Override
@@ -63,14 +68,26 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public void sendMessage(Message.MessageType type, byte[] messageContents, InetSocketAddress target) throws IllegalArgumentException {
-        Message msg = new Message(type,messageContents,this.myAddress.getHostString(),this.myPort,target.getHostString(),target.getPort());
-        this.outgoingMessages.offer(msg);
+        this.logger.entering(PeerServerImpl.class.getName(),"sendMessage",new Object[]{type,messageContents,target});
+
+        this.logger.fine("Sending message to " + target.getHostString() + ":" + target.getPort());
+
+        if(type == WORK || type == COMPLETED_WORK){
+            this.outgoingMessages.offer(new Message(messageContents));
+        }else{
+            Message msg = new Message(type,messageContents,this.myAddress.getHostString(),this.myPort,target.getHostString(),target.getPort());
+            this.outgoingMessages.offer(msg);
+        }
     }
 
     @Override
     public void sendBroadcast(Message.MessageType type, byte[] messageContents) {
+        this.logger.entering(PeerServerImpl.class.getName(),"sendBroadcast",new Object[]{type,messageContents});
+
+        this.logger.fine("Sending broadcast message: " + type.name());
         for(InetSocketAddress peer : peerIDtoAddress.values()){
             if(!peer.equals(this.myAddress)){
+                this.logger.fine("Sending message to " + peer.getHostString() + ":" + peer.getPort());
                 sendMessage(type,messageContents,peer);
             }
         }
@@ -118,24 +135,28 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public void run(){
+        this.logger.entering(PeerServerImpl.class.getName(),"run");
         try{
             this.senderWorker = new UDPMessageSender(this.outgoingMessages,this.myPort);
             this.senderWorker.start();
+            this.logger.fine("Sender worker started on port " + this.myPort);
             this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,this);
             this.receiverWorker.start();
+            this.logger.fine("Receiver worker started on port " + this.myPort);
         }catch(Exception e){
-            e.printStackTrace();
-            return;
+            this.logger.log(Level.WARNING,"Failed to start sender and receiver workers",e);
         }
         try{
             while (!this.shutdown){
                 switch (getPeerState()){
                     case LOOKING:
                         //start leader election, set leader to the election winner
+                        this.logger.fine("Starting leader election");
                         LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
                         Vote leader = election.lookForLeader();
                         if (leader != null) {
                             setCurrentLeader(leader);
+                            this.logger.fine("Leader elected: " + leader.getProposedLeaderID());
 
                             if(leader.getProposedLeaderID() == this.id) {
                                 setPeerState(ServerState.LEADING);
@@ -147,18 +168,25 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                         }
                         break;
                     case FOLLOWING:
-                        Message message1 = this.incomingMessages.poll(3000, TimeUnit.MILLISECONDS);
+                        Message message1 = this.incomingMessages.take();
+                        this.logger.fine("Following and reviced message: " + message1);
                         if(message1 != null){
-                            if(message1.getMessageType() == Message.MessageType.WORK){
-                                this.follower.work(message1); //TODO: implement work method
+                            if(message1.getMessageType() == WORK){
+                                this.logger.fine("Followr received work");
+                                this.follower.work(message1);
                             }
                         }
                         break;
                     case LEADING:
-                        Message message2 = this.incomingMessages.poll(3000, TimeUnit.MILLISECONDS);
+                        Message message2 = this.incomingMessages.take();
+                        logger.fine("Leading and received message: " + message2);
                         if(message2 != null){
                             if(message2.getMessageType() == Message.MessageType.COMPLETED_WORK){
-                                this.leader.processMessage(message2); //TODO: implement processMessage method
+                                this.logger.fine("Leader received completed work");
+                                this.leader.processMessage(message2);
+                            }else if(message2.getMessageType() == WORK){
+                                this.logger.fine("Leader received work");
+                                this.leader.processMessage(message2);
                             }
                         }
                         break;
@@ -166,33 +194,42 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return;
+            this.logger.severe("PeerServerImpl failed: " + e);
         }
     }
 
     private void startFollowing() {
+        this.logger.entering(PeerServerImpl.class.getName(),"startFollowing");
         if(this.follower == null){
             try {
-                this.follower = new JavaRunnerFollower(this,this.logger); //TODO: implement JavaRunnerFollower
+                this.logger.fine("Starting JavaRunnerFollower");
+                this.follower = new JavaRunnerFollower(this);
                 this.follower.start();
             } catch (IOException e) {
                 logger.severe("Failed to start JavaRunnerFollower" + e.getMessage());
             }
         }
         if(leader != null){
-            leader.shutdown(); //TODO: implement shutdown method
+            this.logger.fine("Shutting down RoundRobinLeader to start following");
+            leader.shutdown();
             leader = null;
         }
     }
 
     private void startLeading() {
+        this.logger.entering(PeerServerImpl.class.getName(),"startLeading");
         if(this.leader == null){
-            this.leader = new RoundRobinLeader(this,this.peerIDtoAddress,this.logger); //TODO: implement RoundRobinLeader
+            this.logger.fine("Starting RoundRobinLeader");
+            try {
+                this.leader = new RoundRobinLeader(this,this.peerIDtoAddress);
+            } catch (IOException e) {
+                this.logger.severe("Failed to start RoundRobinLeader" + e.getMessage());
+            }
             this.leader.start();
         }
         if(follower != null){
-            follower.shutdown(); //TODO: implement shutdown method
+            this.logger.fine("Shutting down JavaRunnerFollower to start leading");
+            follower.shutdown();
             follower = null;
         }
     }
