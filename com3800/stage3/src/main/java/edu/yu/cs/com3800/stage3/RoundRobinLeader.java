@@ -24,6 +24,7 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private Iterator<Map.Entry<Long,InetSocketAddress>> workerIterator;
     private int currentWorkerIndex = 0;
     private Map<Long, Message> pendingRequests;
+    private Map<Long,Message> clientRequests;
     private long nextWorkerID = 1;
 
     public RoundRobinLeader(PeerServer myServer, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
@@ -32,6 +33,7 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
         this.workers.remove(myServer.getServerId());
         this.workerIterator = workers.entrySet().iterator();
         this.pendingRequests = new ConcurrentHashMap<>();
+        this.clientRequests = new ConcurrentHashMap<>();
         this.logger = initializeLogging(RoundRobinLeader.class.getCanonicalName() + "-on-port-" + this.myServer.getUdpPort());
         setDaemon(true);
         logger.fine("RoundRobinLeader initialized on port " + myServer.getUdpPort() + " from PeerServer: " + myServer.getServerId());
@@ -46,9 +48,10 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
 
         if(workerIterator.hasNext()){
             Map.Entry<Long,InetSocketAddress> worker = workerIterator.next();
+            clientRequests.put(message.getRequestID(), message);
             Message workMessage = new Message(WORK, message.getMessageContents(), myServer.getAddress().getHostString(),
                     myServer.getUdpPort(), worker.getValue().getHostString(), worker.getValue().getPort(), nextWorkerID);
-            pendingRequests.put(nextWorkerID, workMessage);
+            pendingRequests.put(nextWorkerID, message);
             nextWorkerID++;
             myServer.sendMessage(workMessage.getMessageType(), workMessage.getNetworkPayload(), worker.getValue());
         }
@@ -57,7 +60,10 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private void processCompletedWork(Message message) {
         Message originalWork = pendingRequests.remove(message.getRequestID());
         if(originalWork != null){
-            myServer.sendMessage(COMPLETED_WORK, message.getMessageContents(), new InetSocketAddress(originalWork.getSenderHost(), originalWork.getSenderPort()));
+            Message response = new Message(COMPLETED_WORK, message.getMessageContents(), myServer.getAddress().getHostString(),
+                    myServer.getUdpPort(), originalWork.getSenderHost(), originalWork.getSenderPort(), originalWork.getRequestID());
+            myServer.sendMessage(response.getMessageType(), response.getNetworkPayload(), new InetSocketAddress(originalWork.getSenderHost(), originalWork.getSenderPort()));
+            clientRequests.remove(originalWork.getRequestID());
         }
     }
 

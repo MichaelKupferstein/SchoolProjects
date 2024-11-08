@@ -69,15 +69,20 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     @Override
     public void sendMessage(Message.MessageType type, byte[] messageContents, InetSocketAddress target) throws IllegalArgumentException {
         this.logger.entering(PeerServerImpl.class.getName(),"sendMessage",new Object[]{type,messageContents,target});
-
         this.logger.fine("Sending message to " + target.getHostString() + ":" + target.getPort());
 
+        Message msg;
         if(type == WORK || type == COMPLETED_WORK){
-            this.outgoingMessages.offer(new Message(messageContents));
+            try {
+                msg = new Message(messageContents);
+            }catch (IllegalArgumentException e) {
+                msg = new Message(type,messageContents,this.myAddress.getHostString(),this.myPort,target.getHostString(),target.getPort());
+            }
         }else{
-            Message msg = new Message(type,messageContents,this.myAddress.getHostString(),this.myPort,target.getHostString(),target.getPort());
-            this.outgoingMessages.offer(msg);
+            msg = new Message(type,messageContents,this.myAddress.getHostString(),this.myPort,target.getHostString(),target.getPort());
+
         }
+        this.outgoingMessages.offer(msg);
     }
 
     @Override
@@ -146,11 +151,11 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         }catch(Exception e){
             this.logger.log(Level.WARNING,"Failed to start sender and receiver workers",e);
         }
-        try{
-            while (!this.shutdown){
+
+        while (!this.shutdown){
+            try {
                 switch (getPeerState()){
                     case LOOKING:
-                        //start leader election, set leader to the election winner
                         this.logger.fine("Starting leader election");
                         LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
                         Vote leader = election.lookForLeader();
@@ -167,35 +172,52 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                             }
                         }
                         break;
+
                     case FOLLOWING:
-                        Message message1 = this.incomingMessages.take();
-                        this.logger.fine("Following and reviced message: " + message1);
-                        if(message1 != null){
-                            if(message1.getMessageType() == WORK){
-                                this.logger.fine("Followr received work");
-                                this.follower.work(message1);
+                        try {
+                            Message message1 = this.incomingMessages.take();
+                            if(message1 != null){
+                                this.logger.fine("Following and received message: " + message1);
+                                if(message1.getMessageType() == Message.MessageType.WORK){
+                                    this.logger.fine("Follower received work");
+                                    this.follower.work(message1);
+                                }
                             }
+                        } catch (Exception e) {
+                            this.logger.log(Level.WARNING,"Error processing message in FOLLOWING state",e);
+                            continue;
                         }
                         break;
+
                     case LEADING:
-                        Message message2 = this.incomingMessages.take();
-                        logger.fine("Leading and received message: " + message2);
-                        if(message2 != null){
-                            if(message2.getMessageType() == Message.MessageType.COMPLETED_WORK){
-                                this.logger.fine("Leader received completed work");
-                                this.leader.processMessage(message2);
-                            }else if(message2.getMessageType() == WORK){
-                                this.logger.fine("Leader received work");
-                                this.leader.processMessage(message2);
+                        try {
+                            Message message2 = this.incomingMessages.take();
+                            if(message2 != null){
+                                this.logger.fine("Leading and received message: " + message2);
+                                if(message2.getMessageType() == Message.MessageType.COMPLETED_WORK){
+                                    this.logger.fine("Leader received completed work");
+                                    this.leader.processMessage(message2);
+                                }else if(message2.getMessageType() == Message.MessageType.WORK){
+                                    this.logger.fine("Leader received work");
+                                    this.leader.processMessage(message2);
+                                }
                             }
+                        } catch (Exception e) {
+                            this.logger.log(Level.WARNING,"Error processing message in LEADING state",e);
+                            continue;
                         }
                         break;
                 }
+            } catch (Exception e) {
+                this.logger.warning("Error in main server loop: " + e.getMessage());
+                if (this.shutdown) {
+                    this.logger.severe("PeerServerImpl failed while shutting down: " + e.getMessage());
+                    break;
+                }
             }
         }
-        catch (Exception e) {
-            this.logger.severe("PeerServerImpl failed: " + e);
-        }
+
+        this.logger.info("PeerServerImpl shutting down normally");
     }
 
     private void startFollowing() {
