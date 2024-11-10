@@ -256,4 +256,9 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         }
     }
 
+    //for testing
+    public boolean isInterrupted() {
+        return this.shutdown;
+    }
+
 }
