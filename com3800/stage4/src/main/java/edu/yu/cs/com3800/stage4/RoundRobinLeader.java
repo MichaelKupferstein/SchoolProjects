@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 
@@ -19,6 +20,7 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private PeerServer myServer;
     private volatile boolean shutdown;
     private static Logger logger;
+    private LinkedBlockingQueue<Message> incomingMessages;
 
     private Map<Long, InetSocketAddress> workers;
     private Iterator<Map.Entry<Long,InetSocketAddress>> workerIterator;
@@ -27,8 +29,9 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private Map<Long,Message> clientRequests;
     private long nextWorkerID = 1;
 
-    public RoundRobinLeader(PeerServer myServer, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
+    public RoundRobinLeader(PeerServer myServer, Map<Long, InetSocketAddress> peerIDtoAddress, LinkedBlockingQueue<Message> incomingMessages) throws IOException {
         this.myServer = myServer;
+        this.incomingMessages = incomingMessages;
         this.workers = new HashMap<>(peerIDtoAddress);
         this.workers.remove(myServer.getServerId());
         this.workerIterator = workers.entrySet().iterator();
@@ -39,20 +42,40 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
         logger.fine("RoundRobinLeader initialized on port " + myServer.getUdpPort() + " from PeerServer: " + myServer.getServerId());
     }
 
+    @Override
+    public void run(){
+        while(!shutdown){
+            try{
+                Message message = this.incomingMessages.take();
+                processMessage(message);
+            }catch (InterruptedException e){
+                if(shutdown){
+                    break;
+                }
+            }
+        }
+        logger.info("RRL shutting down");
+    }
+
     public void processMessage(Message message){
         if(message.getMessageType() == WORK) giveWork(message);
         else if( message.getMessageType() == COMPLETED_WORK) processCompletedWork(message);
     }
+
     private void giveWork(Message message) {
         if(!workerIterator.hasNext()) workerIterator = workers.entrySet().iterator();
 
         if(workerIterator.hasNext()){
             Map.Entry<Long,InetSocketAddress> worker = workerIterator.next();
-            clientRequests.put(message.getRequestID(), message);
+
+            long curId = nextWorkerID++;
+
+            clientRequests.put(curId, message);
+
             Message workMessage = new Message(WORK, message.getMessageContents(), myServer.getAddress().getHostString(),
-                    myServer.getUdpPort(), worker.getValue().getHostString(), worker.getValue().getPort(), nextWorkerID);
-            pendingRequests.put(nextWorkerID, message);
-            nextWorkerID++;
+                    myServer.getUdpPort(), worker.getValue().getHostString(), worker.getValue().getPort(), curId);
+            pendingRequests.put(curId, message);
+
             myServer.sendMessage(workMessage.getMessageType(), workMessage.getNetworkPayload(), worker.getValue());
         }
     }
@@ -66,8 +89,6 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
             clientRequests.remove(originalWork.getRequestID());
         }
     }
-
-
 
 
     public void shutdown() {

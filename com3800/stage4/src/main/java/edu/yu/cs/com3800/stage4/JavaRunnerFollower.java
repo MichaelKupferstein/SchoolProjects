@@ -10,6 +10,7 @@ import static edu.yu.cs.com3800.Message.MessageType.COMPLETED_WORK;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 public class JavaRunnerFollower extends Thread implements LoggingServer {
@@ -17,15 +18,32 @@ public class JavaRunnerFollower extends Thread implements LoggingServer {
     private JavaRunner javaRunner;
     private volatile boolean shutdown;
     private static Logger logger;
+    private LinkedBlockingQueue<Message> incomingMessages;
 
 
-    public JavaRunnerFollower(PeerServer myServer) throws IOException {
+    public JavaRunnerFollower(PeerServer myServer, LinkedBlockingQueue<Message> incomingMessages) throws IOException {
         this.myServer = myServer;
+        this.incomingMessages = incomingMessages;
         this.javaRunner = new JavaRunner();
         this.logger = initializeLogging(JavaRunnerFollower.class.getCanonicalName() + "-on-port-" + this.myServer.getUdpPort());
         setDaemon(true);
         logger.fine("JavaRunnerFollower initialized on port: " + myServer.getUdpPort() + " from PeerServer: " + myServer.getServerId());
     }
+
+    @Override
+    public void run(){
+        while(!shutdown){
+            try{
+                Message message = this.incomingMessages.take();
+                if(message == null || message.getMessageType() != Message.MessageType.WORK) continue;
+                work(message);
+            }catch(InterruptedException e){
+                if(shutdown) break;
+            }
+        }
+        logger.info("JavaFOllower shutting down");
+    }
+
 
     public void shutdown(){
         this.shutdown = true;

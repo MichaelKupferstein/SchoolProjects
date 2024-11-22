@@ -53,6 +53,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         if(this.receiverWorker != null)this.receiverWorker.shutdown();
         if(this.follower != null)this.follower.shutdown();
         if(this.leader != null)this.leader.shutdown();
+        interrupt();
 
     }
 
@@ -150,6 +151,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.logger.fine("Receiver worker started on port " + this.myPort);
         }catch(Exception e){
             this.logger.log(Level.WARNING,"Failed to start sender and receiver workers",e);
+            return;
         }
 
         while (!this.shutdown){
@@ -165,47 +167,18 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
                             if(leader.getProposedLeaderID() == this.id) {
                                 setPeerState(ServerState.LEADING);
-                                startLeading();
-                            }else {
+                            }else{
                                 setPeerState(ServerState.FOLLOWING);
-                                startFollowing();
                             }
                         }
                         break;
 
                     case FOLLOWING:
-                        try {
-                            Message message1 = this.incomingMessages.take();
-                            if(message1 != null){
-                                this.logger.fine("Following and received message: " + message1);
-                                if(message1.getMessageType() == Message.MessageType.WORK){
-                                    this.logger.fine("Follower received work");
-                                    this.follower.work(message1);
-                                }
-                            }
-                        } catch (Exception e) {
-                            this.logger.log(Level.WARNING,"Error processing message in FOLLOWING state",e);
-                            continue;
-                        }
+                        startFollowing();
                         break;
 
                     case LEADING:
-                        try {
-                            Message message2 = this.incomingMessages.take();
-                            if(message2 != null){
-                                this.logger.fine("Leading and received message: " + message2);
-                                if(message2.getMessageType() == Message.MessageType.COMPLETED_WORK){
-                                    this.logger.fine("Leader received completed work");
-                                    this.leader.processMessage(message2);
-                                }else if(message2.getMessageType() == Message.MessageType.WORK){
-                                    this.logger.fine("Leader received work");
-                                    this.leader.processMessage(message2);
-                                }
-                            }
-                        } catch (Exception e) {
-                            this.logger.log(Level.WARNING,"Error processing message in LEADING state",e);
-                            continue;
-                        }
+                        startLeading();
                         break;
                 }
             } catch (Exception e) {
@@ -225,7 +198,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         if(this.follower == null){
             try {
                 this.logger.fine("Starting JavaRunnerFollower");
-                this.follower = new JavaRunnerFollower(this);
+                this.follower = new JavaRunnerFollower(this, this.incomingMessages);
                 this.follower.start();
             } catch (IOException e) {
                 logger.severe("Failed to start JavaRunnerFollower" + e.getMessage());
@@ -243,7 +216,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         if(this.leader == null){
             this.logger.fine("Starting RoundRobinLeader");
             try {
-                this.leader = new RoundRobinLeader(this,this.peerIDtoAddress);
+                this.leader = new RoundRobinLeader(this,this.peerIDtoAddress,this.incomingMessages);
             } catch (IOException e) {
                 this.logger.severe("Failed to start RoundRobinLeader" + e.getMessage());
             }
