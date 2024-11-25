@@ -4,22 +4,30 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import edu.yu.cs.com3800.LoggingServer;
+import edu.yu.cs.com3800.Message;
+import edu.yu.cs.com3800.PeerServer;
 import edu.yu.cs.com3800.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class GatewayServer extends Thread implements LoggingServer {
 
+
     private HttpServer httpServer;
-    private GatewayPeerServerImpl peerServer;
+    private final GatewayPeerServerImpl peerServer;
     private int httpPort;
     private ConcurrentHashMap<Integer, byte[]> cache;
     private Logger logger;
+    private volatile boolean shutdown;
 
     public GatewayServer(int httpPort, int peerPort, long peerEpoch, Long serverID,
                          ConcurrentHashMap<Long, InetSocketAddress> peerIDtoAdress, int numberOfObservers) throws IOException{
@@ -29,13 +37,57 @@ public class GatewayServer extends Thread implements LoggingServer {
         this.logger = initializeLogging(GatewayServer.class.getCanonicalName() + "-on-port-" + this.httpPort);
         this.peerServer = new GatewayPeerServerImpl(peerPort, peerEpoch,serverID,peerIDtoAdress,numberOfObservers);
 
-        this.httpServer.createContext("/compileandrun", new CompileAndRunHandler());
+        this.httpServer.createContext("/compileandrun", new CompileAndRunHandler(this.httpPort));
+        this.httpServer.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+    }
+
+    @Override
+    public void run(){
+        try{
+            this.logger.fine("Starting Gateway Server on port: " + this.httpPort);
+            this.httpServer.start();
+            this.peerServer.start();
+
+            while (!shutdown && !isInterrupted()){
+                try{
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    if(shutdown){
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e){
+            this.logger.severe("Gateway server Failed: " + e.getMessage());
+        }finally {
+            shutdown();
+        }
+    }
+
+    public void shutdown(){
+        this.logger.fine("Shutting down Gateway Server");
+        this.shutdown = true;
+        this.httpServer.stop(0);
+        this.peerServer.shutdown();
+        interrupt();
+    }
+
+    public PeerServer getPeerServer() {
+        return this.peerServer;
+    }
+    public boolean isReady(){
+        return this.peerServer.getCurrentLeader() != null;
     }
 
 
-
-
     private class CompileAndRunHandler implements HttpHandler{
+
+        private int port;
+
+        public CompileAndRunHandler(int port){
+            this.port = port;
+        }
+
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             try{
@@ -74,17 +126,41 @@ public class GatewayServer extends Thread implements LoggingServer {
 
         private void sendResponse(HttpExchange ex, int code, byte[] res) throws IOException{
             ex.sendResponseHeaders(code,res.length);
-            OutputStream os = ex.getResponseBody();
-            try{
+            try(OutputStream os = ex.getResponseBody()){
                 os.write(res);
-            }finally {
-                os.close();
+                os.flush();
             }
         }
 
-        private byte[] giveToLeader(byte[] request){
-            //TODO: send to leader with TCP
-            return null;
+        private byte[] giveToLeader(byte[] request) throws IOException{
+            if(peerServer.getCurrentLeader() == null){
+                logger.severe("No leader, current state: " + peerServer.getState());
+                throw new IllegalStateException("No leader");
+            }
+
+            InetSocketAddress leaderAddress = peerServer.getPeerByID(peerServer.getCurrentLeader().getProposedLeaderID());
+            if(leaderAddress == null){
+                throw new IllegalStateException("Leader not in peer list");
+            }
+
+            String leaderHost = leaderAddress.getHostString();
+            int leaderPort = leaderAddress.getPort() + 2; //TCP
+
+            logger.fine("Connectin to leader at: " + leaderAddress + "(TCP port: " + leaderPort + ")");
+
+            try(Socket socket = new Socket(leaderHost,leaderPort)) {
+                Message msg = new Message(Message.MessageType.WORK,request,InetAddress.getLocalHost().getHostAddress(),this.port,leaderHost,leaderPort);
+
+                OutputStream os = socket.getOutputStream();
+                os.write(msg.getNetworkPayload());
+                os.flush();
+
+                InputStream is = socket.getInputStream();
+                byte[] response = Util.readAllBytesFromNetwork(is);
+                Message responseMsg = new Message(response);
+
+                return responseMsg.getMessageContents();
+            }
         }
     }
 }
