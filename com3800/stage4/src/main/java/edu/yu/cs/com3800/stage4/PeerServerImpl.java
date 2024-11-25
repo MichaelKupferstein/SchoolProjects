@@ -24,6 +24,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private long peerEpoch;
     private volatile Vote currentLeader;
     private Map<Long,InetSocketAddress> peerIDtoAddress;
+    private int numOfObservers;
+    private Long gatewayID;
 
     private UDPMessageSender senderWorker;
     private UDPMessageReceiver receiverWorker;
@@ -33,15 +35,17 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private static Logger logger;
 
 
-    public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress) throws IOException {
-        this.myAddress = new InetSocketAddress("localhost",myPort);
-        this.myPort = myPort;
+    public PeerServerImpl(int udpPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress, Long gatewayID,int numOfObservers) throws IOException {
+        this.myAddress = new InetSocketAddress("localhost",udpPort);
+        this.myPort = udpPort;
         this.state = ServerState.LOOKING;
         this.outgoingMessages = new LinkedBlockingQueue<>();
         this.incomingMessages = new LinkedBlockingQueue<>();
         this.id = id;
         this.peerEpoch = peerEpoch;
         this.peerIDtoAddress = peerIDtoAddress;
+        this.gatewayID = gatewayID;
+        this.numOfObservers = numOfObservers;
         this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
         setName("PeerServerImpl-port-" + this.myPort);
     }
@@ -136,7 +140,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public int getQuorumSize() {
-        return (this.peerIDtoAddress.size()/2)+1;
+        int voters = this.peerIDtoAddress.size() - this.numOfObservers;
+        return (voters/2)+1;
     }
 
     @Override
