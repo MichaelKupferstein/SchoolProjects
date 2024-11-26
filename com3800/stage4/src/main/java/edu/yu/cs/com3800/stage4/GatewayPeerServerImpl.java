@@ -19,7 +19,8 @@ public class GatewayPeerServerImpl extends PeerServerImpl{
     @Override
     public void setPeerState(ServerState state) {
         if(state != ServerState.OBSERVER){
-            throw new IllegalArgumentException("GatewayPeerServerImpl can only be an observer");
+            logger.warning("GatewayPeerServer cannot change state from OBSERVER to " + state);
+            return;
         }
         super.setPeerState(state);
     }

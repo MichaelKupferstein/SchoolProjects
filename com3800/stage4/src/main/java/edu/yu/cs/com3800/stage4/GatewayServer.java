@@ -77,6 +77,10 @@ public class GatewayServer extends Thread implements LoggingServer {
         logger.info("GatewayServer shutdown on HTTP port " + this.httpPort);
     }
 
+    public GatewayPeerServerImpl getPeerServer() {
+        return this.peerServer;
+    }
+
     private class CompileAndRunHandler implements HttpHandler{
         @Override
         public void handle(HttpExchange exchange) throws IOException {

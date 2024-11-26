@@ -148,6 +148,10 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         return (voters/2)+1;
     }
 
+    public Long getGatewayID() {
+        return this.gatewayID;
+    }
+
     @Override
     public void run(){
         this.logger.entering(PeerServerImpl.class.getName(),"run");
@@ -196,7 +200,22 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                         break;
 
                     case OBSERVER:
-                        Thread.sleep(1000);
+                        try {
+                            Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                            if (message != null && message.getMessageType() == Message.MessageType.ELECTION) {
+                                ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
+                                logger.info("Observer received election message from " + notification.getSenderID() +
+                                        " in state " + notification.getState());
+                                if (notification.getState() == ServerState.LEADING) {
+                                    setCurrentLeader(new Vote(notification.getProposedLeaderID(), notification.getPeerEpoch()));
+                                    logger.info("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
+                                }
+                            }
+                        } catch (InterruptedException e) {
+                            if (shutdown) {
+                                break;
+                            }
+                        }
                         break;
                 }
             } catch (Exception e) {
@@ -241,6 +260,9 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.logger.fine("Starting RoundRobinLeader");
             try {
                 this.leader = new RoundRobinLeader(this,this.peerIDtoAddress,this.incomingMessages);
+                ElectionNotification n = new ElectionNotification(this.id,ServerState.LEADING,this.id,this.peerEpoch);
+                byte[] content = LeaderElection.buildMsgContent(n);
+                this.sendBroadcast(ELECTION,content);
             } catch (IOException e) {
                 this.logger.severe("Failed to start RoundRobinLeader" + e.getMessage());
             }
@@ -256,6 +278,14 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     //for testing
     public boolean isInterrupted() {
         return this.shutdown;
+    }
+
+    public int getPeerIDtoAddressSize() {
+        return this.peerIDtoAddress.size();
+    }
+
+    public int getNumberOfObservers() {
+        return this.numberOfObservers;
     }
 
 }
