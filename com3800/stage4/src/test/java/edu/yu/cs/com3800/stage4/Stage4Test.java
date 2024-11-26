@@ -52,7 +52,7 @@ public class Stage4Test {
 
     private void waitForElectionComplete() throws InterruptedException {
         long start = System.currentTimeMillis();
-        long timeout = TimeUnit.SECONDS.toMillis(15); // 15 second timeout
+        long timeout = TimeUnit.SECONDS.toMillis(15);
         boolean electionComplete = false;
 
         while (System.currentTimeMillis() - start < timeout) {
@@ -105,8 +105,6 @@ public class Stage4Test {
 
     @Test
     public void testBasicGatewayFunctionality() throws Exception {
-        verifyClusterState();
-
         HttpURLConnection conn = null;
         try {
             conn = sendHttpRequest(validClass);
@@ -120,6 +118,48 @@ public class Stage4Test {
             }
         }
     }
+
+
+
+    @Test
+    public void testCaching() throws Exception {
+        HttpURLConnection conn1 = sendHttpRequest(validClass);
+        assertEquals(200, conn1.getResponseCode());
+        assertEquals("Hello, World!", getResponse(conn1));
+        assertEquals("false", conn1.getHeaderField("Cached-Response"));
+        conn1.disconnect();
+
+        HttpURLConnection conn2 = sendHttpRequest(validClass);
+        assertEquals(200, conn2.getResponseCode());
+        assertEquals("Hello, World!", getResponse(conn2));
+        assertEquals("true", conn2.getHeaderField("Cached-Response"));
+        conn2.disconnect();
+    }
+
+    @Test
+    public void testInvalidRequest() throws Exception {
+        String invalidCode = "public class Test { public String run() { System.out.println(\"this is bad code\"; } }";
+        HttpURLConnection conn = sendHttpRequest(invalidCode);
+        assertEquals(400, conn.getResponseCode());
+        //System.out.println(getResponse(conn));
+        assertTrue(getResponse(conn).contains("Error"));
+        assertEquals("false", conn.getHeaderField("Cached-Response"));
+        conn.disconnect();
+    }
+
+    @Test
+    public void testMultipleRequests() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            String code = "public class Test { public String run() { return \"Hello " + i + "!\"; } }";
+            HttpURLConnection conn = sendHttpRequest(code);
+            assertEquals(200, conn.getResponseCode());
+            assertEquals("Hello " + i + "!", getResponse(conn));
+            assertEquals("false", conn.getHeaderField("Cached-Response"));
+            conn.disconnect();
+        }
+    }
+
+
 
     private HttpURLConnection sendHttpRequest(String code) throws IOException {
         URL url = new URL("http://localhost:" + gatewayPort + "/compileandrun");

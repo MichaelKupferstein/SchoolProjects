@@ -204,11 +204,11 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                             Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
                             if (message != null && message.getMessageType() == Message.MessageType.ELECTION) {
                                 ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
-                                logger.info("Observer received election message from " + notification.getSenderID() +
+                                logger.fine("Observer received election message from " + notification.getSenderID() +
                                         " in state " + notification.getState());
                                 if (notification.getState() == ServerState.LEADING) {
                                     setCurrentLeader(new Vote(notification.getProposedLeaderID(), notification.getPeerEpoch()));
-                                    logger.info("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
+                                    logger.fine("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
                                 }
                             }
                         } catch (InterruptedException e) {
@@ -273,19 +273,6 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             follower.shutdown();
             follower = null;
         }
-    }
-
-    //for testing
-    public boolean isInterrupted() {
-        return this.shutdown;
-    }
-
-    public int getPeerIDtoAddressSize() {
-        return this.peerIDtoAddress.size();
-    }
-
-    public int getNumberOfObservers() {
-        return this.numberOfObservers;
     }
 
 }
