@@ -9,8 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static edu.yu.cs.com3800.Message.MessageType.COMPLETED_WORK;
-import static edu.yu.cs.com3800.Message.MessageType.WORK;
+import static edu.yu.cs.com3800.Message.MessageType.*;
 
 
 public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
@@ -24,8 +23,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private long peerEpoch;
     private volatile Vote currentLeader;
     private Map<Long,InetSocketAddress> peerIDtoAddress;
-    private int numOfObservers;
     private Long gatewayID;
+    private int numberOfObservers;
 
     private UDPMessageSender senderWorker;
     private UDPMessageReceiver receiverWorker;
@@ -35,9 +34,9 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private static Logger logger;
 
 
-    public PeerServerImpl(int udpPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress, Long gatewayID,int numOfObservers) throws IOException {
-        this.myAddress = new InetSocketAddress("localhost",udpPort);
-        this.myPort = udpPort;
+    public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress, Long gatewayID, int numberOfObservers) throws IOException {
+        this.myAddress = new InetSocketAddress("localhost",myPort);
+        this.myPort = myPort;
         this.state = ServerState.LOOKING;
         this.outgoingMessages = new LinkedBlockingQueue<>();
         this.incomingMessages = new LinkedBlockingQueue<>();
@@ -45,7 +44,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         this.peerEpoch = peerEpoch;
         this.peerIDtoAddress = peerIDtoAddress;
         this.gatewayID = gatewayID;
-        this.numOfObservers = numOfObservers;
+        this.numberOfObservers = numberOfObservers;
         this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
         setName("PeerServerImpl-port-" + this.myPort);
     }
@@ -75,6 +74,11 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     public void sendMessage(Message.MessageType type, byte[] messageContents, InetSocketAddress target) throws IllegalArgumentException {
         this.logger.entering(PeerServerImpl.class.getName(),"sendMessage",new Object[]{type,messageContents,target});
         this.logger.fine("Sending message to " + target.getHostString() + ":" + target.getPort());
+
+        if(type == ELECTION && getServerId().equals(gatewayID)){
+            this.logger.warning("GatewayPeerServerImpl cannot send election messages");
+            return;
+        }
 
         Message msg;
         if(type == WORK || type == COMPLETED_WORK){
@@ -140,7 +144,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public int getQuorumSize() {
-        int voters = this.peerIDtoAddress.size() - this.numOfObservers;
+        int voters = this.peerIDtoAddress.size() - this.numberOfObservers;
         return (voters/2)+1;
     }
 
@@ -163,6 +167,11 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             try {
                 switch (getPeerState()){
                     case LOOKING:
+                        if(getServerId().equals(gatewayID)) {
+                            setPeerState(ServerState.OBSERVER);
+                            break;
+                        }
+
                         this.logger.fine("Starting leader election");
                         LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
                         Vote leader = election.lookForLeader();
@@ -185,6 +194,10 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                     case LEADING:
                         startLeading();
                         break;
+
+                    case OBSERVER:
+                        Thread.sleep(1000);
+                        break;
                 }
             } catch (Exception e) {
                 this.logger.warning("Error in main server loop: " + e.getMessage());
@@ -203,7 +216,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         if(this.follower == null){
             try {
                 this.logger.fine("Starting JavaRunnerFollower");
-                this.follower = new JavaRunnerFollower(this, this.incomingMessages);
+                this.follower = new JavaRunnerFollower(this);
                 this.follower.start();
             } catch (IOException e) {
                 logger.severe("Failed to start JavaRunnerFollower" + e.getMessage());
@@ -217,6 +230,12 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     }
 
     private void startLeading() {
+
+        if(getServerId() == gatewayID){
+            this.logger.warning("GatewayPeerServerImpl cannot lead");
+            return;
+        }
+
         this.logger.entering(PeerServerImpl.class.getName(),"startLeading");
         if(this.leader == null){
             this.logger.fine("Starting RoundRobinLeader");
