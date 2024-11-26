@@ -1,166 +1,143 @@
 package edu.yu.cs.com3800.stage4;
 
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import edu.yu.cs.com3800.LoggingServer;
-import edu.yu.cs.com3800.Message;
-import edu.yu.cs.com3800.PeerServer;
-import edu.yu.cs.com3800.Util;
+import edu.yu.cs.com3800.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-public class GatewayServer extends Thread implements LoggingServer {
+import static edu.yu.cs.com3800.Message.MessageType.WORK;
 
+
+public class GatewayServer extends Thread implements LoggingServer {
+    private class CachedResponse{
+        final int code;
+        final byte[] body;
+
+        CachedResponse(int code, byte[] body){
+            this.code = code;
+            this.body = body;
+        }
+
+        @Override
+        public int hashCode(){
+            return new String(body).hashCode();
+        }
+        @Override
+        public boolean equals(Object o){
+            if(o == this) return true;
+            if(!(o instanceof CachedResponse)) return false;
+            CachedResponse other = (CachedResponse) o;
+            return this.code == other.code && this.body.equals(other.body);
+        }
+
+    }
 
     private HttpServer httpServer;
     private final GatewayPeerServerImpl peerServer;
     private int httpPort;
-    private ConcurrentHashMap<Integer, byte[]> cache;
+    private ConcurrentHashMap<Integer, CachedResponse> cache;
     private Logger logger;
     private volatile boolean shutdown;
 
+
     public GatewayServer(int httpPort, int peerPort, long peerEpoch, Long serverID,
-                         ConcurrentHashMap<Long, InetSocketAddress> peerIDtoAdress, int numberOfObservers) throws IOException{
-        this.httpPort = httpPort;
-        this.httpServer = HttpServer.create(new InetSocketAddress(httpPort),0); //create an HTTPServer on...
+                         ConcurrentHashMap<Long, InetSocketAddress> peerIDtoAdress, int numberOfObservers) throws IOException {
+        this.httpPort = httpPort; //Should be 8888
+        this.httpServer = HttpServer.create(new InetSocketAddress(httpPort),0);
         this.cache = new ConcurrentHashMap<>();
         this.logger = initializeLogging(GatewayServer.class.getCanonicalName() + "-on-port-" + this.httpPort);
         this.peerServer = new GatewayPeerServerImpl(peerPort, peerEpoch,serverID,peerIDtoAdress,numberOfObservers);
-
-        this.httpServer.createContext("/compileandrun", new CompileAndRunHandler(this.httpPort));
-        this.httpServer.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+        this.httpServer.createContext("/compileandrun", new CompileAndRunHandler());
+        this.httpServer.setExecutor(Executors.newFixedThreadPool((Runtime.getRuntime().availableProcessors())*2));
+        logger.info("GatewayServer initialized on HTTP port " + httpPort + " and peer port " + peerPort);
     }
 
-    @Override
-    public void run(){
-        try{
-            this.logger.fine("Starting Gateway Server on port: " + this.httpPort);
-            this.httpServer.start();
-            this.peerServer.start();
 
-            while (!shutdown && !isInterrupted()){
-                try{
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    if(shutdown){
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e){
-            this.logger.severe("Gateway server Failed: " + e.getMessage());
-        }finally {
-            shutdown();
-        }
+    @Override
+    public void run() {
+        this.peerServer.start();
+        this.httpServer.start();
+        logger.info("GatewayServer started on HTTP port " + this.httpPort);
     }
 
     public void shutdown(){
-        this.logger.fine("Shutting down Gateway Server");
         this.shutdown = true;
-        this.httpServer.stop(0);
         this.peerServer.shutdown();
-        interrupt();
+        this.httpServer.stop(0);
+        logger.info("GatewayServer shutdown on HTTP port " + this.httpPort);
     }
-
-    public PeerServer getPeerServer() {
-        return this.peerServer;
-    }
-    public boolean isReady(){
-        return this.peerServer.getCurrentLeader() != null;
-    }
-
 
     private class CompileAndRunHandler implements HttpHandler{
-
-        private int port;
-
-        public CompileAndRunHandler(int port){
-            this.port = port;
-        }
-
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            try{
-                if(!"POST".equals(exchange.getRequestMethod())){
-                    exchange.sendResponseHeaders(405,-1);
-                    return;
-                }
 
-                String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
-                if(contentType == null || !contentType.equals("text/x-java-source")){
-                    exchange.sendResponseHeaders(400, -1);
-                    return;
-                }
+            exchange.getResponseHeaders().add("Cached-Response", "false");
 
-                InputStream is = exchange.getRequestBody();
-                byte[] requestBody = Util.readAllBytes(is);
-                is.close();
-
-                int requestHash = new String(requestBody).hashCode();
-                byte[] cacheRespnose = cache.get(requestHash);
-                if(cacheRespnose != null){ //i.e there was something in cache
-                    exchange.getResponseHeaders().set("Cached-Response","true");
-                    sendResponse(exchange, 200,cacheRespnose);
-                }else{
-                    exchange.getResponseHeaders().set("Cached-Response","false");
-                    byte[] response = giveToLeader(requestBody);
-                    cache.put(requestHash,response);
-                    sendResponse(exchange,200,response);
-                }
-
-            }catch(Exception e){
-                logger.severe("Error handling request: " + e.getMessage());
-                sendResponse(exchange,400,("Server eror: " + e.getMessage()).getBytes());
+            if(!"POST".equals(exchange.getRequestMethod())){
+                exchange.sendResponseHeaders(405, 0);
+                exchange.getResponseBody().close();
+                return;
             }
-        }
 
-        private void sendResponse(HttpExchange ex, int code, byte[] res) throws IOException{
-            ex.sendResponseHeaders(code,res.length);
-            try(OutputStream os = ex.getResponseBody()){
-                os.write(res);
-                os.flush();
+            if(!"text/x-java-source".equals(exchange.getRequestHeaders().getFirst("Content-Type"))){
+                exchange.sendResponseHeaders(400, 0);
+                exchange.getResponseBody().close();
+                return;
             }
-        }
 
-        private byte[] giveToLeader(byte[] request) throws IOException{
-            if(peerServer.getCurrentLeader() == null){
-                logger.severe("No leader, current state: " + peerServer.getState());
-                throw new IllegalStateException("No leader");
+            byte[] body = exchange.getRequestBody().readAllBytes();
+            int requestHash = new String(body).hashCode();
+
+            CachedResponse cachedResponse = cache.get(requestHash);
+            if(cachedResponse != null){
+                exchange.getResponseHeaders().add("Cached-Response", "true");
+                exchange.sendResponseHeaders(cachedResponse.code, cachedResponse.body.length);
+                exchange.getResponseBody().write(cachedResponse.body);
+                exchange.getResponseBody().close();
+                return;
             }
 
             InetSocketAddress leaderAddress = peerServer.getPeerByID(peerServer.getCurrentLeader().getProposedLeaderID());
-            if(leaderAddress == null){
-                throw new IllegalStateException("Leader not in peer list");
-            }
+            int leaderPort = leaderAddress.getPort() + 2;
 
-            String leaderHost = leaderAddress.getHostString();
-            int leaderPort = leaderAddress.getPort() + 2; //TCP
+            InetSocketAddress exchangeAddress = exchange.getLocalAddress();
+            Message message = new Message(WORK, body, exchangeAddress.getHostString(), exchangeAddress.getPort(), leaderAddress.getHostString(), leaderAddress.getPort());
 
-            logger.fine("Connectin to leader at: " + leaderAddress + "(TCP port: " + leaderPort + ")");
+            try(Socket socket = new Socket(leaderAddress.getAddress(), leaderPort)) {
+                OutputStream out = socket.getOutputStream();
+                out.write(message.getNetworkPayload());
+                out.flush();
 
-            try(Socket socket = new Socket(leaderHost,leaderPort)) {
-                Message msg = new Message(Message.MessageType.WORK,request,InetAddress.getLocalHost().getHostAddress(),this.port,leaderHost,leaderPort);
+                InputStream in = socket.getInputStream();
+                byte[] response = Util.readAllBytesFromNetwork(in);
 
-                OutputStream os = socket.getOutputStream();
-                os.write(msg.getNetworkPayload());
-                os.flush();
-
-                InputStream is = socket.getInputStream();
-                byte[] response = Util.readAllBytesFromNetwork(is);
                 Message responseMsg = new Message(response);
+                int responseCode = responseMsg.getErrorOccurred() ? 400 : 200;
+                byte[] responseBody = responseMsg.getMessageContents();
 
-                return responseMsg.getMessageContents();
+                cache.put(requestHash, new CachedResponse(responseCode, responseBody));
+                exchange.getResponseHeaders().add("Cached-Response", "false");
+                exchange.sendResponseHeaders(responseCode, responseBody.length);
+                exchange.getResponseBody().write(responseBody);
+                exchange.getResponseBody().close();
+            }catch (IOException e) {
+                logger.severe("GatewayServer failed to forward request to leader: " + e.getMessage());
+                exchange.sendResponseHeaders(500, 0);
+                exchange.getResponseBody().close();
             }
+
         }
     }
+
+
 }
