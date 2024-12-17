@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 
@@ -33,7 +34,7 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private Map<Long, Message> pendingRequests;
     private ServerSocket serverSocket;
     private ExecutorService executorService;
-    private long nextWorkerID = 1;
+    private AtomicLong nextWorkerID = new AtomicLong(1);
 
     public RoundRobinLeader(PeerServer myServer, Map<Long, InetSocketAddress> peerIDtoAddress, LinkedBlockingQueue<Message> incomingMessages) throws IOException {
         this.myServer = myServer;
@@ -79,7 +80,7 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
             int workerPort = workerAddress.getPort() +2;
             workerSocket = new Socket(workerAddress.getAddress(), workerPort);
 
-            long requestID = nextWorkerID++;
+            long requestID = nextWorkerID.getAndIncrement();
             Message workMessage = new Message(WORK, req.getMessageContents(), myServer.getAddress().getHostString(),
                     myServer.getUdpPort(), workerAddress.getHostString(), workerAddress.getPort(), requestID);
             pendingRequests.put(requestID, req);

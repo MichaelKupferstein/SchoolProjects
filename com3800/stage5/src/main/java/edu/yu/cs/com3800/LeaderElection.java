@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static edu.yu.cs.com3800.PeerServer.ServerState.OBSERVER;
+
 /**We are implemeting a simplfied version of the election algorithm. For the complete version which covers all possible scenarios, see https://github.com/apache/zookeeper/blob/90f8d835e065ea12dddd8ed9ca20872a4412c78a/zookeeper-server/src/main/java/org/apache/zookeeper/server/quorum/FastLeaderElection.java#L913
  */
 public class LeaderElection {
@@ -166,6 +168,10 @@ public class LeaderElection {
         //is the number of votes for the proposal > the size of my peer server’s quorum?
         int count = 0;
         for(ElectionNotification n : votes.values()){
+            if(n.getState() == OBSERVER){
+                continue;
+            }
+
             if(n.getProposedLeaderID() == proposal.getProposedLeaderID() && n.getPeerEpoch() == proposal.getPeerEpoch()){
                 count++;
             }
