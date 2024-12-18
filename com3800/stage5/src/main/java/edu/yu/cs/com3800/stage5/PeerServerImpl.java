@@ -4,12 +4,15 @@ import edu.yu.cs.com3800.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.yu.cs.com3800.Message.MessageType.*;
+import static edu.yu.cs.com3800.PeerServer.ServerState.FOLLOWING;
+import static edu.yu.cs.com3800.PeerServer.ServerState.LOOKING;
 
 
 public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
@@ -25,11 +28,13 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     private Map<Long,InetSocketAddress> peerIDtoAddress;
     private Long gatewayID;
     private int numberOfObservers;
+    private ConcurrentHashMap<Long,Boolean> failedPeers;
 
     private UDPMessageSender senderWorker;
     private UDPMessageReceiver receiverWorker;
     private JavaRunnerFollower follower;
     private RoundRobinLeader leader;
+    private Gossiper gossiper;
 
     private static Logger logger;
 
@@ -37,7 +42,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress, Long gatewayID, int numberOfObservers) throws IOException {
         this.myAddress = new InetSocketAddress("localhost",myPort);
         this.myPort = myPort;
-        this.state = ServerState.LOOKING;
+        this.state = LOOKING;
         this.outgoingMessages = new LinkedBlockingQueue<>();
         this.incomingMessages = new LinkedBlockingQueue<>();
         this.id = id;
@@ -45,6 +50,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         this.peerIDtoAddress = peerIDtoAddress;
         this.gatewayID = gatewayID;
         this.numberOfObservers = numberOfObservers;
+        this.failedPeers = new ConcurrentHashMap<>();
+        this.gossiper = new Gossiper(this,this.outgoingMessages,this.incomingMessages,this.peerIDtoAddress);
         this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
         setName("PeerServerImpl-port-" + this.myPort);
     }
@@ -56,6 +63,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         if(this.receiverWorker != null)this.receiverWorker.shutdown();
         if(this.follower != null)this.follower.shutdown();
         if(this.leader != null)this.leader.shutdown();
+        if(this.gossiper != null)this.gossiper.shutdown();
         interrupt();
 
     }
@@ -148,6 +156,35 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         return (voters/2)+1;
     }
 
+    @Override
+    public void reportFailedPeer(long peerID){
+        this.failedPeers.put(peerID,true);
+
+        if(currentLeader != null && currentLeader.getProposedLeaderID() == peerID){
+            if(this.state == FOLLOWING){
+                this.gossiper.logStateChange(this.id,FOLLOWING,LOOKING);
+                this.setPeerState(LOOKING);
+                this.peerEpoch++;
+                this.currentLeader = null;
+            }
+        }
+    }
+
+    @Override
+    public boolean isPeerDead(long peerID){
+        return this.failedPeers.getOrDefault(peerID,false);
+    }
+
+    @Override
+    public boolean isPeerDead(InetSocketAddress address){
+        for(Map.Entry<Long,InetSocketAddress> entry : this.peerIDtoAddress.entrySet()){
+            if(entry.getValue().equals(address)){
+                return isPeerDead(entry.getKey());
+            }
+        }
+        return false;
+    }
+
     public Long getGatewayID() {
         return this.gatewayID;
     }
@@ -162,6 +199,9 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.receiverWorker = new UDPMessageReceiver(this.incomingMessages,this.myAddress,this.myPort,this);
             this.receiverWorker.start();
             this.logger.fine("Receiver worker started on port " + this.myPort);
+
+            this.gossiper.start();
+            this.logger.fine("Gossiper started on port " + this.myPort);
         }catch(Exception e){
             this.logger.log(Level.WARNING,"Failed to start sender and receiver workers",e);
             return;
@@ -186,7 +226,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                             if(leader.getProposedLeaderID() == this.id) {
                                 setPeerState(ServerState.LEADING);
                             }else{
-                                setPeerState(ServerState.FOLLOWING);
+                                setPeerState(FOLLOWING);
                             }
                         }
                         break;

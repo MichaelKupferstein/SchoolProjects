@@ -2,6 +2,7 @@ package edu.yu.cs.com3800.stage5;
 
 import edu.yu.cs.com3800.LoggingServer;
 import edu.yu.cs.com3800.Message;
+import edu.yu.cs.com3800.PeerServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,8 +25,10 @@ public class Gossiper extends Thread implements LoggingServer {
     private GossipData gossipData;
     private Map<Long, InetSocketAddress> peerIDtoAddress;
     private volatile boolean shutdown;
-    private Logger logger;
+    private Logger summaryLogger;
     private Logger verboseLogger;
+    private String summaryLogPath;
+    private String verboseLogPath;
 
     public Gossiper(PeerServerImpl myPeerServer, LinkedBlockingQueue<Message> outgoingMessages,
                     LinkedBlockingQueue<Message> incomingMessages, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
@@ -36,8 +39,20 @@ public class Gossiper extends Thread implements LoggingServer {
         this.gossipData = new GossipData();
         setDaemon(true);
         setName("Gossiper-" + myPeerServer.getServerId());
-        this.logger = initializeLogging(Gossiper.class.getCanonicalName() + "-on-port-" + this.myPeerServer.getUdpPort());
-        this.verboseLogger = initializeLogging(Gossiper.class.getCanonicalName() + "-verbose-on-port-" + this.myPeerServer.getUdpPort(),true);
+
+        String baseLogName = Gossiper.class.getCanonicalName() + "-on-port-" + this.myPeerServer.getUdpPort();
+        this.summaryLogger = initializeLogging(baseLogName + "-summary");
+        this.verboseLogger = initializeLogging(baseLogName + "-verbose");
+        this.summaryLogPath = baseLogName + "-summary-log.txt";
+        this.verboseLogPath = baseLogName + "-verbose-log.txt";
+    }
+
+    public String getSummaryLogPath() {
+        return summaryLogPath;
+    }
+
+    public String getVerboseLogPath() {
+        return verboseLogPath;
     }
 
     public static byte[] buildGossipMessage(GossipData gossipData) {
@@ -86,7 +101,7 @@ public class Gossiper extends Thread implements LoggingServer {
             }
         }catch (InterruptedException e){
             if(!shutdown){
-                logger.severe("Gossiper thread interrupted");
+                summaryLogger.severe("Gossiper thread interrupted");
             }
         }
     }
@@ -106,6 +121,12 @@ public class Gossiper extends Thread implements LoggingServer {
 
             updateGossipDataFromMessage(message.getMessageContents(), gossipData);
         }
+    }
+
+    public void logStateChange(long nodeId,PeerServer.ServerState oldState, PeerServer.ServerState newState){
+        String message = String.format("%d: switching from %s to %s", nodeId, oldState, newState);
+        summaryLogger.info(message);
+        System.out.println(message);
     }
 
     private void sendGossip() {
@@ -148,9 +169,15 @@ public class Gossiper extends Thread implements LoggingServer {
     private void handleNodeFailure(long nodeId) {
         gossipData.markNodeFailed(nodeId);
         String message = String.format("%d: no heartbeat from server %d - SERVER FAILED", myPeerServer.getServerId(), nodeId);
-        logger.warning(message);
+        summaryLogger.warning(message);
         System.out.println(message);
         myPeerServer.reportFailedPeer(nodeId);
+    }
+
+    private void logGossipUpdate(long nodeId, long heartbeat, long sourceId, long timestamp) {
+        String message = String.format("%d: updated %d's heartbeat sequence to %d based on message from %d at node time %d",
+                myPeerServer.getServerId(), nodeId, heartbeat, sourceId, timestamp);
+        summaryLogger.info(message);
     }
 
     public void shutdown() {
