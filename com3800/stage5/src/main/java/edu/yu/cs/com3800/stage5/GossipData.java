@@ -1,5 +1,6 @@
 package edu.yu.cs.com3800.stage5;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,10 +10,16 @@ public class GossipData {
     private final ConcurrentHashMap<Long,Long> lastHeartbeatTime;
     private final ConcurrentHashMap<Long,Boolean> failedNodes;
 
-    public GossipData() {
+    public GossipData(Map<Long, InetSocketAddress> peerIDtoAddress, long myId) {
         heartbeats = new ConcurrentHashMap<>();
         lastHeartbeatTime = new ConcurrentHashMap<>();
         failedNodes = new ConcurrentHashMap<>();
+
+        long startTime = System.currentTimeMillis();
+        for(Long peerId : peerIDtoAddress.keySet() ){
+            heartbeats.put(peerId, 0L);
+            lastHeartbeatTime.put(peerId, startTime);
+        }
     }
 
     public synchronized void updateHeartbeat(long nodeId) {
