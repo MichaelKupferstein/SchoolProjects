@@ -6,7 +6,6 @@ import edu.yu.cs.com3800.PeerServer;
 import edu.yu.cs.com3800.Util;
 
 import static edu.yu.cs.com3800.Message.MessageType.COMPLETED_WORK;
-import static edu.yu.cs.com3800.Message.MessageType.WORK;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,10 +30,11 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
     private LinkedBlockingQueue<Message> incomingMessages;
     private Map<Long, InetSocketAddress> workers;
     private Iterator<Map.Entry<Long,InetSocketAddress>> workerIterator;
-    private Map<Long, Message> pendingRequests;
+    private Map<Long, WorkData> pendingRequests;
     private ServerSocket serverSocket;
     private ExecutorService executorService;
-    private AtomicLong nextWorkerID = new AtomicLong(1);
+    private AtomicLong nextWorkerID;
+    private ConcurrentHashMap<Long, Message> completedWork;
 
     public RoundRobinLeader(PeerServer myServer, Map<Long, InetSocketAddress> peerIDtoAddress, LinkedBlockingQueue<Message> incomingMessages) throws IOException {
         this.myServer = myServer;
@@ -45,6 +45,8 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
         this.pendingRequests = new ConcurrentHashMap<>();
         this.serverSocket = new ServerSocket(myServer.getUdpPort()+2);
         this.executorService = Executors.newFixedThreadPool((Runtime.getRuntime().availableProcessors())*2);
+        this.nextWorkerID = new AtomicLong(1);
+        this.completedWork = new ConcurrentHashMap<>();
         this.logger = initializeLogging(RoundRobinLeader.class.getCanonicalName() + "-on-port-" + this.myServer.getUdpPort());
         setDaemon(true);
         logger.fine("RoundRobinLeader initialized on port " + (myServer.getUdpPort()+2) + " from PeerServer: " + myServer.getServerId());
@@ -67,62 +69,116 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
 
     private void handleClienRequest(Socket clientSocket){
         Socket workerSocket = null;
-        try{
+        try {
             byte[] reqData = Util.readAllBytesFromNetwork(clientSocket.getInputStream());
             Message req = new Message(reqData);
 
-            if(!workerIterator.hasNext()){
-                workerIterator = workers.entrySet().iterator();
+            Message completedResponse = completedWork.get(req.getRequestID());
+            if (completedResponse != null) {
+                sendResponse(clientSocket, completedResponse);
+                return;
             }
-            Map.Entry<Long,InetSocketAddress> worker = workerIterator.next();
 
+            Map.Entry<Long, InetSocketAddress> worker = getNextWorker();
+            if(worker == null){
+                logger.warning("No workers available");
+                return;
+            }
+
+            long reqeustId = nextWorkerID.getAndIncrement();
+            assignWork(worker,req,reqeustId,clientSocket);
+        }catch(IOException e){
+            handleRequestError(clientSocket, e);
+        }
+    }
+
+    private void handleRequestError(Socket clientSocket, Exception e){
+        try{
+            Message error = new Message(COMPLETED_WORK,e.getMessage().getBytes(),myServer.getAddress().getHostString(),myServer.getUdpPort(),
+                    clientSocket.getInetAddress().getHostAddress(),clientSocket.getPort(),-1,true);
+            sendResponse(clientSocket,error);
+        }catch(IOException e2){
+            logger.severe("Error sending error response: " + e2.getMessage());
+        }
+    }
+
+    private void assignWork(Map.Entry<Long,InetSocketAddress> worker, Message req, long requestId, Socket clientSocket){
+        try{
             InetSocketAddress workerAddress = worker.getValue();
-            int workerPort = workerAddress.getPort() +2;
-            workerSocket = new Socket(workerAddress.getAddress(), workerPort);
+            int workerPort = workerAddress.getPort() + 2;
 
-            long requestID = nextWorkerID.getAndIncrement();
-            Message workMessage = new Message(WORK, req.getMessageContents(), myServer.getAddress().getHostString(),
-                    myServer.getUdpPort(), workerAddress.getHostString(), workerAddress.getPort(), requestID);
-            pendingRequests.put(requestID, req);
+            Message workMessage = new Message(Message.MessageType.WORK,req.getMessageContents(),myServer.getAddress().getHostString(),myServer.getUdpPort(),
+                    workerAddress.getHostString(),workerPort,requestId);
 
+            pendingRequests.put(requestId,new WorkData(worker.getKey(),req));
+
+            Socket workerSocket = new Socket(workerAddress.getAddress(),workerPort);
             OutputStream out = workerSocket.getOutputStream();
             out.write(workMessage.getNetworkPayload());
             out.flush();
 
             byte[] response = Util.readAllBytesFromNetwork(workerSocket.getInputStream());
             Message responseMsg = new Message(response);
+            completedWork.put(requestId,responseMsg);
+            pendingRequests.remove(requestId);
+            sendResponse(clientSocket,responseMsg);
+            workerSocket.close();
 
-            OutputStream clientOut = clientSocket.getOutputStream();
-            clientOut.write(responseMsg.getNetworkPayload());
-            clientOut.flush();
+        }catch(IOException e){
+            logger.severe("Error sending work to worker" +  worker.getKey() + ": " + e.getMessage());
+            reassignWork(requestId);
+            handleRequestError(clientSocket,e);
+        }
+    }
 
-            pendingRequests.remove(requestID);
+    private void reassignWork(long requestId){
+        WorkData work = pendingRequests.get(requestId);
+        if(work != null){
+            pendingRequests.remove(requestId);
 
-        }catch (IOException e){
-            logger.severe("Error handiling client request: " + e.getMessage());
-            try{
-                Message error = new Message(COMPLETED_WORK, e.getMessage().getBytes(), myServer.getAddress().getHostString(),
-                        myServer.getUdpPort(), clientSocket.getInetAddress().getHostAddress(), clientSocket.getPort(), -1, true);
-                OutputStream out = clientSocket.getOutputStream();
-                out.write(error.getNetworkPayload());
-                out.flush();
-            }catch (IOException e2){
-                logger.severe("Error sending error response to client: " + e2.getMessage());
-            }
-        }finally {
-            try {
-                if(clientSocket != null && !clientSocket.isClosed()){
-                    clientSocket.close();
+            Map.Entry<Long,InetSocketAddress> worker = getNextWorker();
+            if(worker != null && !worker.getKey().equals(work.workderId)){
+                try{
+                    assignWork(worker,work.request,requestId,null);
+                }catch (Exception e) {
+                    logger.severe("Error reassigning work " + requestId + ": " + e.getMessage());
                 }
-                if(workerSocket != null && !workerSocket.isClosed()){
-                    workerSocket.close();
-                }
-            } catch (IOException e) {
-                logger.severe("Error closing client socket: " + e.getMessage());
             }
         }
     }
 
+    private Map.Entry<Long,InetSocketAddress> getNextWorker(){
+        if(!workerIterator.hasNext()){
+            workerIterator = workers.entrySet().iterator();
+        }
+        while(workerIterator.hasNext()){
+            Map.Entry<Long,InetSocketAddress> worker = workerIterator.next();
+            if(!myServer.isPeerDead(worker.getKey())){
+                return worker;
+            }
+        }
+        return null;
+    }
+
+    private void sendResponse(Socket clientSocket, Message response) throws IOException{
+        if(clientSocket != null && !clientSocket.isClosed()){
+            OutputStream out = clientSocket.getOutputStream();
+            out.write(response.getNetworkPayload());
+            out.flush();
+        }
+    }
+
+    public void handleWorkerFailure(long workerId){
+        for(Map.Entry<Long,WorkData> entry : pendingRequests.entrySet()){
+            if(entry.getValue().workderId == workerId){
+                reassignWork(entry.getKey());
+            }
+        }
+    }
+
+    public Map<Long, Message> getCompletedWork(){
+        return new HashMap<>(completedWork);
+    }
 
     public void shutdown() {
         this.shutdown = true;
@@ -133,5 +189,17 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
             logger.severe("Error closing server socket: " + e.getMessage());
         }
         interrupt();
+    }
+
+    private static class WorkData{
+        final long workderId;
+        final Message request;
+        final long startTime;
+
+        public WorkData(long workerId, Message request){
+            this.workderId = workerId;
+            this.request = request;
+            this.startTime = System.currentTimeMillis();
+        }
     }
 }
