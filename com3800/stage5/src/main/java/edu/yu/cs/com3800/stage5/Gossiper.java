@@ -27,6 +27,7 @@ public class Gossiper extends Thread implements LoggingServer {
     private Logger summaryLogger;
     private Logger verboseLogger;
     private Random random;
+    private volatile boolean readyToStart = false;
 
     public Gossiper(PeerServer myPeerServer, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
         this.myPeerServer = myPeerServer;
@@ -39,10 +40,19 @@ public class Gossiper extends Thread implements LoggingServer {
         setName("Gossiper-on-port-" + myPeerServer.getUdpPort());
     }
 
+    public void setReadyToStart(){
+        this.readyToStart = true;
+    }
+
     @Override
     public void run(){
         while(!shutdown){
             try{
+                if(!readyToStart){
+                    Thread.sleep(1000);
+                    continue;
+                }
+
                 gossipData.updateHeartbeat(myPeerServer.getServerId());
                 List<InetSocketAddress> peers = selectRandomPeers();
 
@@ -89,14 +99,11 @@ public class Gossiper extends Thread implements LoggingServer {
     }
 
     private byte[] createGossipMessageData() {
-        int numEntries = gossipData.getHeartbeats().size();
-        int bufferSize = Integer.BYTES + (Long.BYTES * 3 * numEntries);
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
         Map<Long,Long> heartbeats = gossipData.getHeartbeats();
 
         buffer.putInt(heartbeats.size());
         long currentTime = System.currentTimeMillis();
-
         for(Map.Entry<Long,Long> entry : heartbeats.entrySet()) {
             buffer.putLong(entry.getKey());
             buffer.putLong(entry.getValue());
@@ -115,7 +122,7 @@ public class Gossiper extends Thread implements LoggingServer {
         try{
             ByteBuffer buffer = ByteBuffer.wrap(message.getMessageContents());
             int numEntries = buffer.getInt();
-            for(int i = 0; i < numEntries; i++){
+            for(int i = 0; i < numEntries && buffer.remaining() >= 24; i++){
                 long nodeId = buffer.getLong();
                 long heartbeat = buffer.getLong();
                 long timestamp = buffer.getLong();
@@ -127,7 +134,7 @@ public class Gossiper extends Thread implements LoggingServer {
                 }
             }
 
-            verboseLogger.fine("Processed gossip message from " + message.getSenderPort() + ": " + formatGossipMessageContent(message.getMessageContents()));
+            verboseLogger.fine("Processed gossip message from " + message.getSenderPort());
         }catch(Exception e){
             summaryLogger.severe("Error handling gossip message: " + e.getMessage());
         }

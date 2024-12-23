@@ -208,7 +208,29 @@ public class Message {
                 builder.append(senderID);
                 builder.append("\n\tSender peer epoch: ");
                 builder.append(peerEpoch);
-            }else{
+            } else if (getMessageType() == MessageType.GOSSIP){
+                try {
+                    ByteBuffer buffer = ByteBuffer.wrap(contents);
+                    int numEntries = buffer.getInt();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Message type: GOSSIP");
+                    sb.append("\nNumber of entries: ").append(numEntries);
+
+                    for (int i = 0; i < numEntries && buffer.remaining() >= Long.BYTES * 3; i++) {
+                        long nodeId = buffer.getLong();
+                        long heartbeat = buffer.getLong();
+                        long timestamp = buffer.getLong();
+                        sb.append("\nEntry ").append(i)
+                                .append(": NodeID=").append(nodeId)
+                                .append(", Heartbeat=").append(heartbeat)
+                                .append(", Timestamp=").append(timestamp);
+                    }
+                    return sb.toString();
+                } catch (Exception e) {
+                    return "Failed to format message content: " + e.getMessage();
+                }
+
+            } else{
                 builder.append(new String(getMessageContents()));
             }
             this.stringRepresentation = builder.toString();

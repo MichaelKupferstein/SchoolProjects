@@ -1,5 +1,7 @@
 package edu.yu.cs.com3800;
 
+import edu.yu.cs.com3800.stage5.PeerServerImpl;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -76,54 +78,58 @@ public class LeaderElection {
             sendNotifications();
             int currentInterval = initialNotifcationInterval;
 
-            while (true) {
-                Message message = this.incomingMessages.poll(currentInterval, TimeUnit.MILLISECONDS);
+            while (!Thread.currentThread().isInterrupted()) {
+                try{
+                    Message message = this.incomingMessages.poll(currentInterval, TimeUnit.MILLISECONDS);
 
-                if (message == null) {
-                    sendNotifications();
-                    currentInterval = Math.min(currentInterval * 2, maxNotificationInterval);
-                } else {
-                    currentInterval = initialNotifcationInterval;
-
-                    ElectionNotification notification = getNotificationFromMessage(message);
-
-                    if (notification.getPeerEpoch() < this.proposedEpoch) continue;
-
-                    if(supersedesCurrentVote(notification.getProposedLeaderID(), notification.getPeerEpoch())){
-                        this.proposedLeader = notification.getProposedLeaderID();
-                        this.proposedEpoch = notification.getPeerEpoch();
+                    if (message == null) {
                         sendNotifications();
-                    }
+                        currentInterval = Math.min(currentInterval * 2, maxNotificationInterval);
+                    } else {
+                        currentInterval = initialNotifcationInterval;
 
-                    this.votes.put(notification.getSenderID(), notification);
+                        ElectionNotification notification = getNotificationFromMessage(message);
 
-                    if (haveEnoughVotes(this.votes, new Vote(this.proposedLeader, this.proposedEpoch))) {
-                        boolean gotHigherVote = false;
+                        if (notification.getPeerEpoch() < this.proposedEpoch) continue;
 
-                        while(!gotHigherVote){
-                            Message m = this.incomingMessages.poll(finalizeWait, TimeUnit.MILLISECONDS);
-                            if(m !=null){
-                                ElectionNotification n = getNotificationFromMessage(m);
-                                if(supersedesCurrentVote(n.getProposedLeaderID(), n.getPeerEpoch())){
-                                    this.proposedLeader = n.getProposedLeaderID();
-                                    this.proposedEpoch = n.getPeerEpoch();
+                        if(supersedesCurrentVote(notification.getProposedLeaderID(), notification.getPeerEpoch())){
+                            this.proposedLeader = notification.getProposedLeaderID();
+                            this.proposedEpoch = notification.getPeerEpoch();
+                            sendNotifications();
+                        }
+
+                        this.votes.put(notification.getSenderID(), notification);
+
+                        if (haveEnoughVotes(this.votes, new Vote(this.proposedLeader, this.proposedEpoch))) {
+                            boolean gotHigherVote = false;
+
+                            while(!gotHigherVote){
+                                Message m = this.incomingMessages.poll(finalizeWait, TimeUnit.MILLISECONDS);
+                                if(m !=null){
+                                    ElectionNotification n = getNotificationFromMessage(m);
+                                    if(supersedesCurrentVote(n.getProposedLeaderID(), n.getPeerEpoch())){
+                                        this.proposedLeader = n.getProposedLeaderID();
+                                        this.proposedEpoch = n.getPeerEpoch();
+                                        this.votes.put(n.getSenderID(), n);
+                                        gotHigherVote = true;
+                                        break;
+                                    }
                                     this.votes.put(n.getSenderID(), n);
-                                    gotHigherVote = true;
+                                } else{
                                     break;
                                 }
-                                this.votes.put(n.getSenderID(), n);
-                            } else{
-                                break;
                             }
-                        }
-                        if(!gotHigherVote){
-                            ElectionNotification n1 = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
-                            return acceptElectionWinner(n1);
-                        }
+                            if(!gotHigherVote){
+                                ElectionNotification n1 = new ElectionNotification(this.proposedLeader, this.server.getPeerState(), this.server.getServerId(), this.server.getPeerEpoch());
+                                return acceptElectionWinner(n1);
+                            }
 
+                        }
                     }
+                }catch(InterruptedException e){
+                    Thread.currentThread().interrupt();
+                    return null;
                 }
-
 
             }
         }catch (Exception e){
@@ -157,6 +163,10 @@ public class LeaderElection {
      * 2- New epoch is the same as current epoch, but server id is higher.
      */
     protected boolean supersedesCurrentVote(long newId, long newEpoch) {
+        if(newId >= ((PeerServerImpl)this.server).getPeerIDtoAddressSize() ){
+            return false;
+        }
+
         return (newEpoch > this.proposedEpoch) || ((newEpoch == this.proposedEpoch) && (newId > this.proposedLeader));
     }
 

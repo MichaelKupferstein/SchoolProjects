@@ -79,7 +79,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public void sendMessage(Message.MessageType type, byte[] messageContents, InetSocketAddress target) throws IllegalArgumentException {
-        this.logger.entering(PeerServerImpl.class.getName(),"sendMessage",new Object[]{type,messageContents,target});
+        //this.logger.entering(PeerServerImpl.class.getName(),"sendMessage",new Object[]{type,messageContents,target});
         this.logger.fine("Sending message to " + target.getHostString() + ":" + target.getPort());
 
         if(type == ELECTION && getServerId().equals(gatewayID)){
@@ -103,7 +103,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     @Override
     public void sendBroadcast(Message.MessageType type, byte[] messageContents) {
-        this.logger.entering(PeerServerImpl.class.getName(),"sendBroadcast",new Object[]{type,messageContents});
+        //this.logger.entering(PeerServerImpl.class.getName(),"sendBroadcast",new Object[]{type,messageContents});
 
         this.logger.fine("Sending broadcast message: " + type.name());
         for(InetSocketAddress peer : peerIDtoAddress.values()){
@@ -203,84 +203,81 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
             this.gossiper.start();
             this.logger.fine("Gossiper started on port " + this.myPort);
-        }catch(Exception e){
-            this.logger.log(Level.WARNING,"Failed to start sender and receiver workers",e);
-            return;
-        }
+            while (!this.shutdown){
+                try {
+                    Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                    if(message != null && message.getMessageType() == GOSSIP){
+                        this.gossiper.handleGossipMessage(message);
+                        continue;
+                    }
 
-        while (!this.shutdown){
-            try {
-                Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
-                if(message != null && message.getMessageType() == GOSSIP){
-                    this.gossiper.handleGossipMessage(message);
-                    continue;
-                }
-
-                switch (getPeerState()){
-                    case LOOKING:
-                        if(getServerId().equals(gatewayID)) {
-                            setPeerState(ServerState.OBSERVER);
-                            break;
-                        }
-
-                        this.logger.fine("Starting leader election");
-                        LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
-                        Vote leader = election.lookForLeader();
-                        if (leader != null) {
-                            setCurrentLeader(leader);
-                            this.logger.fine("Leader elected: " + leader.getProposedLeaderID());
-
-                            if(leader.getProposedLeaderID() == this.id) {
-                                setPeerState(ServerState.LEADING);
-                            }else{
-                                setPeerState(FOLLOWING);
-                            }
-                        }
-                        break;
-
-                    case FOLLOWING:
-                        startFollowing();
-                        break;
-
-                    case LEADING:
-                        startLeading();
-                        break;
-
-                    case OBSERVER:
-                        try {
-                            message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
-                            if (message != null && message.getMessageType() == Message.MessageType.ELECTION && isPeerDead(new InetSocketAddress(message.getSenderHost(), message.getSenderPort()))) {
-                                ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
-                                logger.fine("Observer received election message from " + notification.getSenderID() +
-                                        " in state " + notification.getState());
-                                if (notification.getState() == ServerState.LEADING) {
-                                    setCurrentLeader(new Vote(notification.getProposedLeaderID(), notification.getPeerEpoch()));
-                                    logger.fine("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
-                                }
-                            }
-                        } catch (InterruptedException e) {
-                            if (shutdown) {
+                    switch (getPeerState()){
+                        case LOOKING:
+                            if(getServerId().equals(gatewayID)) {
+                                setPeerState(ServerState.OBSERVER);
                                 break;
                             }
-                        }
+
+                            this.logger.fine("Starting leader election");
+                            LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
+                            Vote leader = election.lookForLeader();
+                            if (leader != null) {
+                                setCurrentLeader(leader);
+                                this.logger.fine("Leader elected: " + leader.getProposedLeaderID());
+
+                                if(leader.getProposedLeaderID() == this.id) {
+                                    setPeerState(ServerState.LEADING);
+                                }else{
+                                    setPeerState(FOLLOWING);
+                                }
+                                this.gossiper.setReadyToStart();
+                            }
+                            break;
+
+                        case FOLLOWING:
+                            startFollowing();
+                            break;
+
+                        case LEADING:
+                            startLeading();
+                            break;
+
+                        case OBSERVER:
+                            try {
+                                message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                                if (message != null && message.getMessageType() == Message.MessageType.ELECTION && isPeerDead(new InetSocketAddress(message.getSenderHost(), message.getSenderPort()))) {
+                                    ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
+                                    logger.fine("Observer received election message from " + notification.getSenderID() +
+                                            " in state " + notification.getState());
+                                    if (notification.getState() == ServerState.LEADING) {
+                                        setCurrentLeader(new Vote(notification.getProposedLeaderID(), notification.getPeerEpoch()));
+                                        logger.fine("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
+                                    }
+                                }
+                            } catch (InterruptedException e) {
+                                if (shutdown) {
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                } catch (Exception e) {
+                    this.logger.warning("Error in main server loop: " + e.getMessage());
+                    if (this.shutdown) {
+                        this.logger.severe("PeerServerImpl failed while shutting down: " + e.getMessage());
                         break;
+                    }
                 }
-            } catch (Exception e) {
-                this.logger.warning("Error in main server loop: " + e.getMessage());
-                if (this.shutdown) {
-                    this.logger.severe("PeerServerImpl failed while shutting down: " + e.getMessage());
-                    break;
-                }
-            }finally {
-                if(this.senderWorker != null)this.senderWorker.shutdown();
-                if(this.receiverWorker != null)this.receiverWorker.shutdown();
-                if(this.follower != null)this.follower.shutdown();
-                if(this.leader != null)this.leader.shutdown();
-                if(this.gossiper != null)this.gossiper.shutdown();
             }
+        } catch (IOException e) {
+            this.logger.severe("PeerServerImpl failed to start: " + e.getMessage());
         }
 
         this.logger.info("PeerServerImpl shutting down normally");
+    }
+
+    public int getPeerIDtoAddressSize(){
+        return this.peerIDtoAddress.size();
     }
 
     private void startFollowing() {
