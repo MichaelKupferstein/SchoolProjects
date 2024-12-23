@@ -11,8 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.yu.cs.com3800.Message.MessageType.*;
-import static edu.yu.cs.com3800.PeerServer.ServerState.FOLLOWING;
-import static edu.yu.cs.com3800.PeerServer.ServerState.LOOKING;
+import static edu.yu.cs.com3800.PeerServer.ServerState.*;
 
 
 public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
@@ -42,7 +41,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     public PeerServerImpl(int myPort, long peerEpoch, Long id, Map<Long,InetSocketAddress> peerIDtoAddress, Long gatewayID, int numberOfObservers) throws IOException {
         this.myAddress = new InetSocketAddress("localhost",myPort);
         this.myPort = myPort;
-        this.state = LOOKING;
+        this.state = ServerState.LOOKING;
         this.outgoingMessages = new LinkedBlockingQueue<>();
         this.incomingMessages = new LinkedBlockingQueue<>();
         this.id = id;
@@ -51,7 +50,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         this.gatewayID = gatewayID;
         this.numberOfObservers = numberOfObservers;
         this.failedPeers = new ConcurrentHashMap<>();
-        this.gossiper = new Gossiper(this,this.outgoingMessages,this.incomingMessages,this.peerIDtoAddress);
+        this.gossiper = new Gossiper(this, this.peerIDtoAddress);
         this.logger = initializeLogging(PeerServerImpl.class.getCanonicalName() + "-on-port-" + this.myPort);
         setName("PeerServerImpl-port-" + this.myPort);
     }
@@ -161,12 +160,18 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         this.failedPeers.put(peerID,true);
 
         if(currentLeader != null && currentLeader.getProposedLeaderID() == peerID){
-            if(this.state == FOLLOWING){
-                this.gossiper.logStateChange(this.id,FOLLOWING,LOOKING);
-                this.setPeerState(LOOKING);
-                this.peerEpoch++;
-                this.currentLeader = null;
+            if(getPeerState() != OBSERVER){
+                handleLeaderFailure();
             }
+        }
+    }
+
+    private void handleLeaderFailure(){
+        if(state!=LOOKING){
+            this.gossiper.logStateChange(this.state,LOOKING);
+            this.state = LOOKING;
+            peerEpoch++;
+            currentLeader = null;
         }
     }
 
@@ -183,10 +188,6 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             }
         }
         return false;
-    }
-
-    public Long getGatewayID() {
-        return this.gatewayID;
     }
 
     @Override
@@ -209,6 +210,12 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
         while (!this.shutdown){
             try {
+                Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                if(message != null && message.getMessageType() == GOSSIP){
+                    this.gossiper.handleGossipMessage(message);
+                    continue;
+                }
+
                 switch (getPeerState()){
                     case LOOKING:
                         if(getServerId().equals(gatewayID)) {
@@ -241,8 +248,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
                     case OBSERVER:
                         try {
-                            Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
-                            if (message != null && message.getMessageType() == Message.MessageType.ELECTION) {
+                            message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                            if (message != null && message.getMessageType() == Message.MessageType.ELECTION && isPeerDead(new InetSocketAddress(message.getSenderHost(), message.getSenderPort()))) {
                                 ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
                                 logger.fine("Observer received election message from " + notification.getSenderID() +
                                         " in state " + notification.getState());
@@ -264,6 +271,12 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                     this.logger.severe("PeerServerImpl failed while shutting down: " + e.getMessage());
                     break;
                 }
+            }finally {
+                if(this.senderWorker != null)this.senderWorker.shutdown();
+                if(this.receiverWorker != null)this.receiverWorker.shutdown();
+                if(this.follower != null)this.follower.shutdown();
+                if(this.leader != null)this.leader.shutdown();
+                if(this.gossiper != null)this.gossiper.shutdown();
             }
         }
 
