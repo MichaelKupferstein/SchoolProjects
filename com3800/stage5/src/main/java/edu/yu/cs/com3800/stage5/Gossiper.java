@@ -10,181 +10,171 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Random;
 import java.util.logging.Logger;
+
 
 public class Gossiper extends Thread implements LoggingServer {
 
     private static final int GOSSIP = 3000;
     private static final int FAIL = GOSSIP * 10;
-    private static final int CLEANUP = FAIL * 2;
+    private static final int CLEANUP = FAIL *2;
 
-    private PeerServerImpl myPeerServer;
-    private LinkedBlockingQueue<Message> outgoingMessages;
-    private LinkedBlockingQueue<Message> incomingMessages;
-    private GossipData gossipData;
+    private PeerServer myPeerServer;
     private Map<Long, InetSocketAddress> peerIDtoAddress;
+    private GossipData gossipData;
     private volatile boolean shutdown;
     private Logger summaryLogger;
     private Logger verboseLogger;
-    private String summaryLogPath;
-    private String verboseLogPath;
+    private Random random;
 
-    public Gossiper(PeerServerImpl myPeerServer, LinkedBlockingQueue<Message> outgoingMessages,
-                    LinkedBlockingQueue<Message> incomingMessages, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
+    public Gossiper(PeerServer myPeerServer, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
         this.myPeerServer = myPeerServer;
-        this.outgoingMessages = outgoingMessages;
-        this.incomingMessages = incomingMessages;
         this.peerIDtoAddress = peerIDtoAddress;
-        this.gossipData = new GossipData();
+        this.gossipData = new GossipData(peerIDtoAddress, myPeerServer.getServerId());
+        this.summaryLogger = initializeLogging(Gossiper.class.getCanonicalName() + "-summary-on-port-" + myPeerServer.getUdpPort());
+        this.verboseLogger = initializeLogging(Gossiper.class.getCanonicalName() + "-verbose-on-port-" + myPeerServer.getUdpPort(),true);
+        this.random = new Random();
         setDaemon(true);
-        setName("Gossiper-" + myPeerServer.getServerId());
-
-        String baseLogName = Gossiper.class.getCanonicalName() + "-on-port-" + this.myPeerServer.getUdpPort();
-        this.summaryLogger = initializeLogging(baseLogName + "-summary");
-        this.verboseLogger = initializeLogging(baseLogName + "-verbose");
-        this.summaryLogPath = baseLogName + "-summary-log.txt";
-        this.verboseLogPath = baseLogName + "-verbose-log.txt";
-    }
-
-    public String getSummaryLogPath() {
-        return summaryLogPath;
-    }
-
-    public String getVerboseLogPath() {
-        return verboseLogPath;
-    }
-
-    public static byte[] buildGossipMessage(GossipData gossipData) {
-        Map<Long,Long> heartbeats = gossipData.getHeartbeats();
-        Map<Long,Boolean> failedNodes = gossipData.getFailedNodes();
-
-        int bufferSize = 8 + (heartbeats.size() * 24) + (failedNodes.size() * 9);
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-
-        buffer.putInt(heartbeats.size());
-        heartbeats.forEach((nodeId, heartbeat) -> {
-            buffer.putLong(nodeId);
-            buffer.putLong(heartbeat);
-            buffer.putLong(gossipData.getLastHeartbeatTime(nodeId));
-        });
-        buffer.putInt(failedNodes.size());
-        failedNodes.keySet().forEach(buffer::putLong);
-
-        return buffer.array();
-    }
-
-    public static void updateGossipDataFromMessage(byte[] content, GossipData gossipData) {
-        ByteBuffer buffer = ByteBuffer.wrap(content);
-        int numHeartbeats = buffer.getInt();
-        for(int i = 0; i < numHeartbeats; i++) {
-            long nodeId = buffer.getLong();
-            long heartbeat = buffer.getLong();
-            long timestamp = buffer.getLong();
-            gossipData.updateFromGossip(nodeId, heartbeat, timestamp);
-        }
-        int numFailedNodes = buffer.getInt();
-        for(int i = 0; i < numFailedNodes; i++) {
-            long nodeId = buffer.getLong();
-            gossipData.markNodeFailed(nodeId);
-        }
+        setName("Gossiper-on-port-" + myPeerServer.getUdpPort());
     }
 
     @Override
-    public void run() {
-        try{
-            while (!shutdown) {
-                processIncomingMessages();
-                sendGossip();
+    public void run(){
+        while(!shutdown){
+            try{
+                gossipData.updateHeartbeat(myPeerServer.getServerId());
+                List<InetSocketAddress> peers = selectRandomPeers();
+
+                for(InetSocketAddress peer : peers){
+                    sendGossipMessage(peer);
+                }
                 checkFailedNodes();
+
                 Thread.sleep(GOSSIP);
-            }
-        }catch (InterruptedException e){
-            if(!shutdown){
-                summaryLogger.severe("Gossiper thread interrupted");
+            }catch(InterruptedException e){
+                if(!shutdown){
+                    summaryLogger.severe("Gossiper thread interrupted: " + e.getMessage());
+                }
             }
         }
     }
 
-    private void processIncomingMessages() {
-        Message message;
-        while((message = incomingMessages.poll()) != null){
-            if(message.getMessageType() != Message.MessageType.GOSSIP){
-                incomingMessages.offer(message);
+    private List<InetSocketAddress> selectRandomPeers(){
+        List<InetSocketAddress> allPeers = new ArrayList<>(peerIDtoAddress.values());
+        allPeers.remove(myPeerServer.getAddress());
+        List<InetSocketAddress> selectedPeers = new ArrayList<>();
+
+        int numPeers = (int) Math.sqrt(allPeers.size()) + 1;
+        for(int i = 0; i < numPeers; i++){
+            int index = random.nextInt(allPeers.size());
+            selectedPeers.add(allPeers.get(index));
+            allPeers.remove(index);
+        }
+        return selectedPeers;
+    }
+
+    private void sendGossipMessage(InetSocketAddress peer){
+        try{
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            Map<Long,Long> heartbeats = gossipData.getHeartbeats();
+
+            buffer.putInt(heartbeats.size());
+            for(Map.Entry<Long,Long> entry : heartbeats.entrySet()){
+                buffer.putLong(entry.getKey());
+                buffer.putLong(entry.getValue());
+                buffer.putLong(System.currentTimeMillis());
+            }
+
+            buffer.flip();
+            byte[] data = new byte[buffer.remaining()];
+            buffer.get(data);
+
+            Message gossipMessage = new Message(Message.MessageType.GOSSIP, data, myPeerServer.getAddress().getHostString(), myPeerServer.getUdpPort(),
+                    peer.getHostString(),peer.getPort());
+            myPeerServer.sendMessage(Message.MessageType.GOSSIP,data,peer);
+
+            verboseLogger.fine("Sent gossip message to " + peer.getPort() + ": " + gossipMessage);
+        }catch(Exception e){
+            summaryLogger.severe("Error sending gossip message to " + peer + ": " + e.getMessage());
+        }
+    }
+
+    public void handleGossipMessage(Message message){
+        logGossipMessage(message);
+
+        try{
+            ByteBuffer buffer = ByteBuffer.wrap(message.getMessageContents());
+            int numEntries = buffer.getInt();
+            for(int i = 0; i < numEntries; i++){
+                long nodeId = buffer.getLong();
+                long heartbeat = buffer.getLong();
+                long timestamp = buffer.getLong();
+
+                if(heartbeat > gossipData.getHeartbeat(nodeId)){
+                    gossipData.updateFromGossip(nodeId,heartbeat,timestamp);
+                    logHeartbeatUpdate(nodeId,heartbeat,message.getSenderPort(),timestamp);
+                }
+            }
+
+            verboseLogger.fine("Processed gossip message from " + message.getSenderPort() + ": " + message);
+        }catch(Exception e){
+            summaryLogger.severe("Error handling gossip message: " + e.getMessage());
+        }
+    }
+
+    private void checkFailedNodes(){
+        long curretnTime = System.currentTimeMillis();
+
+        for(Long nodeId : peerIDtoAddress.keySet()){
+            if(nodeId.equals(myPeerServer.getServerId())){
                 continue;
             }
-            verboseLogger.info(String.format("Received gossip from %s:%d - Content: %s, Time: %d",
-                    message.getSenderHost(),
-                    message.getSenderPort(),
-                    new String(message.getMessageContents()),
-                    System.currentTimeMillis()));
 
-            updateGossipDataFromMessage(message.getMessageContents(), gossipData);
+            Long lastHeartbeatTime = gossipData.getLastHeartbeatTime(nodeId);
+            if(lastHeartbeatTime == null){
+                continue;
+            }
+
+            if(!gossipData.isNodeFailed(nodeId) && (curretnTime - lastHeartbeatTime) > FAIL){
+                gossipData.markNodeFailed(nodeId);
+                logNodeFailure(nodeId);
+                myPeerServer.reportFailedPeer(nodeId);
+            }
         }
     }
 
-    public void logStateChange(long nodeId,PeerServer.ServerState oldState, PeerServer.ServerState newState){
-        String message = String.format("%d: switching from %s to %s", nodeId, oldState, newState);
-        summaryLogger.info(message);
+    public boolean isNodeFailed(long nodeId){
+        return gossipData.isNodeFailed(nodeId);
+    }
+
+    private void logNodeFailure(long failedNodeId) {
+        String message = String.format("%d: no heartbeat from server %d - SERVER FAILED", myPeerServer.getServerId(), failedNodeId);
         System.out.println(message);
-    }
-
-    private void sendGossip() {
-        gossipData.updateHeartbeat(myPeerServer.getServerId());
-
-        List<Long> peers = new ArrayList<>(peerIDtoAddress.keySet());
-        peers.remove(myPeerServer.getServerId());
-
-        int numOfPeersToGossip = (int) Math.sqrt(peers.size()) + 1;
-        while(numOfPeersToGossip > 0 && !peers.isEmpty()){
-            int rand = (int) (Math.random() * peers.size());
-            long peerId = peers.remove(rand);
-
-            if(!gossipData.isNodeFailed(peerId)){
-                InetSocketAddress peerAddress = peerIDtoAddress.get(peerId);
-                byte[] gossipMessage = buildGossipMessage(gossipData);
-                Message message = new Message(Message.MessageType.GOSSIP, gossipMessage, myPeerServer.getAddress().getHostString(), myPeerServer.getUdpPort(),
-                        peerAddress.getHostString(), peerAddress.getPort());
-                outgoingMessages.offer(message);
-            }
-            numOfPeersToGossip--;
-        }
-    }
-
-    private void checkFailedNodes() {
-        long currentTime = System.currentTimeMillis();
-        for(Map.Entry<Long,InetSocketAddress> entry : peerIDtoAddress.entrySet()){
-            Long peerId = entry.getKey();
-            if(peerId.equals(myPeerServer.getServerId()) || gossipData.isNodeFailed(peerId)){
-                continue;
-            }
-
-            Long lastHeartbeatTime = gossipData.getLastHeartbeatTime(peerId);
-            if(lastHeartbeatTime == null || (currentTime - lastHeartbeatTime) > FAIL){
-                handleNodeFailure(peerId);
-            }
-        }
-    }
-
-    private void handleNodeFailure(long nodeId) {
-        gossipData.markNodeFailed(nodeId);
-        String message = String.format("%d: no heartbeat from server %d - SERVER FAILED", myPeerServer.getServerId(), nodeId);
         summaryLogger.warning(message);
-        System.out.println(message);
-        myPeerServer.reportFailedPeer(nodeId);
     }
 
-    private void logGossipUpdate(long nodeId, long heartbeat, long sourceId, long timestamp) {
+    private void logHeartbeatUpdate(long updatedNodeId, long newSequence, long sourceNodeId, long timestamp) {
         String message = String.format("%d: updated %d's heartbeat sequence to %d based on message from %d at node time %d",
-                myPeerServer.getServerId(), nodeId, heartbeat, sourceId, timestamp);
-        summaryLogger.info(message);
+                myPeerServer.getServerId(), updatedNodeId, newSequence, sourceNodeId, timestamp);
+        summaryLogger.fine(message);
     }
 
-    public void shutdown() {
+    public void logStateChange(PeerServer.ServerState oldState, PeerServer.ServerState newState){
+        String message = String.format("%d: switching from %s to %s", myPeerServer.getServerId(),oldState,newState);
+        System.out.println(message);
+        summaryLogger.warning(message);
+    }
+
+    private void logGossipMessage(Message message) {
+        String logEntry = String.format("Received gossip message from %s:%d at time %d\nMessage contents:\n%s", message.getSenderHost(), message.getSenderPort(),
+                System.currentTimeMillis(), message.toString());
+        verboseLogger.fine(logEntry);
+    }
+
+    public void shutdown(){
         this.shutdown = true;
-        this.interrupt();
+        interrupt();
     }
-
-
 
 }
