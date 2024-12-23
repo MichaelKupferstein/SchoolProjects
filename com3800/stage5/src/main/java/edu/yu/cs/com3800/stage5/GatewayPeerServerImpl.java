@@ -1,5 +1,7 @@
 package edu.yu.cs.com3800.stage5;
 
+import edu.yu.cs.com3800.Vote;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -14,6 +16,16 @@ public class GatewayPeerServerImpl extends PeerServerImpl{
         setPeerState(ServerState.OBSERVER);
         this.logger = initializeLogging(GatewayPeerServerImpl.class.getCanonicalName() + "-on-port-" + udpPort);
         logger.info("GatewayPeerServer initialized on port " + udpPort);
+    }
+
+    @Override
+    public void setCurrentLeader(Vote v) {
+        super.setCurrentLeader(v);
+
+        if(v != null && this.getPeerState() == ServerState.OBSERVER){
+            startGossiper();
+            logger.info("GatewayPeerServer detected new leader, starting gossiper");
+        }
     }
 
     @Override

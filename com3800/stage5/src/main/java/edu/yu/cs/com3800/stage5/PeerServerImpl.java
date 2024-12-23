@@ -245,7 +245,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                         case OBSERVER:
                             try {
                                 message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
-                                if (message != null && message.getMessageType() == Message.MessageType.ELECTION && isPeerDead(new InetSocketAddress(message.getSenderHost(), message.getSenderPort()))) {
+                                if (message != null && message.getMessageType() == Message.MessageType.ELECTION) {
                                     ElectionNotification notification = LeaderElection.getNotificationFromMessage(message);
                                     logger.fine("Observer received election message from " + notification.getSenderID() +
                                             " in state " + notification.getState());
@@ -278,6 +278,12 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
 
     public int getPeerIDtoAddressSize(){
         return this.peerIDtoAddress.size();
+    }
+
+    protected void startGossiper(){
+        if(this.gossiper != null){
+            this.gossiper.setReadyToStart();
+        }
     }
 
     private void startFollowing() {

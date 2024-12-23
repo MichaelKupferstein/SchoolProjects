@@ -59,27 +59,18 @@ public class GatewayServer extends Thread implements LoggingServer {
         this.httpServer.start();
         logger.info("GatewayServer started on HTTP port " + this.httpPort);
 
-        while(!shutdown && peerServer.getCurrentLeader() == null){
-            try{
-                Thread.sleep(100);
-            }catch(InterruptedException e){
-                if(!shutdown){
-                    logger.warning("GatewayServer thread interrupted waiting for leader: " + e.getMessage());
-                }
-            }
-        }
-
         while (!shutdown) {
-            if(!pendingRequests.isEmpty() && peerServer.getCurrentLeader() != null){
-                QueuedRequest request = pendingRequests.poll();
-                if(request != null){
-                    proccessRequest(request.content, request.exchange, new String(request.content).hashCode());
+            try {
+                if (!pendingRequests.isEmpty()) {
+                    QueuedRequest request = pendingRequests.poll();
+                    if (request != null) {
+                        proccessRequest(request.content, request.exchange,
+                                new String(request.content).hashCode());
+                    }
                 }
-            }
-            try{
                 Thread.sleep(100);
-            }catch(InterruptedException e){
-                if(!shutdown){
+            } catch (InterruptedException e) {
+                if (!shutdown) {
                     logger.warning("GatewayServer thread interrupted: " + e.getMessage());
                 }
             }
