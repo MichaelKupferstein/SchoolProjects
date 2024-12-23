@@ -76,28 +76,37 @@ public class Gossiper extends Thread implements LoggingServer {
 
     private void sendGossipMessage(InetSocketAddress peer){
         try{
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
-            Map<Long,Long> heartbeats = gossipData.getHeartbeats();
-
-            buffer.putInt(heartbeats.size());
-            for(Map.Entry<Long,Long> entry : heartbeats.entrySet()){
-                buffer.putLong(entry.getKey());
-                buffer.putLong(entry.getValue());
-                buffer.putLong(System.currentTimeMillis());
-            }
-
-            buffer.flip();
-            byte[] data = new byte[buffer.remaining()];
-            buffer.get(data);
+            byte[] data = createGossipMessageData();
 
             Message gossipMessage = new Message(Message.MessageType.GOSSIP, data, myPeerServer.getAddress().getHostString(), myPeerServer.getUdpPort(),
                     peer.getHostString(),peer.getPort());
-            myPeerServer.sendMessage(Message.MessageType.GOSSIP,data,peer);
 
-            verboseLogger.fine("Sent gossip message to " + peer.getPort() + ": " + gossipMessage);
+            verboseLogger.fine("Sending gossip message to " + peer.getPort() + ": " + formatGossipMessageContent(data));
+            myPeerServer.sendMessage(Message.MessageType.GOSSIP,data,peer);
         }catch(Exception e){
             summaryLogger.severe("Error sending gossip message to " + peer + ": " + e.getMessage());
         }
+    }
+
+    private byte[] createGossipMessageData() {
+        int numEntries = gossipData.getHeartbeats().size();
+        int bufferSize = Integer.BYTES + (Long.BYTES * 3 * numEntries);
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        Map<Long,Long> heartbeats = gossipData.getHeartbeats();
+
+        buffer.putInt(heartbeats.size());
+        long currentTime = System.currentTimeMillis();
+
+        for(Map.Entry<Long,Long> entry : heartbeats.entrySet()) {
+            buffer.putLong(entry.getKey());
+            buffer.putLong(entry.getValue());
+            buffer.putLong(currentTime);
+        }
+
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        return data;
     }
 
     public void handleGossipMessage(Message message){
@@ -111,13 +120,14 @@ public class Gossiper extends Thread implements LoggingServer {
                 long heartbeat = buffer.getLong();
                 long timestamp = buffer.getLong();
 
-                if(heartbeat > gossipData.getHeartbeat(nodeId)){
+                Long currentHeartbeat = gossipData.getHeartbeat(nodeId);
+                if(currentHeartbeat == null || heartbeat > gossipData.getHeartbeat(nodeId)){
                     gossipData.updateFromGossip(nodeId,heartbeat,timestamp);
                     logHeartbeatUpdate(nodeId,heartbeat,message.getSenderPort(),timestamp);
                 }
             }
 
-            verboseLogger.fine("Processed gossip message from " + message.getSenderPort() + ": " + message);
+            verboseLogger.fine("Processed gossip message from " + message.getSenderPort() + ": " + formatGossipMessageContent(message.getMessageContents()));
         }catch(Exception e){
             summaryLogger.severe("Error handling gossip message: " + e.getMessage());
         }
@@ -167,9 +177,31 @@ public class Gossiper extends Thread implements LoggingServer {
     }
 
     private void logGossipMessage(Message message) {
-        String logEntry = String.format("Received gossip message from %s:%d at time %d\nMessage contents:\n%s", message.getSenderHost(), message.getSenderPort(),
-                System.currentTimeMillis(), message.toString());
+        String logEntry = String.format("Received gossip message from %s:%d at time %d\nMessage contents:%s", message.getSenderHost(), message.getSenderPort(),
+                System.currentTimeMillis(), formatGossipMessageContent(message.getMessageContents()));
         verboseLogger.fine(logEntry);
+    }
+
+    private String formatGossipMessageContent(byte[] contents) {
+        try {
+            ByteBuffer buffer = ByteBuffer.wrap(contents);
+            int numEntries = buffer.getInt();
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nNumber of entries: ").append(numEntries);
+
+            for (int i = 0; i < numEntries && buffer.remaining() >= Long.BYTES * 3; i++) {
+                long nodeId = buffer.getLong();
+                long heartbeat = buffer.getLong();
+                long timestamp = buffer.getLong();
+                sb.append("\nEntry ").append(i)
+                        .append(": NodeID=").append(nodeId)
+                        .append(", Heartbeat=").append(heartbeat)
+                        .append(", Timestamp=").append(timestamp);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "Failed to format message content: " + e.getMessage();
+        }
     }
 
     public void shutdown(){
