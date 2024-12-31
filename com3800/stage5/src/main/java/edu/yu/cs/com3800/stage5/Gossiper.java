@@ -27,7 +27,7 @@ public class Gossiper extends Thread implements LoggingServer {
     private Logger summaryLogger;
     private Logger verboseLogger;
     private Random random;
-    private volatile boolean readyToStart = false;
+    private volatile boolean paused = true;
 
     public Gossiper(PeerServer myPeerServer, Map<Long, InetSocketAddress> peerIDtoAddress) throws IOException {
         this.myPeerServer = myPeerServer;
@@ -40,15 +40,22 @@ public class Gossiper extends Thread implements LoggingServer {
         setName("Gossiper-on-port-" + myPeerServer.getUdpPort());
     }
 
-    public void setReadyToStart(){
-        this.readyToStart = true;
+    public void pause(){
+        this.paused = true;
+        this.summaryLogger.fine("Gossiper paused");
     }
+
+    public void unpause(){
+        this.paused = false;
+        this.summaryLogger.fine("Gossiper unpaused");
+    }
+
 
     @Override
     public void run(){
         while(!shutdown){
             try{
-                if(!readyToStart){
+                if(paused){
                     Thread.sleep(1000);
                     continue;
                 }
@@ -75,11 +82,11 @@ public class Gossiper extends Thread implements LoggingServer {
         allPeers.remove(myPeerServer.getAddress());
         List<InetSocketAddress> selectedPeers = new ArrayList<>();
 
-        int numPeers = (int) Math.sqrt(allPeers.size()) + 1;
-        for(int i = 0; i < numPeers; i++){
+        int numPeers = Math.max(2,(int) Math.sqrt(allPeers.size()) + 1);
+        while (selectedPeers.size() < numPeers && !allPeers.isEmpty()) {
             int index = random.nextInt(allPeers.size());
-            selectedPeers.add(allPeers.get(index));
-            allPeers.remove(index);
+            InetSocketAddress selected = allPeers.remove(index);
+            selectedPeers.add(selected);
         }
         return selectedPeers;
     }
@@ -117,6 +124,11 @@ public class Gossiper extends Thread implements LoggingServer {
     }
 
     public void handleGossipMessage(Message message){
+        if(paused){
+            verboseLogger.fine("Gossiper is paused, ignoring gossip message from " + message.getSenderPort());
+            return;
+        }
+
         logGossipMessage(message);
 
         try{
@@ -126,6 +138,11 @@ public class Gossiper extends Thread implements LoggingServer {
                 long nodeId = buffer.getLong();
                 long heartbeat = buffer.getLong();
                 long timestamp = buffer.getLong();
+
+                if(gossipData.isNodeFailed(nodeId)){
+                    verboseLogger.fine("Ignoring gossip message from failed node " + nodeId);
+                    continue;
+                }
 
                 Long currentHeartbeat = gossipData.getHeartbeat(nodeId);
                 if(currentHeartbeat == null || heartbeat > gossipData.getHeartbeat(nodeId)){
@@ -157,8 +174,16 @@ public class Gossiper extends Thread implements LoggingServer {
                 gossipData.markNodeFailed(nodeId);
                 logNodeFailure(nodeId);
                 myPeerServer.reportFailedPeer(nodeId);
+            }else if(gossipData.isNodeFailed(nodeId) && (curretnTime - lastHeartbeatTime) > CLEANUP){
+                gossipData.removeNode(nodeId);
+                logNodeCleanup(nodeId);
             }
         }
+    }
+
+    private void logNodeCleanup(long nodeId) {
+        String message = String.format("%d: cleaning up failed node %d", myPeerServer.getServerId(), nodeId);
+        verboseLogger.warning(message);
     }
 
     public boolean isNodeFailed(long nodeId){
@@ -168,6 +193,7 @@ public class Gossiper extends Thread implements LoggingServer {
     private void logNodeFailure(long failedNodeId) {
         String message = String.format("%d: no heartbeat from server %d - SERVER FAILED", myPeerServer.getServerId(), failedNodeId);
         System.out.println(message);
+        //System.out.println("Server with ID: " + myPeerServer.getServerId() + " is in state " + myPeerServer.getPeerState());
         summaryLogger.warning(message);
     }
 

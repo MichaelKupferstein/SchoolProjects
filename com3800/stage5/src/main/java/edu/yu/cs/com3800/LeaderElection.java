@@ -163,11 +163,19 @@ public class LeaderElection {
      * 2- New epoch is the same as current epoch, but server id is higher.
      */
     protected boolean supersedesCurrentVote(long newId, long newEpoch) {
-        if(newId >= ((PeerServerImpl)this.server).getPeerIDtoAddressSize() ){
-            return false;
+        if (this.server.getPeerState() == OBSERVER) {
+            return false; // Observers shouldn't influence election
         }
 
-        return (newEpoch > this.proposedEpoch) || ((newEpoch == this.proposedEpoch) && (newId > this.proposedLeader));
+        // First compare epochs
+        if (newEpoch > this.proposedEpoch) {
+            return true;
+        }
+        if (newEpoch < this.proposedEpoch) {
+            return false;
+        }
+        // If epochs are equal, compare IDs
+        return newId > this.proposedLeader;
     }
 
     /**
@@ -175,7 +183,10 @@ public class LeaderElection {
      * Who voted for who isn't relevant, we only care that each server has one current vote.
      */
     protected boolean haveEnoughVotes(Map<Long, ElectionNotification> votes, Vote proposal) {
-        //is the number of votes for the proposal > the size of my peer server’s quorum?
+        if(this.server.getPeerState() == OBSERVER){
+            return false;
+        }
+
         int count = 0;
         for(ElectionNotification n : votes.values()){
             if(n.getState() == OBSERVER){

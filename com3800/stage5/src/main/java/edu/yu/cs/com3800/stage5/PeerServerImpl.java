@@ -70,6 +70,15 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
     @Override
     public void setCurrentLeader(Vote v){
         this.currentLeader = v;
+        if(v == null) {
+            if(this.gossiper != null){
+                this.gossiper.pause();
+            }
+        }else{
+            if(this.gossiper != null){
+                this.gossiper.unpause();
+            }
+        }
     }
 
     @Override
@@ -172,12 +181,24 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.state = LOOKING;
             peerEpoch++;
             currentLeader = null;
+
+            if(leader != null){
+                leader.shutdown();
+                leader = null;
+            }
+            if(follower != null){
+                follower.shutdown();
+                follower = null;
+            }
         }
     }
 
     @Override
     public boolean isPeerDead(long peerID){
-        return this.failedPeers.getOrDefault(peerID,false);
+        if(gossiper != null){
+            return gossiper.isNodeFailed(peerID);
+        }
+        return false;
     }
 
     @Override
@@ -205,8 +226,10 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.logger.fine("Gossiper started on port " + this.myPort);
             while (!this.shutdown){
                 try {
-                    Message message = this.incomingMessages.poll(1000, TimeUnit.MILLISECONDS);
+                    Message message = this.incomingMessages.peek();
                     if(message != null && message.getMessageType() == GOSSIP){
+                        if(getPeerState() == OBSERVER) System.out.println("Observer received gossip message");
+                        message = this.incomingMessages.poll();
                         this.gossiper.handleGossipMessage(message);
                         continue;
                     }
@@ -218,19 +241,21 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                                 break;
                             }
 
-                            this.logger.fine("Starting leader election");
+                            this.logger.fine("Starting leader election with epoch " + this.peerEpoch);
                             LeaderElection election = new LeaderElection(this, this.incomingMessages, this.logger);
                             Vote leader = election.lookForLeader();
                             if (leader != null) {
                                 setCurrentLeader(leader);
-                                this.logger.fine("Leader elected: " + leader.getProposedLeaderID());
+                                this.logger.fine("Leader elected: " + leader.getProposedLeaderID() + " with epoch " + leader.getPeerEpoch());
 
                                 if(leader.getProposedLeaderID() == this.id) {
                                     setPeerState(ServerState.LEADING);
                                 }else{
                                     setPeerState(FOLLOWING);
                                 }
-                                this.gossiper.setReadyToStart();
+                            }else{
+                                this.logger.warning("Leader election failed, retrying");
+                                Thread.sleep(1000);
                             }
                             break;
 
@@ -262,7 +287,6 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                             break;
                     }
                 } catch (Exception e) {
-                    this.logger.warning("Error in main server loop: " + e.getMessage());
                     if (this.shutdown) {
                         this.logger.severe("PeerServerImpl failed while shutting down: " + e.getMessage());
                         break;
@@ -280,11 +304,6 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
         return this.peerIDtoAddress.size();
     }
 
-    protected void startGossiper(){
-        if(this.gossiper != null){
-            this.gossiper.setReadyToStart();
-        }
-    }
 
     private void startFollowing() {
         this.logger.entering(PeerServerImpl.class.getName(),"startFollowing");

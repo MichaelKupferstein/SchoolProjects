@@ -23,18 +23,12 @@ public class GossipData {
     }
 
     public synchronized void updateHeartbeat(long nodeId) {
-        if(isNodeFailed(nodeId)) {
-            return;
-        }
         heartbeats.compute(nodeId, (key, val) -> val == null ? 1L : val + 1);
         lastHeartbeatTime.put(nodeId, System.currentTimeMillis());
 
     }
 
     public synchronized void updateFromGossip(long nodeId, long heartbeat, long timestamp) {
-        if(isNodeFailed(nodeId)) {
-            return;
-        }
         Long currentHeartbeat = heartbeats.getOrDefault(nodeId, -1L);
         if(heartbeat > currentHeartbeat) {
             heartbeats.put(nodeId, heartbeat);
@@ -44,6 +38,10 @@ public class GossipData {
 
     public synchronized void markNodeFailed(long nodeId) {
         failedNodes.put(nodeId, true);
+    }
+
+    public synchronized void removeNode(long nodeId) {
+        failedNodes.remove(nodeId);
         heartbeats.remove(nodeId);
         lastHeartbeatTime.remove(nodeId);
     }
