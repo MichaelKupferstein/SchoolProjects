@@ -21,7 +21,7 @@ public class LeaderElection {
     /**
      * time to wait once we believe we've reached the end of leader election.
      */
-    private final static int finalizeWait = 3200;
+    private final static int finalizeWait = 1600;
 
     /**
      * Upper bound on the amount of time between two consecutive notification checks.
