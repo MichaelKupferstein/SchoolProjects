@@ -222,13 +222,20 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             this.receiverWorker.start();
             this.logger.fine("Receiver worker started on port " + this.myPort);
 
+            if(this.state == OBSERVER && this.leader == null){
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    logger.fine("Observer interrupted while waiting to start gossiper");
+                }
+            }
             this.gossiper.start();
-            this.logger.fine("Gossiper started on port " + this.myPort);
+            this.logger.fine("Gossiper started by " + this.state + " on port " + this.myPort);
             while (!this.shutdown){
                 try {
                     Message message = this.incomingMessages.peek();
                     if(message != null && message.getMessageType() == GOSSIP){
-                        if(getPeerState() == OBSERVER) System.out.println("Observer received gossip message");
+                        //if(getPeerState() == OBSERVER) System.out.println("Observer received gossip message");
                         message = this.incomingMessages.poll();
                         this.gossiper.handleGossipMessage(message);
                         continue;
@@ -278,6 +285,8 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
                                         setCurrentLeader(new Vote(notification.getProposedLeaderID(), notification.getPeerEpoch()));
                                         logger.fine("Observer recognized leader: " + getCurrentLeader().getProposedLeaderID());
                                     }
+                                }else if(message != null && message.getMessageType() == Message.MessageType.GOSSIP){
+                                    this.gossiper.handleGossipMessage(message);
                                 }
                             } catch (InterruptedException e) {
                                 if (shutdown) {
