@@ -166,6 +166,11 @@ public class LeaderElection {
         if (this.server.getPeerState() == OBSERVER) {
             return false; // Observers shouldn't influence election
         }
+        //if the new id is greater than the total number of servers, it is invalid
+        //cast this.server to a PeerServerImpl to access the getNumServers method
+        if(!((PeerServerImpl)this.server).containsId(newId)){
+            return false;
+        }
 
         // First compare epochs
         if (newEpoch > this.proposedEpoch) {
@@ -183,18 +188,17 @@ public class LeaderElection {
      * Who voted for who isn't relevant, we only care that each server has one current vote.
      */
     protected boolean haveEnoughVotes(Map<Long, ElectionNotification> votes, Vote proposal) {
-        if(this.server.getPeerState() == OBSERVER){
+        if (this.server.getPeerState() == OBSERVER) {
             return false;
         }
 
         int count = 0;
-        for(ElectionNotification n : votes.values()){
-            if(n.getState() == OBSERVER){
-                continue;
-            }
 
-            if(n.getProposedLeaderID() == proposal.getProposedLeaderID() && n.getPeerEpoch() == proposal.getPeerEpoch()){
-                count++;
+        for (ElectionNotification n : votes.values()) {
+            if (n.getState() != OBSERVER) {
+                if (n.getProposedLeaderID() == proposal.getProposedLeaderID() && n.getPeerEpoch() == proposal.getPeerEpoch()) {
+                    count++;
+                }
             }
         }
 

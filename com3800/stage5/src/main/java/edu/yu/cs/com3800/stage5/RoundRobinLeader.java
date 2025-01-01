@@ -62,6 +62,8 @@ public class RoundRobinLeader extends Thread implements LoggingServer {
                 if(!shutdown){
                     logger.severe("Error accepting client connection: " + e.getMessage());
                 }
+            }finally {
+                shutdown();
             }
         }
         logger.info("RRL shutting down");

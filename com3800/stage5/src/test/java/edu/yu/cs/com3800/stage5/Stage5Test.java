@@ -137,6 +137,7 @@ public class Stage5Test {
 
     @Test
     public void testWorkReassignmentAfterFailure() throws Exception {
+        Thread.sleep(5000);
         for (int i = 0; i < 5; i++) {
             HttpURLConnection conn = sendHttpRequest(validClass);
             assertEquals(200, conn.getResponseCode());
@@ -159,6 +160,76 @@ public class Stage5Test {
             assertEquals("Hello, World!", getResponse(conn));
             conn.disconnect();
         }
+    }
+
+    @Test
+    public void testLeaderFailure() throws Exception {
+        Thread.sleep(5000);
+
+        PeerServerImpl initialLeader = null;
+        for (PeerServerImpl server : servers) {
+            if (server.getPeerState() == PeerServer.ServerState.LEADING) {
+                initialLeader = server;
+                break;
+            }
+        }
+        assertNotNull(initialLeader, "No leader was elected");
+        long initialLeaderId = initialLeader.getServerId();
+        System.out.println("Initial leader is server with ID: " + initialLeaderId);
+
+        for (int i = 0; i < 3; i++) {
+            HttpURLConnection conn = sendHttpRequest(validClass);
+            assertEquals(200, conn.getResponseCode());
+            assertEquals("Hello, World!", getResponse(conn));
+            conn.disconnect();
+        }
+
+        System.out.println("Killing leader with ID: " + initialLeaderId);
+        initialLeader.shutdown();
+
+        Thread.sleep(30000);
+
+        System.out.println("\nServer states after leader shutdown:");
+        for (PeerServerImpl server : servers) {
+            if (server != initialLeader) {
+                System.out.println("Server " + server.getServerId() + " state: " + server.getPeerState() +
+                        " (isDead " + initialLeaderId + ": " + server.isPeerDead(initialLeaderId) + ")");
+            }
+        }
+
+        Thread.sleep(30000);
+
+        PeerServerImpl newLeader = null;
+        for (PeerServerImpl server : servers) {
+            if (server != initialLeader && server.getPeerState() == PeerServer.ServerState.LEADING) {
+                newLeader = server;
+                break;
+            }
+        }
+        System.out.println("\nFinal server states:");
+        for (PeerServerImpl server : servers) {
+            if (server != initialLeader) {
+                System.out.println("Server " + server.getServerId() + " state: " + server.getPeerState());
+            }
+        }
+
+        assertNotNull(newLeader, "No new leader was elected after leader failure");
+        assertNotEquals(initialLeaderId, newLeader.getServerId(), "New leader should be different from failed leader");
+
+        System.out.println("New leader is server with ID: " + newLeader.getServerId());
+        Thread.sleep(5000);
+
+        for (int i = 0; i < 3; i++) {
+            HttpURLConnection conn = sendHttpRequest(validClass);
+            assertEquals(200, conn.getResponseCode(), "Request failed after leader change");
+            assertEquals("Hello, World!", getResponse(conn), "Unexpected response after leader change");
+            conn.disconnect();
+        }
+
+        for (PeerServerImpl server : servers) {
+            System.out.println("Server " + server.getServerId() + " state: " + server.getPeerState() + " leader: " + server.getCurrentLeader());
+        }
+
     }
 
 

@@ -3,11 +3,11 @@ package edu.yu.cs.com3800.stage5;
 import edu.yu.cs.com3800.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.yu.cs.com3800.Message.MessageType.*;
@@ -172,6 +172,7 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             if(getPeerState() != OBSERVER){
                 handleLeaderFailure();
             }
+            this.gossiper.pause();
         }
     }
 
@@ -358,5 +359,14 @@ public class PeerServerImpl extends Thread implements PeerServer,LoggingServer {
             follower = null;
         }
     }
+
+    public Map<Long,InetSocketAddress> getPeerIDtoAddress(){
+        return Collections.unmodifiableMap(this.peerIDtoAddress);
+    }
+
+    public boolean containsId(long id){
+        return this.peerIDtoAddress.containsKey(id);
+    }
+
 
 }
