@@ -61,11 +61,12 @@ public class GatewayServer extends Thread implements LoggingServer {
 
         while (!shutdown) {
             try {
-                if (!pendingRequests.isEmpty()) {
-                    QueuedRequest request = pendingRequests.poll();
+                if (!pendingRequests.isEmpty() && peerServer.getCurrentLeader() != null) {
+                    QueuedRequest request = pendingRequests.peek();
                     if (request != null) {
                         proccessRequest(request.content, request.exchange,
                                 new String(request.content).hashCode());
+                        pendingRequests.poll();
                     }
                 }
                 Thread.sleep(100);
@@ -90,6 +91,14 @@ public class GatewayServer extends Thread implements LoggingServer {
 
     private void proccessRequest(byte[] body, HttpExchange exchange, int requestHash){
         try{
+            Vote currentLeader = peerServer.getCurrentLeader();
+            if (currentLeader == null) {
+                long requestId = requestID.getAndIncrement();
+                pendingRequests.add(new QueuedRequest(body, exchange, requestId));
+                logger.info("No leader, GatewayServer added request to queue: " + requestId);
+                return;
+            }
+
             InetSocketAddress leaderAddress = peerServer.getPeerByID(peerServer.getCurrentLeader().getProposedLeaderID());
             if (peerServer.isPeerDead(leaderAddress)) {
                 long requestId = requestID.getAndIncrement();
