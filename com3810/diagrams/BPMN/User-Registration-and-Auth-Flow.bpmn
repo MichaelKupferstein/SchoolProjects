@@ -9,6 +9,7 @@
     <bpmn:messageFlow id="Flow_0e965ow" sourceRef="Activity_1unw158" targetRef="Event_1cq2hwi" />
     <bpmn:messageFlow id="Flow_0uedtzy" sourceRef="Activity_09o7z3f" targetRef="Event_1u53yev" />
     <bpmn:messageFlow id="Flow_1eymll1" sourceRef="Event_0sotg0q" targetRef="Activity_0ol4yt0" />
+    <bpmn:messageFlow id="Flow_1phzr8n" sourceRef="Activity_198doy9" targetRef="Activity_0cqlx1t" />
     <bpmn:textAnnotation id="TextAnnotation_0cmoote">
       <bpmn:text>User Registration and Authentication</bpmn:text>
     </bpmn:textAnnotation>
@@ -87,19 +88,25 @@
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0duixiu</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="Event_1go39ub" name="Valid email">
-      <bpmn:incoming>Flow_10tb8r8</bpmn:incoming>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_03siu6o" />
-    </bpmn:intermediateCatchEvent>
     <bpmn:eventBasedGateway id="Gateway_0man38c" name="Valid Emal?">
       <bpmn:incoming>Flow_0a92hcq</bpmn:incoming>
       <bpmn:outgoing>Flow_1q2otk1</bpmn:outgoing>
       <bpmn:outgoing>Flow_10tb8r8</bpmn:outgoing>
     </bpmn:eventBasedGateway>
     <bpmn:sequenceFlow id="Flow_0omlu4m" name="Yes" sourceRef="Gateway_0vvd07u" targetRef="Activity_0k4pgge" />
+    <bpmn:sequenceFlow id="Flow_1r3n48n" sourceRef="Event_1go39ub" targetRef="Activity_198doy9" />
+    <bpmn:intermediateCatchEvent id="Event_1go39ub" name="Valid email">
+      <bpmn:incoming>Flow_10tb8r8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1r3n48n</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_03siu6o" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Activity_198doy9" name="Save User account">
+      <bpmn:incoming>Flow_1r3n48n</bpmn:incoming>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmn:process id="Process_1h52rim" isExecutable="false">
     <bpmn:laneSet id="LaneSet_1hfsrhr">
+      <bpmn:lane id="Lane_108fyht" name="Database" />
       <bpmn:lane id="Lane_1u9k71t" name="Authentication Component">
         <bpmn:flowNodeRef>Activity_1ep15dz</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_09o7z3f</bpmn:flowNodeRef>
@@ -120,81 +127,26 @@
         <bpmn:flowNodeRef>Activity_1scikb2</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_0bzeo9i</bpmn:flowNodeRef>
       </bpmn:lane>
-      <bpmn:lane id="Lane_108fyht" name="Database" />
     </bpmn:laneSet>
-    <bpmn:serviceTask id="Activity_1ep15dz" name="Authenticate User">
-      <bpmn:incoming>Flow_1hz2a5r</bpmn:incoming>
-      <bpmn:outgoing>Flow_1w5rqnn</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:sendTask id="Activity_09o7z3f" name="Correct login info">
-      <bpmn:incoming>Flow_17k0tlv</bpmn:incoming>
-      <bpmn:outgoing>Flow_1nhcquh</bpmn:outgoing>
-    </bpmn:sendTask>
-    <bpmn:sequenceFlow id="Flow_12x6dkb" sourceRef="Activity_0cqlx1t" targetRef="Event_0s5oq8d" />
-    <bpmn:sequenceFlow id="Flow_1nhcquh" sourceRef="Activity_09o7z3f" targetRef="Event_0sotg0q" />
-    <bpmn:sequenceFlow id="Flow_1t4tobp" sourceRef="Activity_1lagc90" targetRef="Gateway_0vebcyu" />
-    <bpmn:sequenceFlow id="Flow_1w5rqnn" sourceRef="Activity_1ep15dz" targetRef="Activity_1e9jpue" />
-    <bpmn:serviceTask id="Activity_1e9jpue" name="Get user info from Database.">
-      <bpmn:incoming>Flow_1w5rqnn</bpmn:incoming>
-      <bpmn:outgoing>Flow_1h2p7mk</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:serviceTask id="Activity_0cqlx1t" name="Hash password">
-      <bpmn:incoming>Flow_1kvs5b9</bpmn:incoming>
-      <bpmn:outgoing>Flow_12x6dkb</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:sendTask id="Activity_1unw158" name="Incorrect login info">
-      <bpmn:incoming>Flow_00pq0ut</bpmn:incoming>
-    </bpmn:sendTask>
-    <bpmn:exclusiveGateway id="Gateway_1cbwoyg" name="Info Correct?">
-      <bpmn:incoming>Flow_0jwpv8u</bpmn:incoming>
-      <bpmn:outgoing>Flow_17k0tlv</bpmn:outgoing>
-      <bpmn:outgoing>Flow_00pq0ut</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:sendTask id="Activity_0oxtoqx" name="Let client know it is invalid email">
-      <bpmn:incoming>Flow_0wz8t5k</bpmn:incoming>
-    </bpmn:sendTask>
-    <bpmn:sequenceFlow id="Flow_0wz8t5k" name="No" sourceRef="Gateway_0vebcyu" targetRef="Activity_0oxtoqx" />
-    <bpmn:sequenceFlow id="Flow_00pq0ut" name="No" sourceRef="Gateway_1cbwoyg" targetRef="Activity_1unw158" />
-    <bpmn:intermediateThrowEvent id="Event_0sotg0q" name="Return session token">
-      <bpmn:incoming>Flow_1nhcquh</bpmn:incoming>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1tb12zn" />
-    </bpmn:intermediateThrowEvent>
-    <bpmn:exclusiveGateway id="Gateway_0vebcyu" name="Valid University Email">
-      <bpmn:incoming>Flow_1t4tobp</bpmn:incoming>
-      <bpmn:outgoing>Flow_0wz8t5k</bpmn:outgoing>
-      <bpmn:outgoing>Flow_1kvs5b9</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_1lagc90" name="Verify if university email">
-      <bpmn:outgoing>Flow_1t4tobp</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1kvs5b9" name="Yes" sourceRef="Gateway_0vebcyu" targetRef="Activity_0cqlx1t" />
-    <bpmn:sequenceFlow id="Flow_17k0tlv" name="Yes" sourceRef="Gateway_1cbwoyg" targetRef="Activity_09o7z3f" />
-    <bpmn:dataStoreReference id="DataStoreReference_18wq157" name="PostgreSQL" />
-    <bpmn:intermediateThrowEvent id="Event_0s5oq8d" name="Save User">
-      <bpmn:incoming>Flow_12x6dkb</bpmn:incoming>
-      <bpmn:outgoing>Flow_0o5cjbo</bpmn:outgoing>
-    </bpmn:intermediateThrowEvent>
-    <bpmn:sequenceFlow id="Flow_0o5cjbo" sourceRef="Event_0s5oq8d" targetRef="Activity_0frsoub" />
+    <bpmn:sequenceFlow id="Flow_0q7a6a9" sourceRef="Activity_1scikb2" targetRef="Activity_0bzeo9i" />
     <bpmn:sequenceFlow id="Flow_1qmxs34" sourceRef="Activity_0frsoub" targetRef="Activity_1becuyw" />
-    <bpmn:sequenceFlow id="Flow_1hz2a5r" sourceRef="Activity_0kwhify" targetRef="Activity_1ep15dz" />
-    <bpmn:receiveTask id="Activity_0kwhify" name="User Saved">
-      <bpmn:incoming>Flow_0a2k5d0</bpmn:incoming>
-      <bpmn:outgoing>Flow_1hz2a5r</bpmn:outgoing>
-    </bpmn:receiveTask>
-    <bpmn:receiveTask id="Activity_0frsoub" name="Save user to Database">
-      <bpmn:incoming>Flow_0o5cjbo</bpmn:incoming>
-      <bpmn:outgoing>Flow_1qmxs34</bpmn:outgoing>
-      <bpmn:dataOutputAssociation id="DataOutputAssociation_06sjwqc">
-        <bpmn:targetRef>DataStoreReference_1q1djjq</bpmn:targetRef>
-      </bpmn:dataOutputAssociation>
-    </bpmn:receiveTask>
     <bpmn:sequenceFlow id="Flow_0a2k5d0" sourceRef="Activity_1becuyw" targetRef="Activity_0kwhify" />
-    <bpmn:dataStoreReference id="DataStoreReference_1q1djjq" name="PostgreSQL" />
-    <bpmn:sendTask id="Activity_1becuyw" name="Let Auth know">
-      <bpmn:incoming>Flow_1qmxs34</bpmn:incoming>
-      <bpmn:outgoing>Flow_0a2k5d0</bpmn:outgoing>
-    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="Flow_0o5cjbo" sourceRef="Event_0s5oq8d" targetRef="Activity_0frsoub" />
+    <bpmn:sequenceFlow id="Flow_1t4tobp" sourceRef="Activity_1lagc90" targetRef="Gateway_0vebcyu" />
+    <bpmn:sequenceFlow id="Flow_0wz8t5k" name="No" sourceRef="Gateway_0vebcyu" targetRef="Activity_0oxtoqx" />
+    <bpmn:sequenceFlow id="Flow_0jwpv8u" sourceRef="Activity_0bzeo9i" targetRef="Gateway_1cbwoyg" />
+    <bpmn:sequenceFlow id="Flow_00pq0ut" name="No" sourceRef="Gateway_1cbwoyg" targetRef="Activity_1unw158" />
+    <bpmn:sequenceFlow id="Flow_12x6dkb" sourceRef="Activity_0cqlx1t" targetRef="Event_0s5oq8d" />
+    <bpmn:sequenceFlow id="Flow_1kvs5b9" name="Yes" sourceRef="Gateway_0vebcyu" targetRef="Activity_0cqlx1t" />
     <bpmn:sequenceFlow id="Flow_1h2p7mk" sourceRef="Activity_1e9jpue" targetRef="Activity_1scikb2" />
+    <bpmn:sequenceFlow id="Flow_1nhcquh" sourceRef="Activity_09o7z3f" targetRef="Event_0sotg0q" />
+    <bpmn:sequenceFlow id="Flow_17k0tlv" name="Yes" sourceRef="Gateway_1cbwoyg" targetRef="Activity_09o7z3f" />
+    <bpmn:sequenceFlow id="Flow_1w5rqnn" sourceRef="Activity_1ep15dz" targetRef="Activity_1e9jpue" />
+    <bpmn:sequenceFlow id="Flow_1hz2a5r" sourceRef="Activity_0kwhify" targetRef="Activity_1ep15dz" />
+    <bpmn:sendTask id="Activity_0bzeo9i" name="Return User Info">
+      <bpmn:incoming>Flow_0q7a6a9</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jwpv8u</bpmn:outgoing>
+    </bpmn:sendTask>
     <bpmn:receiveTask id="Activity_1scikb2" name="Get User">
       <bpmn:incoming>Flow_1h2p7mk</bpmn:incoming>
       <bpmn:outgoing>Flow_0q7a6a9</bpmn:outgoing>
@@ -202,12 +154,66 @@
         <bpmn:targetRef>DataStoreReference_18wq157</bpmn:targetRef>
       </bpmn:dataOutputAssociation>
     </bpmn:receiveTask>
-    <bpmn:sequenceFlow id="Flow_0q7a6a9" sourceRef="Activity_1scikb2" targetRef="Activity_0bzeo9i" />
-    <bpmn:sendTask id="Activity_0bzeo9i" name="Return User Info">
-      <bpmn:incoming>Flow_0q7a6a9</bpmn:incoming>
-      <bpmn:outgoing>Flow_0jwpv8u</bpmn:outgoing>
+    <bpmn:sendTask id="Activity_1becuyw" name="Let Auth know">
+      <bpmn:incoming>Flow_1qmxs34</bpmn:incoming>
+      <bpmn:outgoing>Flow_0a2k5d0</bpmn:outgoing>
     </bpmn:sendTask>
-    <bpmn:sequenceFlow id="Flow_0jwpv8u" sourceRef="Activity_0bzeo9i" targetRef="Gateway_1cbwoyg" />
+    <bpmn:dataStoreReference id="DataStoreReference_1q1djjq" name="PostgreSQL" />
+    <bpmn:receiveTask id="Activity_0frsoub" name="Save user to Database">
+      <bpmn:incoming>Flow_0o5cjbo</bpmn:incoming>
+      <bpmn:outgoing>Flow_1qmxs34</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_06sjwqc">
+        <bpmn:targetRef>DataStoreReference_1q1djjq</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:receiveTask>
+    <bpmn:receiveTask id="Activity_0kwhify" name="User Saved">
+      <bpmn:incoming>Flow_0a2k5d0</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hz2a5r</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:intermediateThrowEvent id="Event_0s5oq8d" name="Save User">
+      <bpmn:incoming>Flow_12x6dkb</bpmn:incoming>
+      <bpmn:outgoing>Flow_0o5cjbo</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:dataStoreReference id="DataStoreReference_18wq157" name="PostgreSQL" />
+    <bpmn:task id="Activity_1lagc90" name="Verify if university email">
+      <bpmn:outgoing>Flow_1t4tobp</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_0vebcyu" name="Valid University Email">
+      <bpmn:incoming>Flow_1t4tobp</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wz8t5k</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1kvs5b9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="Event_0sotg0q" name="Return session token">
+      <bpmn:incoming>Flow_1nhcquh</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1tb12zn" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sendTask id="Activity_0oxtoqx" name="Let client know it is invalid email">
+      <bpmn:incoming>Flow_0wz8t5k</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="Gateway_1cbwoyg" name="Info Correct?">
+      <bpmn:incoming>Flow_0jwpv8u</bpmn:incoming>
+      <bpmn:outgoing>Flow_17k0tlv</bpmn:outgoing>
+      <bpmn:outgoing>Flow_00pq0ut</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Activity_1unw158" name="Incorrect login info">
+      <bpmn:incoming>Flow_00pq0ut</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Activity_0cqlx1t" name="Hash password">
+      <bpmn:incoming>Flow_1kvs5b9</bpmn:incoming>
+      <bpmn:outgoing>Flow_12x6dkb</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_1e9jpue" name="Get user info from Database.">
+      <bpmn:incoming>Flow_1w5rqnn</bpmn:incoming>
+      <bpmn:outgoing>Flow_1h2p7mk</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="Activity_09o7z3f" name="Correct login info">
+      <bpmn:incoming>Flow_17k0tlv</bpmn:incoming>
+      <bpmn:outgoing>Flow_1nhcquh</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Activity_1ep15dz" name="Authenticate User">
+      <bpmn:incoming>Flow_1hz2a5r</bpmn:incoming>
+      <bpmn:outgoing>Flow_1w5rqnn</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0syrmxg">
@@ -265,17 +271,21 @@
       <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
         <dc:Bounds x="182" y="302" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1go39ub_di" bpmnElement="Event_1go39ub">
-        <dc:Bounds x="1172" y="302" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1164" y="345" width="53" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1sgx6ju_di" bpmnElement="Gateway_0man38c">
         <dc:Bounds x="1015" y="295" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1011" y="271" width="58" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1go39ub_di" bpmnElement="Event_1go39ub">
+        <dc:Bounds x="1192" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1183" y="278" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_03r14ji_di" bpmnElement="Activity_198doy9">
+        <dc:Bounds x="1160" y="380" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_02hz53h_di" bpmnElement="Flow_02hz53h">
         <di:waypoint x="2178" y="250" />
@@ -299,7 +309,7 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_10tb8r8_di" bpmnElement="Flow_10tb8r8">
         <di:waypoint x="1065" y="320" />
-        <di:waypoint x="1172" y="320" />
+        <di:waypoint x="1192" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_119kb7c_di" bpmnElement="Flow_119kb7c">
         <di:waypoint x="2390" y="250" />
@@ -347,6 +357,10 @@
         <bpmndi:BPMNLabel>
           <dc:Bounds x="972" y="258" width="18" height="14" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1r3n48n_di" bpmnElement="Flow_1r3n48n">
+        <di:waypoint x="1210" y="338" />
+        <di:waypoint x="1210" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Participant_0tw92jf_di" bpmnElement="Participant_0tw92jf" isHorizontal="true">
         <dc:Bounds x="130" y="530" width="2440" height="630" />
@@ -549,6 +563,10 @@
       <bpmndi:BPMNEdge id="DataOutputAssociation_16jrkbw_di" bpmnElement="DataOutputAssociation_16jrkbw">
         <di:waypoint x="1810" y="970" />
         <di:waypoint x="1810" y="1075" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1phzr8n_di" bpmnElement="Flow_1phzr8n">
+        <di:waypoint x="1210" y="460" />
+        <di:waypoint x="1210" y="690" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
