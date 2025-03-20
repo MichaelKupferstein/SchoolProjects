@@ -190,8 +190,8 @@
       <bpmn:incoming>Flow_10fk2l9</bpmn:incoming>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0ttu86e" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:dataStoreReference id="DataStoreReference_1nrf617" name="MongoDB" />
-    <bpmn:dataStoreReference id="DataStoreReference_0j7fers" name="MongoDB" />
+    <bpmn:dataStoreReference id="DataStoreReference_1nrf617" name="PostgreSQL" />
+    <bpmn:dataStoreReference id="DataStoreReference_0j7fers" name="PostgreSQL" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0egfx70">
@@ -400,13 +400,13 @@
       <bpmndi:BPMNShape id="DataStoreReference_1nrf617_di" bpmnElement="DataStoreReference_1nrf617">
         <dc:Bounds x="1255" y="1065" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1256" y="1122" width="49" height="14" />
+          <dc:Bounds x="1251" y="1122" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="DataStoreReference_0j7fers_di" bpmnElement="DataStoreReference_0j7fers">
         <dc:Bounds x="1975" y="1055" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1976" y="1112" width="49" height="14" />
+          <dc:Bounds x="1971" y="1112" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_10rg93l_di" bpmnElement="Flow_10rg93l">

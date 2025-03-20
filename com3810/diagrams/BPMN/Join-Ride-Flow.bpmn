@@ -59,7 +59,7 @@
       </bpmn:dataOutputAssociation>
     </bpmn:receiveTask>
     <bpmn:sequenceFlow id="Flow_1a7p3td" sourceRef="Event_119nxcx" targetRef="Activity_1c8rs0v" />
-    <bpmn:dataStoreReference id="DataStoreReference_1nrf617" name="MongoDB" />
+    <bpmn:dataStoreReference id="DataStoreReference_1nrf617" name="PostgreSQL" />
     <bpmn:intermediateThrowEvent id="Event_1k2s7bz" name="Receive data">
       <bpmn:incoming>Flow_1hv6opl</bpmn:incoming>
       <bpmn:outgoing>Flow_1vc4rwx</bpmn:outgoing>
@@ -102,7 +102,7 @@
       </bpmn:dataInputAssociation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0bfu84k" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:dataStoreReference id="DataStoreReference_0s9uscn" name="MongoDB" />
+    <bpmn:dataStoreReference id="DataStoreReference_0s9uscn" name="PostgreSQL" />
     <bpmn:sequenceFlow id="Flow_0utuf04" sourceRef="Activity_1624emb" targetRef="Activity_0op4vgu" />
     <bpmn:receiveTask id="Activity_0op4vgu" name="Update ride info">
       <bpmn:incoming>Flow_0utuf04</bpmn:incoming>
@@ -219,7 +219,7 @@
       <bpmndi:BPMNShape id="DataStoreReference_1nrf617_di" bpmnElement="DataStoreReference_1nrf617">
         <dc:Bounds x="1125" y="1125" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1126" y="1182" width="49" height="14" />
+          <dc:Bounds x="1121" y="1182" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1k2s7bz_di" bpmnElement="Event_1k2s7bz">
@@ -256,7 +256,7 @@
       <bpmndi:BPMNShape id="DataStoreReference_0s9uscn_di" bpmnElement="DataStoreReference_0s9uscn">
         <dc:Bounds x="1685" y="1125" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1686" y="1182" width="49" height="14" />
+          <dc:Bounds x="1681" y="1182" width="61" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0wowt0a_di" bpmnElement="Activity_0op4vgu">
@@ -425,6 +425,28 @@
         <di:waypoint x="1680" y="470" />
         <di:waypoint x="1822" y="470" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="TextAnnotation_18r26is_di" bpmnElement="TextAnnotation_18r26is" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="132" y="100" width="198" height="30" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0m6n5ej_di" bpmnElement="DataOutputAssociation_0m6n5ej">
+        <di:waypoint x="970" y="1040" />
+        <di:waypoint x="970" y="1155" />
+        <di:waypoint x="1125" y="1155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1v1smpl_di" bpmnElement="DataInputAssociation_1v1smpl">
+        <di:waypoint x="1150" y="1120" />
+        <di:waypoint x="1150" y="1020" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1rwgq38_di" bpmnElement="DataInputAssociation_1rwgq38">
+        <di:waypoint x="1710" y="1125" />
+        <di:waypoint x="1710" y="838" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1peap6r_di" bpmnElement="DataOutputAssociation_1peap6r">
+        <di:waypoint x="1580" y="1040" />
+        <di:waypoint x="1580" y="1155" />
+        <di:waypoint x="1685" y="1155" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1f1lu36_di" bpmnElement="Flow_1f1lu36">
         <di:waypoint x="660" y="660" />
         <di:waypoint x="660" y="548" />
@@ -432,24 +454,6 @@
       <bpmndi:BPMNEdge id="Flow_0llzo1t_di" bpmnElement="Flow_0llzo1t">
         <di:waypoint x="480" y="380" />
         <di:waypoint x="480" y="780" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DataInputAssociation_1v1smpl_di" bpmnElement="DataInputAssociation_1v1smpl">
-        <di:waypoint x="1150" y="1120" />
-        <di:waypoint x="1150" y="1020" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DataOutputAssociation_0m6n5ej_di" bpmnElement="DataOutputAssociation_0m6n5ej">
-        <di:waypoint x="970" y="1040" />
-        <di:waypoint x="970" y="1155" />
-        <di:waypoint x="1125" y="1155" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DataOutputAssociation_1peap6r_di" bpmnElement="DataOutputAssociation_1peap6r">
-        <di:waypoint x="1580" y="1040" />
-        <di:waypoint x="1580" y="1155" />
-        <di:waypoint x="1685" y="1155" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="DataInputAssociation_1rwgq38_di" bpmnElement="DataInputAssociation_1rwgq38">
-        <di:waypoint x="1710" y="1125" />
-        <di:waypoint x="1710" y="838" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0woggc0_di" bpmnElement="Flow_0woggc0">
         <di:waypoint x="970" y="510" />
@@ -461,10 +465,6 @@
         <di:waypoint x="1410" y="605" />
         <di:waypoint x="1410" y="488" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="TextAnnotation_18r26is_di" bpmnElement="TextAnnotation_18r26is" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
-        <dc:Bounds x="132" y="100" width="198" height="30" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
