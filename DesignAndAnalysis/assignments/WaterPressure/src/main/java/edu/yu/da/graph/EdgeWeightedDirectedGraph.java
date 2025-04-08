@@ -1,0 +1,170 @@
+package edu.yu.da.graph;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * The EdgeWeightedDirectedGraph class represents a directed graph where each edge has a weight.
+ * The graph is represented using an adjacency list, which is a HashMap where the keys are the vertices and the values are ArrayLists of DirectedEdges.
+ */
+public class EdgeWeightedDirectedGraph {
+    private String startVertex; // The starting vertex of the graph
+    private HashMap<String, ArrayList<DirectedEdge>> adj; // The adjacency list
+    private Set<String> vertices; // The set of vertices in the graph
+    private Set<DirectedEdge> edges; // The set of edges in the graph
+
+    /**
+     * Initializes an empty EdgeWeightedDirectedGraph with no vertices and no edges.
+     */
+    public EdgeWeightedDirectedGraph(){
+        this.vertices = new HashSet<>();
+        this.edges = new HashSet<>();
+        this.adj = new HashMap<>();
+    }
+
+    /**
+     * Initializes an EdgeWeightedDirectedGraph with one vertex and no edges.
+     *
+     * @param startVertex the starting vertex of the graph
+     */
+    public EdgeWeightedDirectedGraph(String startVertex){
+        if(startVertex == null || startVertex.length() == 0) throw new IllegalArgumentException("Start vertex must be non-null and not empty");
+        this.startVertex = startVertex;
+        this.vertices = new HashSet<>();
+        this.edges = new HashSet<>();
+        this.adj = new HashMap<>();
+        this.vertices.add(startVertex);
+    }
+
+    /**
+     * Returns the starting vertex of the graph.
+     *
+     * @return the starting vertex of the graph
+     */
+    public String startVertex(){
+        if(startVertex == null) return vertices().iterator().next();
+        return startVertex;
+    }
+
+    /**
+     * Returns the number of vertices in the graph.
+     *
+     * @return the number of vertices in the graph
+     */
+    public int V(){
+        return vertices.size();
+    }
+
+    /**
+     * Returns the number of edges in the graph.
+     *
+     * @return the number of edges in the graph
+     */
+    public int E(){
+        return edges.size();
+    }
+
+    /**
+     * Checks if there is an edge from vertex v to vertex w.
+     *
+     * @param v the starting vertex
+     * @param w the ending vertex
+     * @return true if there is an edge from vertex v to vertex w, false otherwise
+     */
+    public boolean edgeExists(String v, String w) {
+        if (adj.containsKey(v)) {
+            for (DirectedEdge e : adj.get(v)) {
+                if (e.to().equals(w)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Adds the directed edge e to the graph.
+     *
+     * @param e the directed edge
+     */
+    public void addEdge(DirectedEdge e){
+        String v = e.from();
+        adj.putIfAbsent(v, new ArrayList<>());
+        adj.get(v).add(e);
+        vertices.add(e.from());
+        vertices.add(e.to());
+        edges.add(e);
+    }
+
+    /**
+     * Adds a directed edge from vertex v to vertex w with the given weight to the graph.
+     *
+     * @param v the starting vertex
+     * @param w the ending vertex
+     * @param weight the weight of the edge
+     */
+    public void addEdge(String v, String w, double weight){
+        DirectedEdge e = new DirectedEdge(v, w, weight);
+        addEdge(e);
+    }
+
+    /**
+     * Returns the edges incident to vertex v.
+     *
+     * @param v the vertex
+     * @return the edges incident to vertex v as an Iterable
+     */
+    public Iterable<DirectedEdge> adj(String v){
+        if(adj.get(v)!=null) return adj.get(v);
+        else return new ArrayList<DirectedEdge>();
+    }
+
+    /**
+     * Returns all edges in the graph.
+     *
+     * @return all edges in the graph as an Iterable
+     */
+    public Iterable<DirectedEdge> edges(){
+        return this.edges;
+    }
+
+    /**
+     * Returns all vertices in the graph.
+     *
+     * @return all vertices in the graph as an Iterable
+     */
+    public Iterable<String> vertices(){
+        return this.vertices;
+    }
+
+    /**
+     * Returns a string representation of the graph.
+     *
+     * @return a string representation of the graph
+     */
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (DirectedEdge e : this.edges()) {
+            s.append(e + "\n");
+        }
+        return s.toString();
+    }
+
+    /**
+     * Checks if the vertex v exists in the graph.
+     *
+     * @param v the vertex
+     * @return true if the vertex v exists in the graph, false otherwise
+     */
+    public boolean vertexExists(String v) {
+        return vertices.contains(v);
+    }
+
+    public Set<DirectedEdge> getEdges(){
+        return this.edges;
+    }
+
+}
